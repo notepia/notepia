@@ -1,0 +1,20 @@
+package route
+
+import (
+	"github.com/pinbook/pinbook/internal/api/handler"
+	"github.com/pinbook/pinbook/internal/api/middlewares"
+
+	"github.com/labstack/echo/v4"
+)
+
+func RegisterAdmin(api *echo.Group, h handler.Handler, authMiddleware middlewares.AuthMiddleware) {
+	g := api.Group("/admin")
+	g.Use(authMiddleware.RequireOwnerOrAdmin())
+	g.GET("/users", h.ListUsers)
+	g.POST("/users", h.CreateUser)
+	g.PUT("/users/:id/password", h.UpdateUserPassword)
+	g.PUT("/users/:id/role", h.UpdateUserRole)
+	g.PUT("/users/:id/disable", h.DisableUser)
+	g.PUT("/users/:id/enable", h.EnableUser)
+
+}

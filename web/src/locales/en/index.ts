@@ -1,0 +1,57 @@
+export default {
+  placeholder: {
+    note: "Start writing your note ...",
+    search: "Search",
+    searchWorkspace: "Search / Add Workspace"
+  },
+  menu: {
+    notes: "Notes",
+    tags: "Tags",
+    createWithName: "Create workspace：{{name}}",
+  },
+  form: {
+    email: "email",
+    username: "Username",
+    password: "Password",
+    comfirmPassword: "Confirm Password",
+  },
+  pages: {
+    notes: {
+      title: "Notes"
+    },
+  },
+  actions: {
+    signin: "Sign in",
+    signup: "Sign up",
+    signout: "Sign out",
+    createANewAccount:"Create a new account",
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    expand: "Expand",
+    collapse: "Collapse",
+    create: "Create",
+    newNote: "New Note"
+  },
+  message: {
+    deleteTheNote: "Delete the note?",
+    enterNewTag: "Enter new tag",
+    noMoreNotes: "No more notes",
+    noMoreViews: "No more views"
+  },
+  button: {
+    new: "New",
+    save: "Save",
+    filter: "Filter",
+    back: "Back",
+    addTag: "Add Tag"
+  },
+  time: {
+    just_now: "just now",
+    minutes_ago: "{{count}} minutes ago",
+    hours_ago: "{{count}} hours ago",
+    date_md: "{{month}}/{{day}}",
+    date_ymd: "{{year}}/{{month}}/{{day}}"
+  }
+} as const;

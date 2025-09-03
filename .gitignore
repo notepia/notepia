@@ -1,0 +1,6 @@
+tmp/*
+bin/*
+*.exe
+*.log
+.air.toml
+web/.vite

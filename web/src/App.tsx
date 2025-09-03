@@ -1,0 +1,39 @@
+import { Route, Routes, useLocation } from 'react-router-dom';
+import SignIn from './pages/Auth/SignInPage';
+import SignUp from './pages/Auth/SignUpPage'
+import NotFound from './pages/Errors/NotFoundPage';
+import RequireAuth from './components/requireauth/RequireAuth';
+import Dashboard from './components/dashboard/Dashboard';
+import Notes from './pages/Notes/NotesPage';
+import Setup from './pages/Setup/WorkspaceSetupPage';
+import { AnimatePresence } from "motion/react"
+import NoteDetailPage from './pages/Notes/NoteDetailPage';
+import NoteEdit from './pages/Notes/NoteEditPage';
+import Home from './pages/Home/HomePage';
+
+function App() {
+  const location = useLocation();
+
+  return (
+      <AnimatePresence mode='wait'>
+        <Routes location={location} key={location.key}>
+          <Route path='/signin' element={<SignIn />}></Route>
+          <Route path='/signup' element={<SignUp />}></Route>
+          <Route path="*" element={<NotFound />} />
+          <Route path='/workspace-setup' element={<Setup />} />
+          <Route path='/workspaces/:workspaceId' element={<RequireAuth />}>
+            <Route element={<Dashboard />}>
+              <Route path='note/:noteId' element={<NoteDetailPage />} ></Route>
+              <Route path='note/:noteId/edit' element={<NoteEdit />} ></Route>
+              <Route path='note/new' element={<NoteEdit />} ></Route>
+              <Route path='notes' element={<Notes />}></Route>
+              <Route path='' element={<Notes />}></Route>
+            </Route>
+          </Route>
+          <Route path='' element={<Home />} />
+        </Routes>
+      </AnimatePresence>
+  )
+}
+
+export default App

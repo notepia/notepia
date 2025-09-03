@@ -1,0 +1,13 @@
+services:
+  pinbook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pinbook
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./bin:/usr/local/app/bin"
+    environment:
+      - PORT=8080
+    restart: unless-stopped
