@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useLocation } from "react-router-dom"
 import { useWorkspaceStore } from "../../stores/workspace";
+import Loader from "../../components/loader/Loader";
 
 const Home = () => {
     const { workspaces, fetchWorkspaces } = useWorkspaceStore()
@@ -39,7 +40,7 @@ const Home = () => {
 
     if (authStatus === "checking") {
         return <div className='w-screen h-dvh flex justify-center items-center'>
-            {t("actions.loading")}
+            <Loader />
         </div>;
     }
 

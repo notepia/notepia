@@ -10,6 +10,7 @@ import { useRef, useCallback } from "react"
 import ExpandableNote from "../../components/expandablenote/ExpandableNote"
 import TransitionWrapper from "../../components/transitionwrapper/TransitionWrapper"
 import { Tooltip } from "radix-ui"
+import Loader from "../../components/loader/Loader"
 
 const PAGE_SIZE = 20;
 
@@ -144,9 +145,5 @@ const Notes = () => {
         </TransitionWrapper>
     </>
 }
-
-const Loader = ()=>(
-    <div className="w-full flex justify-center py-4"><Loader2Icon className="animate-spin" size={20} /></div>
-)
 
 export default Notes
