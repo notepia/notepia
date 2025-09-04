@@ -66,8 +66,8 @@ const BlockRenderer: FC<Props> = ({ block }) => {
         </div>
     }
     else if (block.type == "image") {
-        return <div>
-            <img className=" px-4 m-auto max-h-[620px]" alt={block.data.file.name} src={block.data.file.url} />
+        return <div className="px-4">
+            <img className=" rounded overflow-hidden m-auto max-h-[620px]" alt={block.data.file.name} src={block.data.file.url} />
         </div>
     }
     else if (block.type == "list" && block.data.style == "checklist") {
