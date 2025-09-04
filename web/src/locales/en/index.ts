@@ -10,7 +10,7 @@ export default {
     createWithName: "Create workspace：{{name}}",
   },
   form: {
-    email: "email",
+    email: "Email",
     username: "Username",
     password: "Password",
     comfirmPassword: "Confirm Password",

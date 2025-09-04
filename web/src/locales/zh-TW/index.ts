@@ -10,7 +10,7 @@ export default {
     createWithName: "新增工作區：{{name}}",
   },
   form: {
-    email: "email",
+    email: "Email",
     username: "使用者名稱",
     password: "密碼",
     comfirmPassword: "再次輸入密碼",

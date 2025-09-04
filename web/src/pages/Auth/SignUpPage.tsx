@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { signUp } from '../../api/auth';
 import logo from '../../assets/app.png'
+import logotext from '../../assets/applogo_text.png'
 import { useTranslation } from 'react-i18next';
 
 const SignUp: React.FC = () => {
@@ -35,10 +36,11 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-dvh bg-neutral-50 dark:bg-neutral-800 flex justify-center items-center">
-      <div className="w-80 flex flex-col gap-8 pb-5">
+    <div className="min-h-dvh bg-neutral-50 dark:bg-neutral-800 flex justify-center pt-24">
+      <div className="w-80 flex flex-col gap-10 pb-5">
         <div className='flex items-center justify-center flex-col gap-3 sm:flex-row select-none '>
-          <img src={logo} className='w-36 sm:w-16' alt="logo" />
+          <img src={logo} className='w-14' alt="logo" />
+          <img src={logotext} className='w-32' alt="logo" />
         </div>
         <form onSubmit={handleSubmit} className='px-3 sm:px-0'>
           <div className="mb-4">
