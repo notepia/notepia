@@ -5,7 +5,7 @@ import NotFound from './pages/Errors/NotFoundPage';
 import RequireAuth from './components/requireauth/RequireAuth';
 import Dashboard from './components/dashboard/Dashboard';
 import Notes from './pages/Notes/NotesPage';
-import Setup from './pages/Setup/WorkspaceSetupPage';
+import Setup from './pages/WorkspaceSetup/WorkspaceSetupPage';
 import { AnimatePresence } from "motion/react"
 import NoteDetailPage from './pages/Notes/NoteDetailPage';
 import NoteEdit from './pages/Notes/NoteEditPage';
