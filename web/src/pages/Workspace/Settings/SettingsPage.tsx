@@ -66,21 +66,21 @@ const Settings = () => {
                             <div className="flex flex-col gap-6">
                                 <div className="flex flex-col gap-2 ">
                                     <div className="text-lg font-semibold">
-                                        Workspace name
+                                        {t("pages.settings.workspaceName")}
                                     </div>
                                     <div className="flex gap-3 ">
                                         <input className=" px-3 py-2 border rounded-lg" value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} title="rename workspace" />
-                                        <button onClick={handleRenameClick} className="px-3 py-2 border shadow-sm rounded-lg">Rename</button>
+                                        <button onClick={handleRenameClick} className="px-3 py-2 border shadow-sm rounded-lg">{t("actions.rename")}</button>
                                     </div>
                                 </div>
                                 <div className="flex gap-2 items-center justify-between">
                                     <div className="flex flex-col">
                                         <div className=" text-lg font-semibold">
-                                            Delete this workspace
+                                            {t("pages.settings.deleteThisWorkspace")}
                                         </div>
                                     </div>
                                     <div>
-                                        <button onClick={handleDeleteClick} className="px-3 py-2 border border-red-600 text-red-600 shadow-sm rounded-lg">Delete</button>
+                                        <button onClick={handleDeleteClick} className="px-3 py-2 border border-red-600 text-red-600 shadow-sm rounded-lg">{t("actions.delete")}</button>
                                     </div>
                                 </div>
                             </div>
