@@ -16,6 +16,12 @@ export default {
     comfirmPassword: "Confirm Password",
   },
   pages: {
+    signin:{
+      "noAccount":"Don't have an account? Sign up"
+    },
+    signup:{
+      "alreadyHaveAccount":"Already have an account? Log in."
+    },
     settings: {
       workspaceName: "Workspace name",
       deleteThisWorkspace: "Delete this workspace",
@@ -32,7 +38,6 @@ export default {
     signin: "Sign in",
     signup: "Sign up",
     signout: "Sign out",
-    createANewAccount:"Create a new account",
     save: "Save",
     cancel: "Cancel",
     delete: "Delete",

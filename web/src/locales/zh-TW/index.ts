@@ -16,6 +16,12 @@ export default {
     comfirmPassword: "再次輸入密碼",
   },
   pages: {
+    signin:{
+      "noAccount":"沒有帳號? 註冊"
+    },
+    signup:{
+      "alreadyHaveAccount":"已有帳號? 登入"
+    },
     settings: {
       workspaceName: "工作區名稱",
       deleteThisWorkspace: "刪除這個工作區",
@@ -32,7 +38,6 @@ export default {
     signin: "登入",
     signup: "註冊",
     signout: "登出",
-    createANewAccount: "建立新帳號",
     save: "保存",
     cancel: "取消",
     delete: "刪除",

@@ -76,7 +76,7 @@ const SignIn: React.FC = () => {
                             to="/signup"
                             className="inline-block align-baseline text-right font-bold text-sm text-amber-500 hover:text-amber-800"
                         >
-                            {t("actions.createANewAccount")}
+                            {t("pages.signin.noAccount")}
                         </Link>
                     </div>
                 </form>
