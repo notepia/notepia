@@ -16,8 +16,9 @@ export default {
     comfirmPassword: "Confirm Password",
   },
   pages: {
-    notes: {
-      title: "Notes"
+    settings: {
+      workspaceName: "Workspace name",
+      deleteThisWorkspace: "Delete this workspace"
     },
   },
   actions: {
@@ -32,7 +33,8 @@ export default {
     expand: "Expand",
     collapse: "Collapse",
     create: "Create",
-    newNote: "New Note"
+    newNote: "New Note",
+    rename: "Rename"
   },
   message: {
     deleteTheNote: "Delete the note?",

@@ -16,8 +16,9 @@ export default {
     comfirmPassword: "再次輸入密碼",
   },
   pages: {
-    notes: {
-      title: "筆記"
+    settings: {
+      workspaceName: "工作區名稱",
+      deleteThisWorkspace: "刪除這個工作區"
     },
   },
   actions: {
@@ -32,7 +33,8 @@ export default {
     expand: "展開",
     collapse: "收合",
     create: "建立",
-    newNote: "新增筆記"
+    newNote: "新增筆記",
+    rename: "重新命名"
   },
   message:{
     noMoreNotes: "沒有更多筆記",
