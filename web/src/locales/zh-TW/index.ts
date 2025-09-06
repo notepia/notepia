@@ -19,11 +19,11 @@ export default {
     settings: {
       workspaceName: "工作區名稱",
       deleteThisWorkspace: "刪除這個工作區",
-      deleteThisWorkspaceMessage : "刪除這個工作區 ?"
+      deleteThisWorkspaceMessage: "刪除這個工作區 ?"
     },
     workspaceSetup: {
       createWorkspace: "建立工作區",
-      pleaseEnterYourWorkspaceName:"請輸入你的工作區名稱",
+      pleaseEnterYourWorkspaceName: "請輸入你的工作區名稱",
       workspaceName: "工作區名稱",
       workspaceNamePlaceholder: "工作區名稱",
     }
@@ -32,7 +32,7 @@ export default {
     signin: "登入",
     signup: "註冊",
     signout: "登出",
-    createANewAccount:"建立新帳號",
+    createANewAccount: "建立新帳號",
     save: "保存",
     cancel: "取消",
     delete: "刪除",
@@ -43,7 +43,7 @@ export default {
     newNote: "新增筆記",
     rename: "重新命名"
   },
-  message:{
+  message: {
     noMoreNotes: "沒有更多筆記",
   },
   button: {

@@ -11,6 +11,7 @@ import Embed from '@editorjs/embed';
 import useCurrentWorkspaceId from "../../hooks/useCurrentworkspaceId";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
+import { getEditorI18n } from "../../locales/getEditori18n";
 
 interface Props {
   value?: any;
@@ -22,12 +23,14 @@ const Editor: React.FC<Props> = ({ value, onChange }) => {
   const holder = useRef<HTMLDivElement>(null);
   const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation()
+  const { t: tEditor } =useTranslation("editor")
 
   useEffect(() => {
     if (!holder.current || ejInstance.current) return;
     ejInstance.current = new EditorJS({
       holder: holder.current,
       placeholder: t("placeholder.note"),
+      i18n: getEditorI18n(tEditor),
       data: value,
       autofocus: true,
       tools: {
@@ -101,8 +104,6 @@ const Editor: React.FC<Props> = ({ value, onChange }) => {
                   responseType: 'blob',
                   withCredentials: true,
                 });
-
-                console.log(fetchedFile)
 
                 if (fetchedFile.data) {
                   const formData = new FormData();
