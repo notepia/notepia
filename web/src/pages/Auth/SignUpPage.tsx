@@ -96,9 +96,9 @@ const SignUp: React.FC = () => {
               required
             />
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col items-center gap-5 justify-between">
             <button
-              className=" whitespace-nowrap bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-xl focus:outline-none focus:shadow-outline disabled:opacity-50"
+              className=" w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-xl focus:outline-none focus:shadow-outline disabled:opacity-50"
               type="submit"
               disabled={signUpMutation.isPending}
             >
