@@ -109,6 +109,7 @@ export const getEditorI18n = (t: TFunction<'editor'>) => {
             blockTunes: {
                 delete: {
                     Delete: t('blockTunes.delete.Delete'),
+                    'Click to delete': t('blockTunes.delete.Click to delete'),
                 },
                 moveUp: {
                     'Move up': t('blockTunes.moveUp.Move up'),

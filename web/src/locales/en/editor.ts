@@ -103,7 +103,8 @@ export default {
             "Delete": "Delete"
         },
         "moveUp": {
-            "Move up": "Move up"
+            "Move up": "Move up",
+            "Click to delete": "Click to delete"
         },
         "moveDown": {
             "Move down": "Move down"

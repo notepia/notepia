@@ -100,7 +100,8 @@ export default {
     },
     "blockTunes": {
         "delete": {
-            "Delete": "刪除"
+            "Delete": "刪除",
+            "Click to delete": "點擊即可刪除"
         },
         "moveUp": {
             "Move up": "上移"

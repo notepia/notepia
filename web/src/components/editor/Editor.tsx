@@ -79,6 +79,12 @@ const Editor: React.FC<Props> = ({ value, onChange }) => {
         image: {
           class: ImageTool,
           config: {
+            features:{
+              border: false,
+              caption: false,
+              stretch: false,
+              background: false
+            },
             uploader: {
               async uploadByFile(file: any) {
                 const formData = new FormData();
