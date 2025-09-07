@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 
-export function getEditorI18n(t: TFunction<'editor'>) {
+export const getEditorI18n = (t: TFunction<'editor'>) => {
     return {
         messages: {
             ui: {
