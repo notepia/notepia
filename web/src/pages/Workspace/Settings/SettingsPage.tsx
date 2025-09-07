@@ -7,11 +7,13 @@ import { useWorkspaceStore } from "../../../stores/workspace"
 import { deleteWorkspace, updateWorkspace } from "../../../api/workspace"
 import { useEffect, useState } from "react"
 import SidebarButton from "../../../components/sidebar/SidebarButton"
+import { Loader } from "lucide-react"
 
 const Settings = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
     const { getWorkspaceById } = useWorkspaceStore()
     const [workspaceName, setWorkspaceName] = useState("")
+    const [isRenaming, SetIsRenaming] = useState(false)
     const { t } = useTranslation()
     const navigate = useNavigate()
 
@@ -29,7 +31,12 @@ const Settings = () => {
     const renameWorkspaceNameMutation = useMutation({
         mutationFn: () => updateWorkspace(currentWorkspaceId, {
             name: workspaceName
-        })
+        }),
+        onSuccess: () => {
+            setTimeout(() => {
+                SetIsRenaming(false)
+            }, 200)
+        }
     })
 
     const deleteWorkspaceMutation = useMutation({
@@ -46,6 +53,7 @@ const Settings = () => {
     }
 
     const handleRenameClick = () => {
+        SetIsRenaming(true)
         renameWorkspaceNameMutation.mutate()
     }
 
@@ -70,7 +78,9 @@ const Settings = () => {
                                     </div>
                                     <div className="flex gap-3 flex-wrap">
                                         <input className="flex-1 px-3 py-2 border rounded-lg dark:text-black" value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} title="rename workspace" />
-                                        <button onClick={handleRenameClick} className=" px-3 py-2 border shadow-sm rounded-lg">{t("actions.rename")}</button>
+                                        <button onClick={handleRenameClick} className=" px-3 py-2 border shadow-sm rounded-lg">
+                                            {isRenaming ? <Loader size={16} className="animate-spin" /> : t("actions.rename")}
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="flex gap-2 items-center justify-between">
