@@ -1,5 +1,5 @@
 import Masonry from "../../../components/masonry/Masonry"
-import { MoveDiagonal, PlusCircle } from "lucide-react"
+import { MoveDiagonal, PlusCircle, Search } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import SidebarButton from "../../../components/sidebar/SidebarButton"
 import { getNotes, NoteData } from "../../../api/note"
@@ -93,27 +93,41 @@ const Notes = () => {
                             {getWorkspaceById(currentWorkspaceId)?.name ?? ""}
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <Tooltip.Root>
-                            <Tooltip.Trigger asChild>
-                                <Link to="note/new" className="p-3 rounded-full">
-                                    <PlusCircle size={20} />
-                                </Link>
-                            </Tooltip.Trigger>
-                            <Tooltip.Portal>
-                                <Tooltip.Content
-                                    className="select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
-                                    side="bottom"
-                                >
-                                    <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
-                                    {t("actions.newNote")}
-                                </Tooltip.Content>
-                            </Tooltip.Portal>
-                        </Tooltip.Root>
+                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                        <div className="hidden sm:block">
+                             <div className="flex items-center gap-3 py-2 px-3 rounded-md dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
+                                <Search size={16} />
+                                <input type="text" className=" flex-1 bg-transparent" placeholder="Search" />
+                            </div>
+                        </div>
+                        <div className="flex items-center">
+                            <Tooltip.Root>
+                                <Tooltip.Trigger asChild>
+                                    <Link to="note/new" className=" p-3 rounded-full">
+                                        <PlusCircle size={20} />
+                                    </Link>
+                                </Tooltip.Trigger>
+                                <Tooltip.Portal>
+                                    <Tooltip.Content
+                                        className="select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
+                                        side="bottom"
+                                    >
+                                        <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
+                                        {t("actions.newNote")}
+                                    </Tooltip.Content>
+                                </Tooltip.Portal>
+                            </Tooltip.Root>
+                        </div>
                     </div>
                 </div>
             </div>
             <div className="flex flex-col gap-2 sm:gap-5">
+                <div className="block sm:hidden">
+                    <div className="w-full flex items-center gap-3 py-2 px-3 rounded-md border dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
+                        <Search size={16} />
+                        <input type="text" className=" bg-transparent flex-1" placeholder="Search" />
+                    </div>                
+                </div>
                 <div className="">
                     {
                         isLoading ? <Loader />
