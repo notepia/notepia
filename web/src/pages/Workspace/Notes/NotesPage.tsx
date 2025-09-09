@@ -123,7 +123,7 @@ const Notes = () => {
             </div>
             <div className="flex flex-col gap-2 sm:gap-5">
                 <div className="block sm:hidden">
-                    <div className="w-full flex items-center gap-2 py-2 px-3 rounded-md border dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
+                    <div className="w-full flex items-center gap-2 py-2 px-3 rounded-md shadow-inner border dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
                         <Search size={16} className="text-gray-400" />
                         <input type="text" className=" bg-transparent flex-1" placeholder={t("placeholder.search")} />
                     </div>                
