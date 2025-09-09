@@ -38,7 +38,7 @@ export default {
     signin: "登入",
     signup: "註冊",
     signout: "登出",
-    save: "保存",
+    save: "存檔",
     cancel: "取消",
     delete: "刪除",
     edit: "編輯",
