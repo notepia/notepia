@@ -37,6 +37,10 @@ func (h Handler) GetWorkspaces(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	if len(workspaceUsers) == 0 {
+		return c.JSON(http.StatusOK, []model.Workspace{})
+	}
+
 	var workspaceIDs []string
 	for _, wu := range workspaceUsers {
 		workspaceIDs = append(workspaceIDs, wu.WorkspaceID)
