@@ -22,14 +22,16 @@ const BlockRenderer: FC<Props> = ({ block }) => {
                             block.data.level == 6 ? <h6 className=" px-4 py-1.5">{block.data.text}</h6> : <></>
     }
     else if (block.type == "quote") {
-        return <figure className="border-l-4 border-blue-500 pl-4 italic ">
-            <blockquote>
-                {block.data.text}
-            </blockquote>
-        </figure>
+        return <div className="py-2 px-4">
+            <figure className="p-2 border-l-4 border-blue-500 pl-4 italic ">
+                <blockquote>
+                    {block.data.text}
+                </blockquote>
+            </figure>
+        </div>
     }
     else if (block.type == "code") {
-        return <div className="p-2">
+        return <div className="py-2 px-4">
             <pre className="p-4 bg-gray-100 text-gray-800 
             dark:bg-gray-900 dark:text-gray-100 dark:border rounded-lg whitespace-pre-wrap overflow-x-auto">
                 <code className="font-mono text-sm">
@@ -39,13 +41,15 @@ const BlockRenderer: FC<Props> = ({ block }) => {
         </div>
     }
     else if (block.type == "embed") {
-        return <iframe src={block.data.embed} width={"100%"} height={block.data.height} title={block.data.source} allowFullScreen></iframe>
+        return <div className="py-2 px-4">
+            <iframe src={block.data.embed} width={"100%"} height={block.data.height} title={block.data.source} allowFullScreen></iframe>
+        </div>
     }
     else if (block.type == "table") {
         const { withHeadings, content } = block.data;
 
         return (
-            <div className=" overflow-x-auto w-full">
+            <div className="py-2 px-4 overflow-x-auto w-full">
                 <table className="border-collapse border border-gray-400  w-full">
                     {withHeadings && (
                         <thead>
