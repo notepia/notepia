@@ -1,5 +1,5 @@
 import Masonry from "../../../components/masonry/Masonry"
-import { Filter, MoveDiagonal, PlusCircle, Search } from "lucide-react"
+import { Filter, MoveDiagonal, PlusCircle, Search, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import SidebarButton from "../../../components/sidebar/SidebarButton"
 import { getNotes, NoteData } from "../../../api/note"
@@ -95,16 +95,21 @@ const Notes = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                        <div className="hidden sm:block">
+                        {isSearchVisible && <div className="hidden sm:block">
                             <div className="flex items-center gap-2 py-2 px-3 rounded-xl dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
                                 <Search size={16} className="text-gray-400" />
                                 <input type="text" className=" flex-1 bg-transparent" placeholder={t("placeholder.search")} />
+                                <button onClick={() => setIsSearchVisible(false)}>
+                                    <X size={16} className="text-gray-400" />
+                                </button>
                             </div>
-                        </div>
-                        <div className="block sm:hidden">
-                            <button title="toggle the filter" className="p-3" onClick={() => setIsSearchVisible(!isSearchVisible)}>
-                                <Filter size={20} />
-                            </button>
+                        </div>}
+                        <div className="">
+                            {
+                                !isSearchVisible && <button title="toggle the filter" className="p-3" onClick={() => setIsSearchVisible(!isSearchVisible)}>
+                                    <Filter size={20} />
+                                </button>
+                            }
                         </div>
                         <div className="flex items-center">
                             <Tooltip.Root>
@@ -133,6 +138,9 @@ const Notes = () => {
                         <div className="w-full flex items-center gap-2 py-2 px-3 rounded-xl shadow-inner border dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
                             <Search size={16} className="text-gray-400" />
                             <input type="text" className=" bg-transparent flex-1" placeholder={t("placeholder.search")} />
+                            <button onClick={() => setIsSearchVisible(false)}>
+                                <X size={16} className="text-gray-400" />
+                            </button>
                         </div>
                     </div>
                 }
