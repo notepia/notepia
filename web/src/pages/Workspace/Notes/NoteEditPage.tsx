@@ -85,17 +85,21 @@ const NoteEdit = () => {
     >
         <div className="flex flex-col min-h-screen">
             <div className="py-2 px-4 sm:px-0  flex items-center justify-between border-b xl:border-b-0">
-                <div className="">
+                <div className="flex items-center gap-2">
                     <Link to={`/workspaces/${currentWorkspaceId}/`} className="inline-flex p-3 rounded-full ">
                         <ChevronLeft size={20} />
                     </Link>
+                    <div className="text-lg font-semibold">
+                        {
+                            noteId ? t("pages.noteEdit.editNote") :  t("pages.noteEdit.newNote")
+                        }
+                    </div>
                 </div>
-                <div className="inline-flex gap-2">
-                    <Link to={noteId ? `/workspaces/${currentWorkspaceId}/note/${noteId}` : `/workspaces/${currentWorkspaceId}/`} className="px-4 text-red-600">
-                        {t("actions.cancel")}
-                    </Link>
-                    <button title="menu" onClick={handleSave} className="px-4 ">
-                        {isSaving ? <LoaderIcon size={16} className=" animate-spin" /> : t("actions.save")}
+                <div className="">
+                    <button title="save" onClick={handleSave} className="px-4 ">
+                        {isSaving ? <LoaderIcon size={16} className=" animate-spin" /> : <span className="text-blue-600">
+                            {t("actions.save")}
+                        </span> }
                     </button>
                 </div>
             </div>

@@ -32,6 +32,10 @@ export default {
       pleaseEnterYourWorkspaceName:"Please enter your workspace name",
       workspaceName: "Workspace name",
       workspaceNamePlaceholder: "workspace name",
+    },
+    noteEdit: {
+      newNote: "New Note",
+      editNote: "Edit Note",
     }
   },
   actions: {

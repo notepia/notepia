@@ -32,6 +32,10 @@ export default {
       pleaseEnterYourWorkspaceName: "請輸入你的工作區名稱",
       workspaceName: "工作區名稱",
       workspaceNamePlaceholder: "工作區名稱",
+    },
+    noteEdit: {
+      newNote: "新增筆記",
+      editNote: "編輯筆記",
     }
   },
   actions: {
