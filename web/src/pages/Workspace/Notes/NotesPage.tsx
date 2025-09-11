@@ -1,5 +1,5 @@
 import Masonry from "../../../components/masonry/Masonry"
-import { Filter, MoveDiagonal, PlusCircle, Search, X } from "lucide-react"
+import { ChevronDown, Filter, MoveDiagonal, PlusCircle, Search, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import SidebarButton from "../../../components/sidebar/SidebarButton"
 import { getNotes, NoteData } from "../../../api/note"
@@ -107,9 +107,10 @@ const Notes = () => {
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3 h-10">
                         <SidebarButton />
-                        <div className=" max-w-[calc(100vw-165px)] overflow-x-auto whitespace-nowrap sm:text-xl font-semibold hide-scrollbar">
+                        <Link to={`/workspaces/${currentWorkspaceId}/settings`} className="flex gap-2 items-center max-w-[calc(100vw-165px)] overflow-x-auto whitespace-nowrap sm:text-xl font-semibold hide-scrollbar">
                             {getWorkspaceById(currentWorkspaceId)?.name ?? ""}
-                        </div>
+                            <ChevronDown size={16} />
+                        </Link>
                     </div>
                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                         {isSearchVisible && <div className="hidden sm:block">

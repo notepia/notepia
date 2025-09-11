@@ -64,7 +64,7 @@ const Settings = () => {
             <div className="py-2 flex items-center justify-between ">
                 <div className="flex gap-3 items-center sm:text-xl font-semibold h-10">
                     <SidebarButton />
-                    {t("menu.settings")}
+                    {t("menu.workspaceSettings")}
                 </div>
             </div>
             <div className="grow flex justify-start">

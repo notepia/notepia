@@ -6,7 +6,7 @@ export default {
   },
   menu: {
     notes: "筆記",
-    settings: "設定",
+    workspaceSettings: "工作區設定",
     createWithName: "新增工作區：{{name}}",
   },
   form: {
