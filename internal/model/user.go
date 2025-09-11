@@ -7,17 +7,17 @@ type UserFilter struct {
 }
 
 type User struct {
-	ID           string
-	Email        string
-	Name         string
-	PasswordHash string
-	Role         string
-	AvatarUrl    string
-	Disabled     bool
-	CreatedBy    string
-	CreatedAt    string
-	UpdatedBy    string
-	UpdatedAt    string
+	ID           string `json:"id"`
+	Email        string `json:"email"`
+	Name         string `json:"name"`
+	PasswordHash string `json:"password_hash"`
+	Role         string `json:"role"`
+	AvatarUrl    string `json:"avatar_url"`
+	Disabled     bool   `json:"disabled"`
+	CreatedBy    string `json:"created_by"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedBy    string `json:"updated_by"`
+	UpdatedAt    string `json:"updated_at"`
 }
 
 const (
