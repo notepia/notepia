@@ -1,11 +1,12 @@
 import axios from 'axios';
+import { Visibility } from '../types/visibility';
 
 export interface NoteData {
   id?: string;
   created_at?: string;
   updated_at?: string;
   blocks: Block[] | null;
-  visibility?: string;
+  visibility?: Visibility;
 }
 
 interface Block {
@@ -35,5 +36,10 @@ export const updateNote = async (workspaceId: string, data: NoteData) => {
 
 export const deleteNote = async (workspaceId: string, id: string) => {
   const response = await axios.delete(`/api/v1/workspaces/${workspaceId}/notes/${id}`);
+  return response.data;
+}; 
+
+export const updateNoteVisibility = async (workspaceId: string, id: string, visibility: Visibility) => {
+  const response = await axios.patch(`/api/v1/workspaces/${workspaceId}/notes/${id}/visibility/${visibility}`);
   return response.data;
 }; 

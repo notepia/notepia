@@ -23,7 +23,7 @@ const Editor: React.FC<Props> = ({ value, onChange }) => {
   const holder = useRef<HTMLDivElement>(null);
   const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation()
-  const { t: tEditor } =useTranslation("editor")
+  const { t: tEditor } = useTranslation("editor")
 
   useEffect(() => {
     if (!holder.current || ejInstance.current) return;
@@ -80,7 +80,7 @@ const Editor: React.FC<Props> = ({ value, onChange }) => {
         image: {
           class: ImageTool,
           config: {
-            features:{
+            features: {
               border: false,
               caption: false,
               stretch: false,
@@ -142,6 +142,7 @@ const Editor: React.FC<Props> = ({ value, onChange }) => {
       onChange: async () => {
         if (ejInstance.current) {
           const outputData = await ejInstance.current.save();
+          console.log(outputData)
           onChange(outputData);
         }
       },

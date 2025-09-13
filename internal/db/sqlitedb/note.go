@@ -21,7 +21,14 @@ func (s SqliteDB) UpdateNote(n model.Note) error {
 		}
 	}()
 
-	_, err := gorm.G[model.Block](db).Where("note_id = ?", n.ID).Delete(context.Background())
+	_, err := gorm.G[model.Note](db).Where("id = ?", n.ID).Updates(context.Background(), n)
+
+	if err != nil {
+		s.Rollback()
+		return err
+	}
+
+	_, err = gorm.G[model.Block](db).Where("note_id = ?", n.ID).Delete(context.Background())
 
 	if err != nil {
 		s.Rollback()

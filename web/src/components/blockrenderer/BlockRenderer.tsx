@@ -9,7 +9,7 @@ interface Props {
 
 const BlockRenderer: FC<Props> = ({ block }) => {
     if (block.type == "paragraph") {
-        return <div className=" px-4 py-1.5">
+        return block.data.text == "" ? <div className=" p-4 "></div> : <div className=" px-4 ">
             <p className="leading-6" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.data.text) }}></p>
         </div>
     }
@@ -83,7 +83,7 @@ const BlockRenderer: FC<Props> = ({ block }) => {
     else if (block.type == "image") {
         return <div className="px-4">
             <PhotoView src={block.data.file.url} >
-                <img className=" rounded overflow-hidden max-h-[620px]" alt={block.data.file.name} src={block.data.file.url} />
+                <img className=" rounded overflow-hidden w-full h-auto" alt={block.data.file.name} src={block.data.file.url} />
             </PhotoView>
         </div>
     }

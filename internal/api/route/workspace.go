@@ -23,6 +23,7 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 	g.GET("/:workspaceId/notes/:id", h.GetNote)
 	g.PUT("/:workspaceId/notes/:id", h.UpdateNote)
 	g.DELETE("/:workspaceId/notes/:id", h.DeleteNote)
+	g.PATCH("/:workspaceId/notes/:id/visibility/:visibility", h.UpdateNoteVisibility)
 
 	g.GET("/:workspaceId/files/:id", h.Download)
 	g.GET("/:workspaceId/files", h.List)

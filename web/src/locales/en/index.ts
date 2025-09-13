@@ -51,7 +51,10 @@ export default {
     create: "Create",
     newNote: "New Note",
     rename: "Rename",
-    selectFileToUpload: "Select file to upload"
+    selectFileToUpload: "Select file to upload",
+    makePublic: "Make Public",
+    makeWorkspace: "Make Workspace",
+    makePrivate: "Make Private",
   },
   message: {
     deleteTheNote: "Delete the note?",

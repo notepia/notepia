@@ -105,6 +105,7 @@ code.cdx-code__line { @apply font-mono text-sm; }
 /* link tool input */
 .tc-popover, .tc-toolbox { @apply bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl ; }
 
+.ce-paragraph { @apply py-0 }
 
 /* Placeholder text */
 .ce-paragraph[data-placeholder]:empty:before { @apply text-neutral-400 dark:text-neutral-500; }

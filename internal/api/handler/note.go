@@ -14,15 +14,10 @@ import (
 type CreateNoteRequest struct {
 	Visibility string        `json:"visibility"  validate:"required"`
 	Blocks     []model.Block `json:"blocks"  validate:"required"`
-	Tags       []string      `json:"tags"`
-	FileIDs    []string      `json:"file_ids"`
 }
 
 type UpdateNoteRequest struct {
-	Visibility string        `json:"visibility"  validate:"required"`
-	Blocks     []model.Block `json:"blocks"  validate:"required"`
-	Tags       []string      `json:"tags"`
-	FileIDs    []string      `json:"file_ids"`
+	Blocks []model.Block `json:"blocks"  validate:"required"`
 }
 
 type GetNoteResponse struct {
@@ -244,7 +239,6 @@ func (h Handler) UpdateNote(c echo.Context) error {
 
 	n.WorkspaceID = workspaceId
 	n.ID = existingNote.ID
-	n.Visibility = req.Visibility
 	n.CreatedAt = existingNote.CreatedAt
 	n.CreatedBy = existingNote.CreatedBy
 	n.UpdatedAt = time.Now().UTC().String()
@@ -267,4 +261,64 @@ func (h Handler) UpdateNote(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, existingNote)
+}
+
+func (h Handler) UpdateNoteVisibility(c echo.Context) error {
+	workspaceId := c.Param("workspaceId")
+	if workspaceId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "workspace id is required")
+	}
+	id := c.Param("id")
+	if id == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Note id is required")
+	}
+	visibility := c.Param("visibility")
+	if visibility == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Note visibility is required")
+	}
+
+	switch visibility {
+	case "public", "workspace", "private":
+	default:
+		return echo.NewHTTPError(http.StatusBadRequest, "Note visibility is invalid")
+	}
+
+	existingNote, err := h.db.FindNote(model.Note{ID: id})
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	user := c.Get("user").(model.User)
+
+	if existingNote.CreatedBy != user.ID {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+	var n model.Note
+
+	n.WorkspaceID = workspaceId
+	n.ID = existingNote.ID
+	n.Visibility = visibility
+	n.CreatedAt = existingNote.CreatedAt
+	n.CreatedBy = existingNote.CreatedBy
+	n.UpdatedAt = time.Now().UTC().String()
+	n.UpdatedBy = user.ID
+
+	for _, b := range existingNote.Blocks {
+		n.Blocks = append(n.Blocks, model.Block{
+			WorkspaceID: workspaceId,
+			NoteID:      existingNote.ID,
+			ID:          util.NewId(),
+			Type:        b.Type,
+			Data:        b.Data,
+		})
+	}
+
+	err = h.db.UpdateNote(n)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, n)
 }

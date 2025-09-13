@@ -5,11 +5,12 @@ import useCurrentWorkspaceId from "../../../hooks/useCurrentworkspaceId"
 import { useEffect, useState } from "react"
 import { getNote, NoteData } from "../../../api/note"
 import TransitionWrapper from "../../../components/transitionwrapper/TransitionWrapper"
-import { ChevronLeft, Dot, Globe, Lock, Pencil, Users2 } from "lucide-react"
+import { ChevronLeft } from "lucide-react"
 import NoteDetailMenu from "../../../components/notedetailmenu/NoteDetailMenu"
 import FullNote from "../../../components/fullnote/FullNote"
 import NoteTime from "../../../components/notetime/NoteTime"
 import { useCurrentUserStore } from "../../../stores/current-user"
+import VisibilityLabel from "../../../components/visibilitylabel/VisibilityLabel"
 
 const NoteDetailPage = () => {
     const [_, setIsLoading] = useState<boolean>(true)
@@ -35,51 +36,48 @@ const NoteDetailPage = () => {
     return <TransitionWrapper
         className="px-0 xl:px-6 bg-white dark:bg-neutral-900"
     >
-        <div className="flex flex-col min-h-dvh ">
-            <div className="py-2 px-4 sm:px-0 flex items-center justify-between border-b xl:border-b-0">
-                <div className="">
-                    <Link to=".." className="inline-flex p-3 rounded-full ">
-                        <ChevronLeft size={20} />
-                    </Link>
-                </div>
-                <div className="inline-flex">
-                    <NoteDetailMenu noteId={noteId ?? ""} />
-                </div>
-            </div>
-            <div className="grow flex">
-                <div className=" flex-1 ">
-                    <div className="max-w-2xl w-full m-auto pb-4">
-                        <div className="p-2 flex gap-2 justify-between items-center" >
-                            <div className=" px-3 py-2 flex flex-col ">
-                                <div className="flex items-center  text-gray-500">
-                                    <span className="text-orange-500">{user?.name}</span>
-                                    <span className="px-1">{note && <Dot size={16} />}</span>
-                                    <span>{note && <NoteTime time={note.updated_at ?? ""} />}</span>
-                                </div>
-                                <div className=" inline-flex gap-1">
-                                </div>
-                            </div>
-                            <div className="text-gray-500 flex">
-                                <button className="p-3">
-                                    {note &&
-                                        note.visibility == "private" ? <><Lock size={16} /></>
-                                        : note && note.visibility == "public" ? <><Globe size={16} /></>
-                                            : <><Users2 size={16} /></>
-                                    }
-                                </button>
-                                <Link to={"./edit"} className="flex gap-3 p-3 items-center " >
-                                    <Pencil size={16} />
-                                </Link>
-                            </div>
+        {
+            note &&
+            <div className="flex flex-col min-h-dvh ">
+                <div className="py-2 px-4 sm:px-0 flex items-center justify-between border-b xl:border-b-0">
+                    <div className="flex items-center gap-2">
+                        <Link to=".." className="inline-flex p-3 rounded-full ">
+                            <ChevronLeft size={20} />
+                        </Link>
+                        <div className="text-lg font-semibold">
+                            筆記
                         </div>
-                        {note && <FullNote note={note} />}
+                    </div>
+                    <div className="inline-flex">
+                        <NoteDetailMenu note={note} />
                     </div>
                 </div>
-                <div className="hidden lg:block w-[260px]">
+                <div className="grow flex">
+                    <div className=" flex-1 ">
+                        <div className="max-w-2xl w-full m-auto">
+                            <div className="px-4 pt-4 pb-2 flex gap-2 items-center" >
+                                <span className="flex items-center rounded text-gray-500" >
+                                    <VisibilityLabel value={note.visibility} />
+                                </span>
+                                <span className="text-gray-500">
+                                    {note && <NoteTime time={note.updated_at ?? ""} />}
+                                </span>
+                                <span className=" text-orange-500">
+                                    {user?.name}
+                                </span>
+                            </div>
+                            <div className="">
 
+                                {note && <FullNote note={note} />}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="hidden lg:block w-[260px]">
+
+                    </div>
                 </div>
             </div>
-        </div>
+        }
     </TransitionWrapper>
 }
 
