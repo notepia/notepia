@@ -11,7 +11,7 @@ type DropdownProps = {
   buttonTooltip: string;
 };
 
-const Dropdown = forwardRef(({ children, className, buttonClassName, buttonTooltip, buttonContent }: DropdownProps) => {
+const WorkspaceDropdown = forwardRef(({ children, className, buttonClassName, buttonTooltip, buttonContent }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { isCollapse } = useSidebar();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -42,18 +42,18 @@ const Dropdown = forwardRef(({ children, className, buttonClassName, buttonToolt
           </button>
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Content
-            className="select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
-            side="right"
-            sideOffset={5}
-          >
-            {
-              isCollapse && <>
+          {
+            isCollapse &&
+            <Tooltip.Content
+              className="select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
+              side="right"
+              sideOffset={5}
+            > <>
                 <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
                 {buttonTooltip}
               </>
-            }
-          </Tooltip.Content>
+            </Tooltip.Content>
+          }
         </Tooltip.Portal>
       </Tooltip.Root>
       {isOpen && (
@@ -67,4 +67,4 @@ const Dropdown = forwardRef(({ children, className, buttonClassName, buttonToolt
   );
 });
 
-export { Dropdown };
+export { WorkspaceDropdown };
