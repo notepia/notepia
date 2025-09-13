@@ -3,6 +3,7 @@ import axios from 'axios';
 export interface NoteData {
   id?: string;
   created_at?: string;
+  updated_at?: string;
   blocks: Block[] | null;
   visibility?: string;
 }

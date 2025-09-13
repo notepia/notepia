@@ -5,7 +5,7 @@ import useCurrentWorkspaceId from "../../../hooks/useCurrentworkspaceId"
 import { useEffect, useState } from "react"
 import { getNote, NoteData } from "../../../api/note"
 import TransitionWrapper from "../../../components/transitionwrapper/TransitionWrapper"
-import { ChevronLeft,  Dot, Globe, Lock, Pencil, Users2 } from "lucide-react"
+import { ChevronLeft, Dot, Globe, Lock, Pencil, Users2 } from "lucide-react"
 import NoteDetailMenu from "../../../components/notedetailmenu/NoteDetailMenu"
 import FullNote from "../../../components/fullnote/FullNote"
 import NoteTime from "../../../components/notetime/NoteTime"
@@ -13,7 +13,7 @@ import { useCurrentUserStore } from "../../../stores/current-user"
 
 const NoteDetailPage = () => {
     const [_, setIsLoading] = useState<boolean>(true)
-    const [note, setNote] = useState<NoteData>({ blocks: [], visibility: "private" })
+    const [note, setNote] = useState<NoteData | null>(null)
     const currentWorkspaceId = useCurrentWorkspaceId()
     const { user } = useCurrentUserStore()
     const { noteId } = useParams()
@@ -52,19 +52,19 @@ const NoteDetailPage = () => {
                         <div className="p-2 flex gap-2 justify-between items-center" >
                             <div className=" px-3 py-2 flex flex-col ">
                                 <div className="flex items-center  text-gray-500">
-                                    <span ><NoteTime time={note.created_at ?? ""} /></span>
-                                    <span><Dot size={16} /></span>
                                     <span className="text-orange-500">{user?.name}</span>
+                                    <span className="px-1">{note && <Dot size={16} />}</span>
+                                    <span>{note && <NoteTime time={note.updated_at ?? ""} />}</span>
                                 </div>
                                 <div className=" inline-flex gap-1">
                                 </div>
                             </div>
                             <div className="text-gray-500 flex">
                                 <button className="p-3">
-                                    {
+                                    {note &&
                                         note.visibility == "private" ? <><Lock size={16} /></>
-                                            : note.visibility == "public" ? <><Globe size={16} /></>
-                                                : <><Users2 size={16} /></>
+                                        : note && note.visibility == "public" ? <><Globe size={16} /></>
+                                            : <><Users2 size={16} /></>
                                     }
                                 </button>
                                 <Link to={"./edit"} className="flex gap-3 p-3 items-center " >
@@ -72,7 +72,7 @@ const NoteDetailPage = () => {
                                 </Link>
                             </div>
                         </div>
-                        <FullNote note={note} />
+                        {note && <FullNote note={note} />}
                     </div>
                 </div>
                 <div className="hidden lg:block w-[260px]">
