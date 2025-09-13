@@ -32,6 +32,7 @@ type GetNoteResponse struct {
 	Tags       []string      `json:"tags"`
 	Files      []string      `json:"files"`
 	CreatedAt  string        `json:"created_at"`
+	UpdatedAt  string        `json:"updated_at"`
 }
 
 func (h Handler) GetNotes(c echo.Context) error {
@@ -74,6 +75,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 				Visibility: b.Visibility,
 				Blocks:     b.Blocks,
 				CreatedAt:  b.CreatedAt,
+				UpdatedAt:  b.UpdatedAt,
 			})
 		case "private":
 			if b.CreatedBy == user.ID {
@@ -82,6 +84,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 					Visibility: b.Visibility,
 					Blocks:     b.Blocks,
 					CreatedAt:  b.CreatedAt,
+					UpdatedAt:  b.UpdatedAt,
 				})
 			}
 		}
@@ -126,6 +129,7 @@ func (h Handler) GetNote(c echo.Context) error {
 		Visibility: b.Visibility,
 		Blocks:     b.Blocks,
 		CreatedAt:  b.CreatedAt,
+		UpdatedAt:  b.UpdatedAt,
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -155,6 +159,8 @@ func (h Handler) CreateNote(c echo.Context) error {
 	n.Visibility = req.Visibility
 	n.CreatedAt = time.Now().UTC().String()
 	n.CreatedBy = user.ID
+	n.UpdatedAt = time.Now().UTC().String()
+	n.UpdatedBy = user.ID
 
 	for _, b := range req.Blocks {
 		n.Blocks = append(n.Blocks, model.Block{

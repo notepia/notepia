@@ -146,7 +146,7 @@ const Notes = () => {
                                         return n && <div key={n.id || idx} className="bg-white dark:bg-neutral-900 border sm:shadow-sm dark:border-neutral-600 rounded-lg overflow-auto flex flex-col gap-2 ">
                                             <div className="flex justify-between text-gray-500 px-4 pt-4">
                                                 <div>
-                                                    <NoteTime time={n.created_at ?? ""} />
+                                                    <NoteTime time={n.updated_at ?? ""} />
                                                 </div>
                                                 <div>
                                                     <Link to={"note/" + n.id!} >
