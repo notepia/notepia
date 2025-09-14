@@ -4,9 +4,19 @@ import { useSidebar } from "../sidebar/SidebarProvider"
 import { Outlet } from "react-router-dom"
 import { useEffect } from "react"
 import Main from "../main/Main"
+import { useWorkspaceStore } from "../../stores/workspace"
 
 const WorkspaceLayout = () => {
     const { isOpen, isCollapse, closeSidebar, isOver1280 } = useSidebar()
+    const { isFetched, fetchWorkspaces } = useWorkspaceStore()
+
+    useEffect(() => {
+        (async () => {
+            if (isFetched) return;
+            await fetchWorkspaces();
+        })()
+    }, [])
+
     useEffect(() => {
         closeSidebar()
     }, [location])
