@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from '../../stores/toast';
 import TextInput from '../../components/textinput/TextInput';
 import SubmitButton from '../../components/submitbutton/SubmitButton';
+import { Telescope } from 'lucide-react';
 
 const SignUp: React.FC = () => {
   const { t } = useTranslation()
@@ -108,6 +109,13 @@ const SignUp: React.FC = () => {
               className="inline-block align-baseline font-bold text-sm text-amber-500 hover:text-amber-800"
             >
               {t("pages.signup.alreadyHaveAccount")}
+            </Link>
+            <Link
+              to="/public/notes"
+              className="flex gap-2 items-center text-right font-bold text-sm text-amber-500 hover:text-amber-800"
+            >
+              <Telescope size={20} />
+              {t("menu.explore")}
             </Link>
           </div>
         </form>

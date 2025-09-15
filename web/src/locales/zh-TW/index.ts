@@ -11,6 +11,7 @@ export default {
     workspace: "工作區",
     user: "使用者",
     preferences: "偏好設定",
+    explore: "探索",
   },
   form: {
     email: "Email",

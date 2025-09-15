@@ -1,5 +1,5 @@
 import Masonry from "../../../components/masonry/Masonry"
-import { ChevronDown, Filter, MoveDiagonal, PlusCircle, Search, X } from "lucide-react"
+import { ChevronDown, Filter, MoveDiagonal, Plus, PlusCircle, Search, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import SidebarButton from "../../../components/sidebar/SidebarButton"
 import { getNotes, NoteData } from "../../../api/note"
@@ -87,22 +87,19 @@ const NotesPage = () => {
                             <ChevronDown size={16} />
                         </Link>
                     </div>
-                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                        {isSearchVisible && <div className="hidden sm:block">
+                    <div className="flex items-center gap-2.5 text-gray-600 dark:text-gray-400">
+                        <div className="hidden sm:block">
                             <div className="flex items-center gap-2 py-2 px-3 rounded-xl dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
                                 <Search size={16} className="text-gray-400" />
                                 <input type="text" value={query} onChange={e => setQuery(e.target.value)} className=" flex-1 bg-transparent" placeholder={t("placeholder.search")} />
-                                <button title="toggle isSearchVisible" onClick={() => setIsSearchVisible(false)}>
-                                    <X size={16} className="text-gray-400" />
-                                </button>
                             </div>
-                        </div>}
-                        <div className="">
+                        </div>
+                        <div className="sm:hidden">
                             {
                                 !isSearchVisible && <Tooltip.Root>
                                     <Tooltip.Trigger asChild>
                                         <button aria-label="toggle the filter" className="p-3" onClick={() => setIsSearchVisible(!isSearchVisible)}>
-                                            <Filter size={20} />
+                                            <Search size={20} />
                                         </button>
                                     </Tooltip.Trigger>
                                     <Tooltip.Portal>
@@ -120,7 +117,7 @@ const NotesPage = () => {
                         <div className="flex items-center">
                             <Tooltip.Root>
                                 <Tooltip.Trigger asChild>
-                                    <Link to="note/new" className=" p-3 rounded-full">
+                                    <Link to="note/new" className="p-2">
                                         <PlusCircle size={20} />
                                     </Link>
                                 </Tooltip.Trigger>

@@ -76,14 +76,13 @@ const PublicNotesPage = () => {
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3 h-10">
                         <SidebarButton />
-                        Explore
+                        {t("menu.explore")}
                     </div>
                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                         <div className="hidden sm:block">
                             <div className="flex items-center gap-2 py-2 px-3 rounded-xl dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
                                 <Search size={16} className="text-gray-400" />
-                                <input type="text" value={query} onChange={e => setQuery(e.target.value)} className=" flex-1 bg-transparent" placeholder={t("placeholder.search")} />
-                                
+                                <input type="text" value={query} onChange={e => setQuery(e.target.value)} className=" flex-1 bg-transparent" placeholder={t("placeholder.search")} />       
                             </div>
                         </div>
                         <div className="block sm:hidden">

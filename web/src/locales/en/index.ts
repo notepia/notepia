@@ -11,6 +11,7 @@ export default {
     workspace: "Workspace",
     user: "User",
     preferences: "Preferences",
+    explore: "Explore",
   },
   form: {
     email: "Email",

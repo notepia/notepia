@@ -39,7 +39,7 @@ const PublicLayout = () => {
                                 </Link>
                                     : <Link to="/signin" className="p-2 flex items-center gap-2">
                                         <LogIn size={20} />
-                                        {!isCollapse && <>{t("menu.signin")}</>}
+                                        {!isCollapse && <>{t("actions.signin")}</>}
                                     </Link>
                             }
 
