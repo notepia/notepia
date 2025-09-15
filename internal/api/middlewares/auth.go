@@ -19,12 +19,12 @@ func NewAuthMiddleware(db db.DB) *AuthMiddleware {
 	}
 }
 
-func (a AuthMiddleware) JWT() echo.MiddlewareFunc {
+func (a AuthMiddleware) ParseJWT() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) (returnErr error) {
 			cookie, err := c.Cookie("token")
 			if err != nil || cookie.Value == "" {
-				return echo.NewHTTPError(http.StatusUnauthorized, "missing or invalid token")
+				return next(c)
 			}
 
 			user, err := auth.GetUserFromCookie(cookie)
@@ -34,6 +34,18 @@ func (a AuthMiddleware) JWT() echo.MiddlewareFunc {
 
 			c.Set("user", *user)
 
+			return next(c)
+		}
+	}
+}
+
+func (a AuthMiddleware) CheckJWT() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) (returnErr error) {
+			cookie, err := c.Cookie("token")
+			if err != nil || cookie.Value == "" {
+				return echo.NewHTTPError(http.StatusUnauthorized, "missing or invalid token")
+			}
 			return next(c)
 		}
 	}

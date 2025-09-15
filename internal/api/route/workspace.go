@@ -9,7 +9,8 @@ import (
 
 func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middlewares.AuthMiddleware, workspaceMiddleware middlewares.WorkspaceMiddleware) {
 	g := api.Group("/workspaces")
-	g.Use(authMiddleware.JWT())
+	g.Use(authMiddleware.CheckJWT())
+	g.Use(authMiddleware.ParseJWT())
 	g.Use(workspaceMiddleware.CheckWorkspaceExists())
 
 	g.GET("", h.GetWorkspaces)

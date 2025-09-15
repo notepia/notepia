@@ -9,7 +9,8 @@ import (
 
 func RegisterUser(api *echo.Group, h handler.Handler, authMiddleware middlewares.AuthMiddleware) {
 	g := api.Group("/users")
-	g.Use(authMiddleware.JWT())
+	g.Use(authMiddleware.CheckJWT())
+	g.Use(authMiddleware.ParseJWT())
 	g.PATCH("/:id/password", h.ChangePassword)
 	g.PATCH("/:id/preferences", h.UpdatePreferences)
 }

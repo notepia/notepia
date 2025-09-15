@@ -30,6 +30,69 @@ type GetNoteResponse struct {
 	UpdatedAt  string        `json:"updated_at"`
 }
 
+func (h Handler) GetPublicNotes(c echo.Context) error {
+	pageSize := 20
+	pageNumber := 1
+	if ps := c.QueryParam("pageSize"); ps != "" {
+		if v, err := strconv.Atoi(ps); err == nil && v > 0 {
+			pageSize = v
+		}
+	}
+	if pn := c.QueryParam("pageNumber"); pn != "" {
+		if v, err := strconv.Atoi(pn); err == nil && v > 0 {
+			pageNumber = v
+		}
+	}
+
+	query := c.QueryParam("query")
+
+	filter := model.NoteFilter{
+		WorkspaceID: "",
+		PageSize:    pageSize,
+		PageNumber:  pageNumber,
+		Query:       query,
+	}
+
+	notes, err := h.db.FindNotes(filter)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	var user *model.User
+	if u := c.Get("user"); u != nil {
+		if uu, ok := u.(model.User); ok {
+			user = &uu
+		}
+	}
+
+	var res []GetNoteResponse
+
+	for _, b := range notes {
+		switch b.Visibility {
+		case "public", "workspace":
+			res = append(res, GetNoteResponse{
+				ID:         b.ID,
+				Visibility: b.Visibility,
+				Blocks:     b.Blocks,
+				CreatedAt:  b.CreatedAt,
+				UpdatedAt:  b.UpdatedAt,
+			})
+		case "private":
+			if user != nil && b.CreatedBy == user.ID {
+				res = append(res, GetNoteResponse{
+					ID:         b.ID,
+					Visibility: b.Visibility,
+					Blocks:     b.Blocks,
+					CreatedAt:  b.CreatedAt,
+					UpdatedAt:  b.UpdatedAt,
+				})
+			}
+		}
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
 func (h Handler) GetNotes(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	pageSize := 20
