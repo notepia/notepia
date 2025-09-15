@@ -25,49 +25,44 @@ const WorkspaceLayout = () => {
     }, [])
 
     useEffect(() => {
-        if (!isFetched) return
-
-        setContent(
-            <div className="flex flex-col gap-3">
-                <div className="pt-4">
-                    <WorkspaceMenu />
-                </div>
-                <div className=" flex flex-col gap-1 overflow-y-auto">
-                    <div className="">
-                        <Tooltip.Root>
-                            <Tooltip.Trigger asChild>
-                                <Link to={`/workspaces/${currentWorkspaceId}`} className="flex items-center gap-3 w-full p-2.5 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-700">
-                                    <Text size={20} />
-                                    {!isCollapse && t("menu.notes")}
-                                </Link>
-                            </Tooltip.Trigger>
-                            {
-                                isCollapse &&
-                                <Tooltip.Portal>
-                                    <Tooltip.Content
-                                        className="select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
-                                        side="right"
-                                        sideOffset={5}
-                                    >
-                                        <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
-                                        {t("menu.notes")}
-                                    </Tooltip.Content>
-                                </Tooltip.Portal>
-                            }
-                        </Tooltip.Root>
-                    </div>
-                </div>
-            </div>)
-    }, [workspaces, isCollapse])
-
-    useEffect(() => {
         closeSidebar()
     }, [location])
 
     return <>
         <div className='flex justify-center relative'>
             <div className={twMerge("flex", isOver1280 ? isCollapse ? "w-[72px]" : "w-[260px]" : isOpen ? "w-full absolute top-0 z-30" : "")}>
-                <Sidebar />
+                <Sidebar >
+                    <div className="flex flex-col gap-3">
+                        <div className="pt-4">
+                            <WorkspaceMenu />
+                        </div>
+                        <div className=" flex flex-col gap-1 overflow-y-auto">
+                            <div className="">
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger asChild>
+                                        <Link to={`/workspaces/${currentWorkspaceId}`} className="flex items-center gap-3 w-full p-2.5 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-700">
+                                            <Text size={20} />
+                                            {!isCollapse && t("menu.notes")}
+                                        </Link>
+                                    </Tooltip.Trigger>
+                                    {
+                                        isCollapse &&
+                                        <Tooltip.Portal>
+                                            <Tooltip.Content
+                                                className="select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
+                                                side="right"
+                                                sideOffset={5}
+                                            >
+                                                <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
+                                                {t("menu.notes")}
+                                            </Tooltip.Content>
+                                        </Tooltip.Portal>
+                                    }
+                                </Tooltip.Root>
+                            </div>
+                        </div>
+                    </div>
+                </Sidebar>
                 {
                     isOpen && <div className="2xl:hidden grow bg-opacity-50 bg-black h-[100dvh]" onClick={() => closeSidebar()}></div>
                 }
