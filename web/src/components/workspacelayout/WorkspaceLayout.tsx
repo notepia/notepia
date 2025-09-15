@@ -13,8 +13,8 @@ import { useTranslation } from "react-i18next"
 
 const WorkspaceLayout = () => {
     const { t } = useTranslation();
-    const { isOpen, isCollapse, closeSidebar, isOver1280, setContent } = useSidebar()
-    const { isFetched, workspaces, fetchWorkspaces } = useWorkspaceStore()
+    const { isOpen, isCollapse, closeSidebar, isOver1280 } = useSidebar()
+    const { isFetched, fetchWorkspaces } = useWorkspaceStore()
     const currentWorkspaceId = useCurrentWorkspaceId()
 
     useEffect(() => {
