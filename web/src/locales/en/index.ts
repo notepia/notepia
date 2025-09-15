@@ -8,6 +8,7 @@ export default {
     notes: "Notes",
     createWithName: "Create workspace：{{name}}",
     workspaceSettings: "Workspace Settings",
+    workspace: "Workspace",
     user: "User",
     preferences: "Preferences",
   },

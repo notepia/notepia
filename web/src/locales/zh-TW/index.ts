@@ -8,6 +8,7 @@ export default {
     notes: "筆記",
     createWithName: "新增工作區：{{name}}",
     workspaceSettings: "工作區設定",
+    workspace: "工作區",
     user: "使用者",
     preferences: "偏好設定",
   },
