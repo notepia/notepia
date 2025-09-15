@@ -4,9 +4,15 @@ import { useSidebar } from "./SidebarProvider"
 import ThemeButton from "../themebutton/ThemeButton"
 import { Link } from "react-router-dom"
 import UserLogout from "../userlogout/UserLogout"
+import { FC, ReactNode } from "react"
 
-const Sidebar = function () {
-    const { isOpen, isCollapse, isOver1280, expandSidebar, collapseSidebar, content } = useSidebar()
+interface Props {
+    children: ReactNode
+    disableCurrentUserMenu?: boolean
+}
+
+const Sidebar: FC<Props> = function ({ children, disableCurrentUserMenu }) {
+    const { isOpen, isCollapse, isOver1280, expandSidebar, collapseSidebar } = useSidebar()
 
     return <>
         <aside id="logo-sidebar"
@@ -17,7 +23,7 @@ const Sidebar = function () {
                 , " transition duration-200 ease-in-out transform fixed xl:static top-0 left-0 xl:flex-col gap-0.5 h-[100dvh] bg-opacity-100 ")}
             aria-label="Sidebar">
             <div className="px-4 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 flex flex-col justify-between h-full ">
-                {content}
+                {children}
                 <div className={twMerge("pt-1 pb-3 flex gap-1", isCollapse ? "flex-col" : "flex-row flex-reverse")}>
                     {
                         isOver1280 &&
@@ -27,12 +33,15 @@ const Sidebar = function () {
                             }
                         </button>
                     }
-                    <ThemeButton />
-                    <Link to="/user/preferences" className="p-2">
-                        <UserCircle2 size={20} />
-                    </Link>
-
-                    <UserLogout />
+                    {
+                        !disableCurrentUserMenu && <>
+                            <ThemeButton />
+                            <Link to="/user/preferences" className="p-2">
+                                <UserCircle2 size={20} />
+                            </Link>
+                            <UserLogout />
+                        </>
+                    }
                 </div>
             </div>
         </aside>
