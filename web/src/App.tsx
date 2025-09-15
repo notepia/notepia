@@ -3,7 +3,7 @@ import SignIn from './pages/Auth/SignInPage';
 import SignUp from './pages/Auth/SignUpPage'
 import NotFound from './pages/Errors/NotFoundPage';
 import RequireAuth from './components/requireauth/RequireAuth';
-import Notes from './pages/Workspace/Notes/NotesPage';
+import NotesPage from './pages/Workspace/Notes/NotesPage';
 import Setup from './pages/WorkspaceSetup/WorkspaceSetupPage';
 import { AnimatePresence } from "motion/react"
 import NoteDetailPage from './pages/Workspace/Notes/NoteDetailPage';
@@ -14,8 +14,10 @@ import { Toast } from './components/toast/Toast'
 import { useToastStore } from './stores/toast';
 import WorkspaceLayout from './components/workspacelayout/WorkspaceLayout';
 import WorkspaceLoader from './components/workspaceloader/WorkspaceLoader';
-import Preferences from './pages/User/Preferences';
+import Preferences from './pages/User/PreferencesPage';
 import UserLayout from './components/userlayout/UserLayout';
+import PublicLayout from './components/publiclayout/PublicLayout';
+import PublicNotesPage from './pages/Public/PublicNotesPage';
 
 function App() {
   const location = useLocation();
@@ -24,9 +26,6 @@ function App() {
   return (
     <AnimatePresence mode='wait'>
       <Routes location={location} key={location.key}>
-        <Route path='/signin' element={<SignIn />}></Route>
-        <Route path='/signup' element={<SignUp />}></Route>
-        <Route path="*" element={<NotFound />} />
         <Route path='/workspace-setup' element={<Setup />} />
         <Route path='/' element={<RequireAuth />}>
           <Route index element={<Navigate to="/workspaces" replace />} />
@@ -35,15 +34,20 @@ function App() {
             <Route path='note/:noteId' element={<NoteDetailPage />} ></Route>
             <Route path='note/:noteId/edit' element={<NoteEdit />} ></Route>
             <Route path='note/new' element={<NoteEdit />} ></Route>
-            <Route path='notes' element={<Notes />}></Route>
+            <Route path='notes' element={<NotesPage />}></Route>
             <Route path='settings' element={<Settings />}></Route>
-            <Route path='' element={<Notes />}></Route>
+            <Route path='' element={<NotesPage />}></Route>
           </Route>
           <Route path='user' element={<UserLayout />} >
-
             <Route path='preferences' element={<Preferences />} />
           </Route>
         </Route>
+        <Route path='/' element={<PublicLayout />}>
+          <Route path='public/notes' element={<PublicNotesPage />} />
+          <Route path='signin' element={<SignIn />}></Route>
+          <Route path='signup' element={<SignUp />}></Route>
+        </Route>
+        <Route path="*" element={<NotFound />} />
         <Route path='' element={<Home />} />
       </Routes>
 

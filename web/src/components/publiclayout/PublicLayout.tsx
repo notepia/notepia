@@ -4,12 +4,15 @@ import { useSidebar } from "../sidebar/SidebarProvider"
 import { Link, Outlet } from "react-router-dom"
 import { useEffect } from "react"
 import Main from "../main/Main"
-import { CornerUpLeft, Settings2 } from 'lucide-react'
+import { LogIn, Telescope, Text } from 'lucide-react'
 import { useTranslation } from "react-i18next"
+import logo from '../../assets/app.png'
+import { useCurrentUserStore } from "../../stores/current-user"
 
-const UserLayout = () => {
+const PublicLayout = () => {
     const { t } = useTranslation()
     const { isOpen, isCollapse, closeSidebar, isOver1280 } = useSidebar()
+    const { user } = useCurrentUserStore()
 
     useEffect(() => {
         closeSidebar()
@@ -18,19 +21,24 @@ const UserLayout = () => {
     return <>
         <div className='flex justify-center relative'>
             <div className={twMerge("flex", isOver1280 ? isCollapse ? "w-[72px]" : "w-[260px]" : isOpen ? "w-full absolute top-0 z-30" : "")}>
-                <Sidebar>
+                <Sidebar
+                >
                     <div className="flex flex-col gap-3">
                         <div className="pt-4">
-                            <Link to="/" className="p-2 flex gap-2">
-                                <CornerUpLeft size={20} />
-                                {!isCollapse && <>{t("menu.user")}</>}
-                            </Link>
+                            <img src={logo} className="w-10 h-10" aria-label="logo" />
                         </div>
                         <div className=" flex flex-col gap-1 overflow-y-auto">
-                            <Link to="/user/preferences" className="p-2 flex gap-2">
-                                <Settings2 size={20} />
-                                {!isCollapse && <>{t("menu.preferences")}</>}
-                            </Link>
+                            {
+                                user ? <Link to="/" className="p-2 flex gap-2">
+                                    <Text size={20} />
+                                    {!isCollapse && <>{t("menu.notes")}</>}
+                                </Link>
+                                    : <Link to="/signin" className="p-2 flex gap-2">
+                                    <LogIn size={20} />
+                                    {!isCollapse && <>{t("menu.signin")}</>}
+                                </Link>
+                            }
+
                         </div>
                     </div>
                 </Sidebar>
@@ -52,4 +60,4 @@ const UserLayout = () => {
     </>
 }
 
-export default UserLayout
+export default PublicLayout
