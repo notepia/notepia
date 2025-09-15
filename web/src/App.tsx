@@ -44,9 +44,9 @@ function App() {
         </Route>
         <Route path='/' element={<PublicLayout />}>
           <Route path='public/notes' element={<PublicNotesPage />} />
-          <Route path='signin' element={<SignIn />}></Route>
-          <Route path='signup' element={<SignUp />}></Route>
         </Route>
+        <Route path='signin' element={<SignIn />}></Route>
+        <Route path='signup' element={<SignUp />}></Route>
         <Route path="*" element={<NotFound />} />
         <Route path='' element={<Home />} />
       </Routes>
