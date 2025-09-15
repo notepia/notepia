@@ -14,6 +14,11 @@ interface Block {
   data: any;
 }
 
+export const getPublicNotes = async (pageNum: number, pageSize: number, query: string) => {
+  const response = await axios.get(`/api/v1/public/notes?pageSize=${pageSize}&pageNumber=${pageNum}&query=${query}`, { withCredentials: true });
+  return response.data;
+};
+
 export const getNotes = async (workspaceId: string, pageNum: number, pageSize: number, query: string) => {
   const response = await axios.get(`/api/v1/workspaces/${workspaceId}/notes?pageSize=${pageSize}&pageNumber=${pageNum}&query=${query}`, { withCredentials: true });
   return response.data;
@@ -37,7 +42,7 @@ export const updateNote = async (workspaceId: string, data: NoteData) => {
 export const deleteNote = async (workspaceId: string, id: string) => {
   const response = await axios.delete(`/api/v1/workspaces/${workspaceId}/notes/${id}`);
   return response.data;
-}; 
+};
 
 export const updateNoteVisibility = async (workspaceId: string, id: string, visibility: Visibility) => {
   const response = await axios.patch(`/api/v1/workspaces/${workspaceId}/notes/${id}/visibility/${visibility}`);
