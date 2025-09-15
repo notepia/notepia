@@ -39,6 +39,7 @@ function App() {
             <Route path='' element={<NotesPage />}></Route>
           </Route>
           <Route path='user' element={<UserLayout />} >
+            <Route index element={<Navigate to="/user/preferences" replace />} />
             <Route path='preferences' element={<Preferences />} />
           </Route>
         </Route>

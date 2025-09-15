@@ -1,15 +1,37 @@
 import { twMerge } from "tailwind-merge"
 import Sidebar from "../sidebar/Sidebar"
 import { useSidebar } from "../sidebar/SidebarProvider"
-import { Link, Outlet } from "react-router-dom"
+import { Link, Outlet, useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import Main from "../main/Main"
-import { CornerUpLeft, Settings2 } from 'lucide-react'
+import { CornerUpLeft, LogOut, Settings2 } from 'lucide-react'
 import { useTranslation } from "react-i18next"
+import { useMutation } from "@tanstack/react-query"
+import { signOut } from "../../api/auth"
+import { useWorkspaceStore } from "../../stores/workspace"
+import Tooltip from "../tooltip/Tooltip"
 
 const UserLayout = () => {
     const { t } = useTranslation()
     const { isOpen, isCollapse, closeSidebar, isOver1280 } = useSidebar()
+    const navigate = useNavigate()
+    const { reset } = useWorkspaceStore()
+    const signoutMutation = useMutation({
+        mutationFn: () => signOut(),
+        onSuccess: async () => {
+            try {
+                reset();
+                navigate(`/`)
+            } catch (error) {
+                console.error('Error invalidating queries:', error)
+
+            }
+        },
+    })
+
+    const handleLogout = () => {
+        signoutMutation.mutate()
+    }
 
     useEffect(() => {
         closeSidebar()
@@ -26,11 +48,25 @@ const UserLayout = () => {
                                 {!isCollapse && <>{t("menu.user")}</>}
                             </Link>
                         </div>
-                        <div className=" flex flex-col gap-1 overflow-y-auto">
-                            <Link to="/user/preferences" className="p-2 flex gap-2">
-                                <Settings2 size={20} />
-                                {!isCollapse && <>{t("menu.preferences")}</>}
-                            </Link>
+                        <div className=" flex flex-col gap-2 overflow-y-auto">
+                            <Tooltip
+                                text={t("menu.preferences")}
+                                side="right"
+                                enabled={isCollapse}>
+                                <Link to="/user/preferences" className="p-2 flex gap-2">
+                                    <Settings2 size={20} />
+                                    {!isCollapse && <>{t("menu.preferences")}</>}
+                                </Link>
+                            </Tooltip>
+                            <Tooltip
+                                text={t("actions.signout")}
+                                side="right"
+                                enabled={isCollapse}>
+                                <button onClick={handleLogout} className="w-full p-2 flex gap-2 items-center">
+                                    <LogOut size={20} />
+                                    {!isCollapse && <>{t("actions.signout")}</>}
+                                </button>
+                            </Tooltip>
                         </div>
                     </div>
                 </Sidebar>

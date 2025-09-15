@@ -60,6 +60,7 @@ export default {
     newNote: "New Note",
     rename: "Rename",
     filter: "Filter",
+    toggleTheme: "Toggle theme",
     selectFileToUpload: "Select file to upload",
     makePublic: "Make Public",
     makeWorkspace: "Make Workspace",
