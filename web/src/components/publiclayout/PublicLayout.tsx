@@ -4,9 +4,10 @@ import { useSidebar } from "../sidebar/SidebarProvider"
 import { Link, Outlet } from "react-router-dom"
 import { useEffect } from "react"
 import Main from "../main/Main"
-import { LogIn, Telescope, Text } from 'lucide-react'
+import { Laptop2, LogIn } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import logo from '../../assets/app.png'
+import logotext from '../../assets/applogo_text.png'
 import { useCurrentUserStore } from "../../stores/current-user"
 
 const PublicLayout = () => {
@@ -25,18 +26,21 @@ const PublicLayout = () => {
                 >
                     <div className="flex flex-col gap-3">
                         <div className="pt-4">
-                            <img src={logo} className="w-10 h-10" aria-label="logo" />
+                            <div className={twMerge("flex gap-5 items-center ", isCollapse ? "justify-center": "justify-start px-4")}>
+                                <img src={logo} className="w-8 h-8" aria-label="logo" />
+                                {!isCollapse && <img src={logotext} className='w-28' alt="logo" />}
+                            </div>
                         </div>
                         <div className=" flex flex-col gap-1 overflow-y-auto">
                             {
-                                user ? <Link to="/" className="p-2 flex gap-2">
-                                    <Text size={20} />
-                                    {!isCollapse && <>{t("menu.notes")}</>}
+                                user ? <Link to="/" className="p-2 flex items-center gap-2">
+                                    <Laptop2 size={20} />
+                                    {!isCollapse && <>{t("menu.workspace")}</>}
                                 </Link>
-                                    : <Link to="/signin" className="p-2 flex gap-2">
-                                    <LogIn size={20} />
-                                    {!isCollapse && <>{t("menu.signin")}</>}
-                                </Link>
+                                    : <Link to="/signin" className="p-2 flex items-center gap-2">
+                                        <LogIn size={20} />
+                                        {!isCollapse && <>{t("menu.signin")}</>}
+                                    </Link>
                             }
 
                         </div>
