@@ -26,14 +26,14 @@ const SignUp: React.FC = () => {
     },
     onError: (error: any) => {
       console.error('Sign up failed:', error);
-      toast.error(`Sign up failed, ${error.response.data.error}`);
+      toast.error(t("messages.signUpFailed", { error: error }));
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      toast.error(t("messages.passwordDoNotMatch"));
       return;
     }
     signUpMutation.mutate({ username, email, password });

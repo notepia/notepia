@@ -24,7 +24,7 @@ const SignIn: React.FC = () => {
         },
         onError: (error) => {
             console.log(error)
-            toast.error('Sign in failed, please check your username and password');
+            toast.error(t("messages.signInFailed"));
         },
     });
 

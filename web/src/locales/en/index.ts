@@ -67,6 +67,9 @@ export default {
     makePrivate: "Make Private",
   },
   messages: {
+    signInFailed: "Sign in failed, please check your username and password",
+    signUpFailed: "Sign up failed, {{error}}",
+    passwordDoNotMatch: "Passwords do not match",
     deleteTheNote: "Delete the note?",
     noMoreNotes: "No more notes",
     preferencesUpdated: "Preferences updated",
