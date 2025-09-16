@@ -67,6 +67,9 @@ export default {
     makePrivate: "設為私人",
   },
   messages: {
+    signInFailed: "登入失敗，請檢查你的帳號和密碼",
+    signUpFailed: "註冊失敗，{{error}}",
+    passwordDoNotMatch: "再次輸入密碼不符合",
     deleteTheNote: "刪除這個筆記?",
     noMoreNotes: "沒有更多的筆記",
     preferencesUpdated: "偏好設定已更新",
