@@ -56,7 +56,7 @@ const WorkspaceLayout = () => {
                                     enabled={isCollapse}
                                     >
                                     <Link to={`/workspaces/${currentWorkspaceId}/settings`} className="flex items-center gap-3 w-full p-2.5 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-700">
-                                        <Wrench size={20} className="stroke-[1.4]" />
+                                        <Wrench size={20} />
                                         {!isCollapse && t("menu.workspaceSettings")}
                                     </Link>
                                 </Tooltip>
