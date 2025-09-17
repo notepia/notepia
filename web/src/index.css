@@ -110,6 +110,10 @@ code.cdx-code__line { @apply font-mono text-sm; }
 /* Placeholder text */
 .ce-paragraph[data-placeholder]:empty:before { @apply text-neutral-400 dark:text-neutral-500; }
 
+svg.lucide-icon{
+  width: 16px!important;
+  height: 16px!important;
+}
 
 /* global.css */
 ::-webkit-scrollbar {

@@ -13,6 +13,7 @@ import useCurrentWorkspaceId from "../../hooks/useCurrentworkspaceId";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { getEditorI18n } from "../../locales/getEditorI18n";
+import TextGenTool from "./blocks/TextGenTool";
 
 interface Props {
   value?: any;
@@ -144,7 +145,8 @@ const Editor: React.FC<Props> = ({ value, onChange }) => {
             }
           }
         },
-        table: Table
+        table: Table,
+        textgen: TextGenTool
       },
       onChange: async () => {
         if (ejInstance.current) {

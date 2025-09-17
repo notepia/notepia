@@ -41,7 +41,8 @@ export default {
         "Embed": "嵌入內容",
         "Marker": "標記",
         "InlineCode": "行內程式碼",
-        "Attachment": "檔案"
+        "Attachment": "檔案",
+        "TextGen": "AI文字生成" 
     },
     "tools": {
         "warning": {

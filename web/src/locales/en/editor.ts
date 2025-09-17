@@ -41,7 +41,8 @@ export default {
         "Embed": "Embed",
         "Marker": "Marker",
         "InlineCode": "Inline code",
-        "Attachment": "Attachment"
+        "Attachment": "Attachment",
+        "TextGen": "Text Gen" 
     },
     "tools": {
         "warning": {

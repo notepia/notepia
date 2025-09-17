@@ -46,6 +46,7 @@ export const getEditorI18n = (t: TFunction<'editor'>) => {
                 Marker: t('toolNames.Marker'),
                 InlineCode: t('toolNames.InlineCode'),
                 Attachment: t('toolNames.Attachment'),
+                TextGen: t('toolNames.TextGen')
             },
             tools: {
                 warning: {
