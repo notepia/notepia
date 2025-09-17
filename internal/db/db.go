@@ -19,13 +19,16 @@ type Uow interface {
 	Commit() error
 	Rollback() error
 }
-
 type UserRepository interface {
 	CreateUser(u model.User) error
 	FindUsers(f model.UserFilter) ([]model.User, error)
 	FindUserByID(id string) (model.User, error)
 	UpdateUser(u model.User) error
 	DeleteUser(id string) error
+}
+type UserKeyRepository interface {
+	SaveUserKey(u model.UserKey) error
+	GetUserKeyByPlatform(userId string, platform string) (model.UserKey, error)
 }
 type NoteRepository interface {
 	CreateNote(n model.Note) error
