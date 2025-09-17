@@ -1,6 +1,8 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
 type DatabaseConfig struct {
 	Driver        string
@@ -50,6 +52,7 @@ func Init() {
 	C.SetDefault(STORAGE_ROOT, "./bin/uploads/")
 	C.SetDefault(SERVER_API_ROOT_PATH, "/api/v1")
 	C.SetDefault(APP_DISABLE_SIGNUP, false)
+	C.SetDefault(APP_SECRET, "default_secret")
 
 	C.AutomaticEnv()
 }
