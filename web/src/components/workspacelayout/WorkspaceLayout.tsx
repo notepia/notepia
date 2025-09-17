@@ -7,7 +7,7 @@ import Main from "../main/Main"
 import { useWorkspaceStore } from "../../stores/workspace"
 import WorkspaceMenu from "../workspacemenu/WorkspaceMenu"
 import useCurrentWorkspaceId from "../../hooks/useCurrentworkspaceId"
-import { Text } from 'lucide-react'
+import { BookText, FileText, NotebookText, Text, Wrench } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import Tooltip from "../tooltip/Tooltip"
 
@@ -44,8 +44,20 @@ const WorkspaceLayout = () => {
                                     enabled={isCollapse}
                                     >
                                     <Link to={`/workspaces/${currentWorkspaceId}`} className="flex items-center gap-3 w-full p-2.5 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-700">
-                                        <Text size={20} />
+                                        <BookText size={20} />
                                         {!isCollapse && t("menu.notes")}
+                                    </Link>
+                                </Tooltip>
+                            </div>
+                            <div className="">
+                                <Tooltip
+                                    text={t("menu.workspaceSettings")}
+                                    side="right"
+                                    enabled={isCollapse}
+                                    >
+                                    <Link to={`/workspaces/${currentWorkspaceId}/settings`} className="flex items-center gap-3 w-full p-2.5 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-700">
+                                        <Wrench size={20} className="stroke-[1.4]" />
+                                        {!isCollapse && t("menu.workspaceSettings")}
                                     </Link>
                                 </Tooltip>
                             </div>

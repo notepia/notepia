@@ -93,10 +93,9 @@ const NotesPage = () => {
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-3 h-10">
                                 <SidebarButton />
-                                <Link to={`/workspaces/${currentWorkspaceId}/settings`} className="flex gap-2 items-center max-w-[calc(100vw-165px)] overflow-x-auto whitespace-nowrap sm:text-xl font-semibold hide-scrollbar">
+                                <div className="flex gap-2 items-center max-w-[calc(100vw-165px)] overflow-x-auto whitespace-nowrap sm:text-xl font-semibold hide-scrollbar">
                                     {getWorkspaceById(currentWorkspaceId)?.name ?? ""}
-                                    <ChevronDown size={16} />
-                                </Link>
+                                </div>
                             </div>
                             <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                 <div className="hidden sm:block">
