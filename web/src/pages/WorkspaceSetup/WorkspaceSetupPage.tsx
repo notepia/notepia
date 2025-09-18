@@ -4,14 +4,18 @@ import { createWorkspace } from "../../api/workspace";
 import { useTranslation } from "react-i18next";
 import SubmitButton from "../../components/submitbutton/SubmitButton";
 import TextInput from "../../components/textinput/TextInput";
+import { useWorkspaceStore } from "../../stores/workspace";
 
 const WorkspaceSetupPage = () => {
     const [workspaceName, setWorkspaceName] = useState("");
     const { t } = useTranslation()
     const navigate = useNavigate()
+    const { reset } = useWorkspaceStore()
 
     const handleCreate = async () => {
         await createWorkspace({ name: workspaceName })
+
+        reset()
 
         navigate("/")
     };

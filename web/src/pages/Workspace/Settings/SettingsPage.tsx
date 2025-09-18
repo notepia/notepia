@@ -11,7 +11,7 @@ import { Loader } from "lucide-react"
 
 const Settings = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
-    const { isFetched, getWorkspaceById } = useWorkspaceStore()
+    const { isFetched, reset, getWorkspaceById } = useWorkspaceStore()
     const [workspaceName, setWorkspaceName] = useState("")
     const [isRenaming, SetIsRenaming] = useState(false)
     const { t } = useTranslation()
@@ -35,6 +35,7 @@ const Settings = () => {
             name: workspaceName
         }),
         onSuccess: () => {
+            reset() 
             setTimeout(() => {
                 SetIsRenaming(false)
             }, 200)
@@ -44,6 +45,7 @@ const Settings = () => {
     const deleteWorkspaceMutation = useMutation({
         mutationFn: () => deleteWorkspace(currentWorkspaceId),
         onSuccess: () => {
+            reset() 
             navigate("/")
         }
     })
