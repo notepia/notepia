@@ -75,7 +75,7 @@ const ExploreNotesPage = () => {
             <div className=" py-2 ">
                 
                 {
-                    isSearchVisible ? < div className="block sm:hidden pb-1">
+                    isSearchVisible ? < div className="block sm:hidden py-1">
                         <div className="w-full flex items-center gap-2 py-2 px-3 rounded-xl shadow-inner border dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
                             <Search size={16} className="text-gray-400" />
                             <input type="text" value={query} onChange={e => setQuery(e.target.value)} className=" bg-transparent flex-1" placeholder={t("placeholder.search")} />
