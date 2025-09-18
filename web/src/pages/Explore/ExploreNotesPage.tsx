@@ -13,7 +13,7 @@ import NoteTime from "../../components/notetime/NoteTime"
 
 const PAGE_SIZE = 20;
 
-const PublicNotesPage = () => {
+const ExploreNotesPage = () => {
     const [query, setQuery] = useState("")
     const [debouncedQuery, setDebouncedQuery] = useState(query);
     const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -151,4 +151,4 @@ const PublicNotesPage = () => {
     </>
 }
 
-export default PublicNotesPage
+export default ExploreNotesPage

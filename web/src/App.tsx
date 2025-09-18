@@ -17,7 +17,7 @@ import WorkspaceLoader from './components/workspaceloader/WorkspaceLoader';
 import PreferencesPage from './pages/User/PreferencesPage';
 import UserLayout from './components/userlayout/UserLayout';
 import PublicLayout from './components/publiclayout/PublicLayout';
-import PublicNotesPage from './pages/Public/PublicNotesPage';
+import ExploreNotesPage from './pages/Explore/ExploreNotesPage';
 
 function App() {
   const location = useLocation();
@@ -45,7 +45,7 @@ function App() {
             </Route>
           </Route>
           <Route path='/' element={<PublicLayout />}>
-            <Route path='public/notes' element={<PublicNotesPage />} />
+            <Route path='explore/notes' element={<ExploreNotesPage />} />
           </Route>
           <Route path='signin' element={<SignIn />}></Route>
           <Route path='signup' element={<SignUp />}></Route>

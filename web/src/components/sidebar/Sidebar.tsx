@@ -34,7 +34,7 @@ const Sidebar: FC<Props> = function ({ children }) {
                         side="right"
                         enabled={isCollapse}
                     >
-                        <Link to="/public/notes" className="p-2">
+                        <Link to="/explore/notes" className="p-2">
                             <Telescope size={20} />
                         </Link>
                     </Tooltip>
