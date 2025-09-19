@@ -98,20 +98,20 @@ const NotesPage = () => {
                                     {getWorkspaceById(currentWorkspaceId)?.name ?? ""}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center text-gray-600 dark:text-gray-400">
+                                <div className="hidden sm:block px-1.5">
+                                    <div className="flex items-center gap-2 py-2 px-3 rounded-xl dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
+                                        <Search size={16} className="text-gray-400" />
+                                        <input type="text" value={query} onChange={e => setQuery(e.target.value)} className=" flex-1 bg-transparent" placeholder={t("placeholder.search")} />
+                                    </div>
+                                </div>
                                 <div className="hidden sm:block">
-                                    <div className="p-3 flex items-center gap-2">
+                                    <div className="p-3 flex items-center ">
                                         <button onClick={() => setIsMasonryView(!isMasonryView)}>
                                             {
                                                 isMasonryView ? <LayoutGrid size={20} /> : <LayoutList size={20} />
                                             }
                                         </button>
-                                    </div>
-                                </div>
-                                <div className="hidden sm:block">
-                                    <div className="flex items-center gap-2 py-2 px-3 rounded-xl dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
-                                        <Search size={16} className="text-gray-400" />
-                                        <input type="text" value={query} onChange={e => setQuery(e.target.value)} className=" flex-1 bg-transparent" placeholder={t("placeholder.search")} />
                                     </div>
                                 </div>
                                 <div className="sm:hidden">
