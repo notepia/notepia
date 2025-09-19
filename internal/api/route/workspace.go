@@ -1,6 +1,8 @@
 package route
 
 import (
+	"strings"
+
 	"github.com/pinbook/pinbook/internal/api/handler"
 	"github.com/pinbook/pinbook/internal/api/middlewares"
 
@@ -9,7 +11,10 @@ import (
 
 func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middlewares.AuthMiddleware, workspaceMiddleware middlewares.WorkspaceMiddleware) {
 	g := api.Group("/workspaces")
-	g.Use(authMiddleware.CheckJWT())
+	g.Use(middlewares.Skippable(authMiddleware.CheckJWT(), func(c echo.Context) bool {
+		// Skip JWT auth for routes intended to be publicly accessible
+		return strings.HasSuffix(c.Path(), "/:workspaceId/files/:id")
+	}))
 	g.Use(authMiddleware.ParseJWT())
 	g.Use(workspaceMiddleware.CheckWorkspaceExists())
 
