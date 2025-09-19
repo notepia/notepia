@@ -26,9 +26,9 @@ type UserRepository interface {
 	UpdateUser(u model.User) error
 	DeleteUser(id string) error
 }
-type UserKeyRepository interface {
-	SaveUserKey(u model.UserKey) error
-	GetUserKey(u model.UserKey) (model.UserKey, error)
+type UserSettingsRepository interface {
+	SaveUserSettings(u model.UserSettings) error
+	GetUserSettings(uid string) (model.UserSettings, error)
 }
 type NoteRepository interface {
 	CreateNote(n model.Note) error
