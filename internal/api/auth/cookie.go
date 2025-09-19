@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pinbook/pinbook/internal/config"
 	"github.com/pinbook/pinbook/internal/model"
 
 	"github.com/golang-jwt/jwt"
@@ -18,7 +19,7 @@ func GetUserCookie(u model.User) (*http.Cookie, error) {
 
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
-	tokenString, err := token.SignedString([]byte("secret"))
+	tokenString, err := token.SignedString([]byte(config.C.GetString(config.APP_SECRET)))
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +40,7 @@ func GetUserFromCookie(cookie *http.Cookie) (*model.User, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte("secret"), nil
+		return []byte(config.C.GetString(config.APP_SECRET)), nil
 	})
 
 	if err != nil || !token.Valid {
