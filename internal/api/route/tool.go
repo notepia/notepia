@@ -13,4 +13,8 @@ func RegisterTool(api *echo.Group, h handler.Handler, authMiddleware middlewares
 	g.Use(authMiddleware.ParseJWT())
 
 	g.POST("/fetchfile", h.FetchFile)
+
+	textgenGroup := g.Group("/textgen")
+	textgenGroup.GET("/models", h.ListTextModels)
+	textgenGroup.POST("/generate", h.GenerateText)
 }

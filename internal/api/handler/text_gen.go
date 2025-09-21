@@ -33,6 +33,9 @@ func (h *Handler) ListTextModels(c echo.Context) error {
 
 func (h Handler) GenerateText(c echo.Context) error {
 	req := textgen.GenerateRequest{}
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
 	user := c.Get("user").(model.User)
 
