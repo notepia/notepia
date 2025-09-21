@@ -1,4 +1,4 @@
-package openai
+package gemini
 
 import (
 	"context"
@@ -16,7 +16,7 @@ func NewGeminiTextGen(apiKey string) GeminiTextGen {
 }
 
 func (g GeminiTextGen) Name() string {
-	return "openai"
+	return "gemini"
 }
 
 func (g GeminiTextGen) ListModels() ([]textgen.Model, error) {

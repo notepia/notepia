@@ -27,9 +27,9 @@ func (s *Service) ListModels() ([]Model, error) {
 }
 
 func (s *Service) Generate(req GenerateRequest) (*GenerateResponse, error) {
-	p, ok := s.providers[req.Model]
+	p, ok := s.providers[req.Provider]
 	if !ok {
-		return nil, fmt.Errorf("provider not found for model: %s", req.Model)
+		return nil, fmt.Errorf("provider not found: %s", req.Provider)
 	}
 	return p.Generate(req)
 }

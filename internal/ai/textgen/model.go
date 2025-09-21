@@ -7,8 +7,9 @@ type Model struct {
 }
 
 type GenerateRequest struct {
-	Model  string `validate:"required"`
-	Prompt string `validate:"required"`
+	Provider string `validate:"required"`
+	Model    string `validate:"required"`
+	Prompt   string `validate:"required"`
 }
 
 type GenerateResponse struct {

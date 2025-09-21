@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pinbook/pinbook/internal/ai/textgen"
+	"github.com/pinbook/pinbook/internal/ai/textgen/providers/gemini"
 	"github.com/pinbook/pinbook/internal/ai/textgen/providers/openai"
 	"github.com/pinbook/pinbook/internal/model"
 )
@@ -60,7 +61,13 @@ func (h Handler) GenerateText(c echo.Context) error {
 }
 
 func createTextGenService(u model.UserSettings) *textgen.Service {
-	openaiProvider := openai.NewOpenaiTextGen(*u.OpenAIKey)
+	var providers []textgen.Provider
+	if u.OpenAIKey != nil {
+		providers = append(providers, openai.NewOpenaiTextGen(*u.OpenAIKey))
+	}
+	if u.GeminiKey != nil {
+		providers = append(providers, gemini.NewGeminiTextGen(*u.GeminiKey))
+	}
 
-	return textgen.NewService(openaiProvider)
+	return textgen.NewService(providers...)
 }
