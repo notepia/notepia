@@ -11,6 +11,7 @@ func RegisterUser(api *echo.Group, h handler.Handler, authMiddleware middlewares
 	g := api.Group("/users")
 	g.Use(authMiddleware.CheckJWT())
 	g.Use(authMiddleware.ParseJWT())
-	g.PATCH("/:id/password", h.ChangePassword)
 	g.PATCH("/:id/preferences", h.UpdatePreferences)
+	g.GET("/:id/settings", h.GetUserSettings)
+	g.PUT("/:id/settings", h.UpdateUserSettings)
 }

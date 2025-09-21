@@ -4,17 +4,53 @@ import { useTranslation } from "react-i18next"
 import OpenAI from "../../components/icons/openai"
 import Gemini from "../../components/icons/gemini"
 import AutoSaveInput from "../../components/autosaveinput/AutoSaveInput"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { getUserSettings, updateUserSettings, UserSettings } from "../../api/user-settings"
+import { useCurrentUserStore } from "../../stores/current-user"
+import { toast } from "../../stores/toast"
 
 const ModelsPage = () => {
     const { t } = useTranslation();
-    const [openaiKey, setOpenAIKey] = useState("openai")
-    const [geminiKey, setGeminiKey] = useState("gemini")
+    const { user } = useCurrentUserStore()
+    const [userSettings, setUserSettings] = useState<UserSettings>()
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user?.id) return
+
+            try {
+                const settings = await getUserSettings(user.id);
+                setUserSettings({ ...settings });
+            } catch (error) {
+                toast.error(`Failed to fetch user settings:${error}`);
+            }
+        };
+
+        fetchData();
+    }, [user?.id]);
 
     const handleOpenAIKeySave = async (text: string) => {
+        if (!userSettings) return
+
+        userSettings.openai_api_key = text
+
+        await updateSettings(userSettings)
     }
 
     const handleGeminiKeySave = async (text: string) => {
+        if (!userSettings) return
+
+        userSettings.gemini_api_key = text
+
+        await updateSettings(userSettings)
+    }
+
+    const updateSettings = async (userSettings: UserSettings) => {
+        try {
+            await updateUserSettings(userSettings);
+        } catch (error) {
+            toast.error(`Failed to update user settings:${error}`);
+        }
     }
 
     return <TransitionWrapper
@@ -37,7 +73,7 @@ const ModelsPage = () => {
                                     OpenAI
                                 </div>
                                 <div className="flex gap-3 flex-wrap">
-                                    <AutoSaveInput value={openaiKey} onSave={handleOpenAIKeySave} placeholder="OpenAI API KEY" />
+                                    <AutoSaveInput value={userSettings?.openai_api_key ?? ""} onSave={handleOpenAIKeySave} placeholder="OpenAI API KEY" />
                                 </div>
                             </div>
                         </div>
@@ -48,7 +84,7 @@ const ModelsPage = () => {
                                     Gemini
                                 </div>
                                 <div className="flex gap-3 flex-wrap">
-                                    <AutoSaveInput value={geminiKey} onSave={handleGeminiKeySave} placeholder="Gemini API KEY" />
+                                    <AutoSaveInput value={userSettings?.gemini_api_key ?? ""} onSave={handleGeminiKeySave} placeholder="Gemini API KEY" />
                                 </div>
                             </div>
                         </div>

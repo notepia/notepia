@@ -1,12 +1,6 @@
 import { create } from "zustand";
 import { me } from "../api/auth";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  preferences: any;
-}
+import { User } from "../api/user";
 
 interface CurrentUserStore {
   user: User | null;

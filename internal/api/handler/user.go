@@ -21,8 +21,8 @@ type UpdatePreferencesRequest struct {
 }
 
 type SaveUserSettingsRequest struct {
-	OpenAIKey *string `json:"openai_key"`
-	GeminiKey *string `json:"gemini_key"`
+	OpenAIKey *string `json:"openai_api_key"`
+	GeminiKey *string `json:"gemini_api_key"`
 }
 
 func (h Handler) UpdatePreferences(c echo.Context) error {
@@ -195,7 +195,7 @@ func (h Handler) UpdateUserSettings(c echo.Context) error {
 		encrypted, err := util.Encrypt(*req.OpenAIKey, secret)
 
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, "failed to encrypt key")
+			return c.JSON(http.StatusInternalServerError, "failed to encrypt api key")
 		}
 
 		us.OpenAIKey = &encrypted
@@ -205,7 +205,7 @@ func (h Handler) UpdateUserSettings(c echo.Context) error {
 		encrypted, err := util.Encrypt(*req.GeminiKey, secret)
 
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, "failed to encrypt key")
+			return c.JSON(http.StatusInternalServerError, "failed to encrypt api key")
 		}
 
 		us.GeminiKey = &encrypted
@@ -216,6 +216,9 @@ func (h Handler) UpdateUserSettings(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "failed to update settings")
 	}
+
+	us.OpenAIKey = maskAPIKey(req.OpenAIKey)
+	us.GeminiKey = maskAPIKey(req.GeminiKey)
 
 	return c.JSON(http.StatusOK, us)
 }

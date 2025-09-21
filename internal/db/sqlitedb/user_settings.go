@@ -10,7 +10,7 @@ import (
 
 func (s SqliteDB) SaveUserSettings(settings model.UserSettings) error {
 	var existing model.UserSettings
-	err := s.getDB().Where("id = ?", settings.UserID).First(&existing).Error
+	err := s.getDB().Where("user_id = ?", settings.UserID).First(&existing).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return gorm.G[model.UserSettings](s.getDB()).Create(context.Background(), &settings)
@@ -24,8 +24,12 @@ func (s SqliteDB) SaveUserSettings(settings model.UserSettings) error {
 }
 
 func (s SqliteDB) FindUserSettingsByID(id string) (model.UserSettings, error) {
-	return gorm.
-		G[model.UserSettings](s.getDB()).
-		Where("id = ?", id).
-		Take(context.Background())
+	var existing model.UserSettings
+	err := s.getDB().Where("user_id = ?", id).First(&existing).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return model.UserSettings{UserID: id}, nil
+	}
+
+	return existing, err
 }
