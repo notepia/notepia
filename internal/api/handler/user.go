@@ -233,6 +233,6 @@ func maskAPIKey(key *string) *string {
 		return &k
 	}
 
-	masked := k[:3] + "***"
+	masked := k[:3] + "******************************************"
 	return &masked
 }
