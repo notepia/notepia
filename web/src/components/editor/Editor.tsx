@@ -14,6 +14,8 @@ import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { getEditorI18n } from "../../locales/getEditorI18n";
 import TextGenTool from "./blocks/TextGenTool";
+import { toast } from "../../stores/toast";
+import { TextGenRequest } from "./blocks/TextGenBlock";
 
 interface Props {
   value?: any;
@@ -36,7 +38,7 @@ const Editor: React.FC<Props> = ({ value, onChange }) => {
       data: value,
       autofocus: true,
       tools: {
-        paragraph:{
+        paragraph: {
           class: Paragraph as ToolConstructable,
           config: {
             preserveBlank: true
@@ -146,7 +148,29 @@ const Editor: React.FC<Props> = ({ value, onChange }) => {
           }
         },
         table: Table,
-        textgen: TextGenTool
+        textgen: {
+          class: TextGenTool as ToolConstructable,
+          config: {
+            onListModels: async () => {
+              try {
+                const response = await axios.get(`/api/v1/tools/textgen/models`, { withCredentials: true });
+                return response.data
+              }
+              catch (e) {
+                toast.error(JSON.stringify(e))
+              }
+            },
+            onGenerate: async (req: TextGenRequest) => {
+              try {
+                const response = await axios.post(`/api/v1/tools/textgen/generate`, req );
+                return response.data
+              }
+              catch (e) {
+                toast.error(JSON.stringify(e))
+              }
+            }
+          }
+        }
       },
       onChange: async () => {
         if (ejInstance.current) {

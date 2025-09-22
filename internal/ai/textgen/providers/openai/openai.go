@@ -60,5 +60,5 @@ func (o OpenaiTextGen) Generate(req textgen.GenerateRequest) (*textgen.GenerateR
 		return nil, err
 	}
 
-	return &textgen.GenerateResponse{Text: resp.OutputText()}, nil
+	return &textgen.GenerateResponse{Output: resp.OutputText()}, nil
 }

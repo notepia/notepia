@@ -5,14 +5,19 @@ import OpenAI from "../../components/icons/openai"
 import Gemini from "../../components/icons/gemini"
 import AutoSaveInput from "../../components/autosaveinput/AutoSaveInput"
 import { useEffect, useState } from "react"
-import { getUserSettings, updateUserSettings, UserSettings } from "../../api/user-settings"
+import { getUserSettings, updateGeminiKey, updateOpenAIKey, UserSettings } from "../../api/user-settings"
 import { useCurrentUserStore } from "../../stores/current-user"
 import { toast } from "../../stores/toast"
+import { Edit, Loader, Trash2, X } from "lucide-react"
 
 const ModelsPage = () => {
     const { t } = useTranslation();
     const { user } = useCurrentUserStore()
     const [userSettings, setUserSettings] = useState<UserSettings>()
+    const [isOpenAIKeyEditing, setIsOpenAIKeyEditing] = useState(false)
+    const [isGeminiKeyEditing, setIsGeminiKeyEditing] = useState(false)
+    const [isOpenAIKeyRevoking, setIsOpenAIKeyRevoking] = useState(false)
+    const [isGeminiKeyRevoking, setIsGeminiKeyRevoking] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -20,7 +25,7 @@ const ModelsPage = () => {
 
             try {
                 const settings = await getUserSettings(user.id);
-                setUserSettings({ ...settings });
+                setUserSettings(settings);
             } catch (error) {
                 toast.error(`Failed to fetch user settings:${error}`);
             }
@@ -29,12 +34,59 @@ const ModelsPage = () => {
         fetchData();
     }, [user?.id]);
 
+    const handleOpenAIKeyRevoke = async () => {
+        if (!userSettings) return
+
+        setIsOpenAIKeyRevoking(true)
+
+        userSettings.openai_api_key = ""
+
+        try {
+            await updateOpenAIKey(userSettings)
+        }
+        catch {
+
+        }
+
+        setUserSettings({ ...userSettings })
+
+        setIsOpenAIKeyRevoking(false)
+    }
+
     const handleOpenAIKeySave = async (text: string) => {
         if (!userSettings) return
 
         userSettings.openai_api_key = text
 
-        await updateSettings(userSettings)
+        try {
+            await updateOpenAIKey(userSettings)
+        }
+        catch {
+
+        }
+
+        setUserSettings({ ...userSettings })
+
+        setIsOpenAIKeyEditing(false)
+    }
+
+    const handleGeminiKeyRevoke = async () => {
+        if (!userSettings) return
+
+        setIsGeminiKeyRevoking(true)
+
+        userSettings.gemini_api_key = ""
+
+        try {
+            await updateGeminiKey(userSettings)
+        }
+        catch {
+
+        }
+
+        setUserSettings({ ...userSettings })
+
+        setIsGeminiKeyRevoking(false)
     }
 
     const handleGeminiKeySave = async (text: string) => {
@@ -42,15 +94,16 @@ const ModelsPage = () => {
 
         userSettings.gemini_api_key = text
 
-        await updateSettings(userSettings)
-    }
-
-    const updateSettings = async (userSettings: UserSettings) => {
         try {
-            await updateUserSettings(userSettings);
-        } catch (error) {
-            toast.error(`Failed to update user settings:${error}`);
+            await updateGeminiKey(userSettings)
         }
+        catch {
+
+        }
+
+        setUserSettings({ ...userSettings })
+
+        setIsGeminiKeyEditing(false)
     }
 
     return <TransitionWrapper
@@ -73,7 +126,23 @@ const ModelsPage = () => {
                                     OpenAI
                                 </div>
                                 <div className="flex gap-3 flex-wrap">
-                                    <AutoSaveInput value={userSettings?.openai_api_key ?? ""} onSave={handleOpenAIKeySave} placeholder="OpenAI API KEY" />
+                                    {
+                                        isOpenAIKeyEditing ? <div className="flex gap-3 w-full">
+                                            <AutoSaveInput onSave={handleOpenAIKeySave} placeholder="OpenAI API KEY" />
+                                            <button aria-label="edit key" onClick={() => setIsOpenAIKeyEditing(false)}><X size={16} /></button>
+                                        </div>
+                                            : <div className="flex items-center truncate">
+                                                <button className="text-gray-500 p-2" aria-label="edit key" onClick={() => setIsOpenAIKeyEditing(true)}>
+                                                    <Edit size={16} />
+                                                </button>
+                                                <button className="text-red-500 p-2" aria-label="revoke key" onClick={handleOpenAIKeyRevoke}>
+                                                    {
+                                                        isOpenAIKeyRevoking ? <Loader size={16} className=" animate-spin" /> : <Trash2 size={16} />
+                                                    }
+                                                </button>
+                                                {!userSettings?.openai_api_key ? "API Key" : userSettings?.openai_api_key}
+                                            </div>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -84,7 +153,23 @@ const ModelsPage = () => {
                                     Gemini
                                 </div>
                                 <div className="flex gap-3 flex-wrap">
-                                    <AutoSaveInput value={userSettings?.gemini_api_key ?? ""} onSave={handleGeminiKeySave} placeholder="Gemini API KEY" />
+                                    {
+                                        isGeminiKeyEditing ? <div className="flex gap-3 w-full">
+                                            <AutoSaveInput onSave={handleGeminiKeySave} placeholder="Gemini API KEY" />
+                                            <button aria-label="edit key" onClick={() => setIsGeminiKeyEditing(false)}><X size={16} /></button>
+                                        </div>
+                                            : <div className="flex items-center truncate">
+                                                <button className="text-gray-500 p-2" aria-label="edit key" onClick={() => setIsGeminiKeyEditing(true)}>
+                                                    <Edit size={16} />
+                                                </button>
+                                                <button className="text-red-500 p-2" aria-label="revoke key" onClick={handleGeminiKeyRevoke}>
+                                                    {
+                                                        isGeminiKeyRevoking ? <Loader size={16} className=" animate-spin" /> : <Trash2 size={16} />
+                                                    }
+                                                </button>
+                                                {!userSettings?.gemini_api_key ? "API Key" : userSettings?.gemini_api_key}
+                                            </div>
+                                    }
                                 </div>
                             </div>
                         </div>

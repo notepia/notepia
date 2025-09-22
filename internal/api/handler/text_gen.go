@@ -7,7 +7,9 @@ import (
 	"github.com/pinbook/pinbook/internal/ai/textgen"
 	"github.com/pinbook/pinbook/internal/ai/textgen/providers/gemini"
 	"github.com/pinbook/pinbook/internal/ai/textgen/providers/openai"
+	"github.com/pinbook/pinbook/internal/config"
 	"github.com/pinbook/pinbook/internal/model"
+	"github.com/pinbook/pinbook/internal/util"
 )
 
 func (h *Handler) ListTextModels(c echo.Context) error {
@@ -23,7 +25,11 @@ func (h *Handler) ListTextModels(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	ts := createTextGenService(userSettings)
+	ts, err := createTextGenService(userSettings)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
 
 	models, err := ts.ListModels()
 	if err != nil {
@@ -50,7 +56,11 @@ func (h Handler) GenerateText(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	ts := createTextGenService(userSettings)
+	ts, err := createTextGenService(userSettings)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
 
 	res, err := ts.Generate(req)
 	if err != nil {
@@ -60,14 +70,32 @@ func (h Handler) GenerateText(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
-func createTextGenService(u model.UserSettings) *textgen.Service {
+func createTextGenService(u model.UserSettings) (*textgen.Service, error) {
 	var providers []textgen.Provider
+	secret := config.C.GetString(config.APP_SECRET)
+
 	if u.OpenAIKey != nil {
-		providers = append(providers, openai.NewOpenaiTextGen(*u.OpenAIKey))
+		apikey, err := util.Decrypt(*u.OpenAIKey, secret)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if apikey != "" {
+			providers = append(providers, openai.NewOpenaiTextGen(apikey))
+		}
 	}
 	if u.GeminiKey != nil {
-		providers = append(providers, gemini.NewGeminiTextGen(*u.GeminiKey))
+		apikey, err := util.Decrypt(*u.GeminiKey, secret)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if apikey != "" {
+			providers = append(providers, gemini.NewGeminiTextGen(apikey))
+		}
 	}
 
-	return textgen.NewService(providers...)
+	return textgen.NewService(providers...), nil
 }

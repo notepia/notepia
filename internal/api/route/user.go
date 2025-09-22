@@ -13,5 +13,6 @@ func RegisterUser(api *echo.Group, h handler.Handler, authMiddleware middlewares
 	g.Use(authMiddleware.ParseJWT())
 	g.PATCH("/:id/preferences", h.UpdatePreferences)
 	g.GET("/:id/settings", h.GetUserSettings)
-	g.PUT("/:id/settings", h.UpdateUserSettings)
+	g.PATCH("/:id/openaikey", h.UpdateOpenAIKey)
+	g.PATCH("/:id/geminikey", h.UpdateGeminiKey)
 }

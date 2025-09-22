@@ -15,7 +15,12 @@ export const getUserSettings = async (id: string) => {
     return response.data as UserSettings;
 };
 
-export const updateUserSettings = async (userSettings: UserSettings) => {
-    const response = await axios.put(`/api/v1/users/${userSettings.user_id}/settings`, userSettings);
+export const updateOpenAIKey = async (userSettings: UserSettings) => {
+    const response = await axios.patch(`/api/v1/users/${userSettings.user_id}/openaikey`, userSettings);
+    return response.data as UserSettings;
+};
+
+export const updateGeminiKey = async (userSettings: UserSettings) => {
+    const response = await axios.patch(`/api/v1/users/${userSettings.user_id}/geminikey`, userSettings);
     return response.data as UserSettings;
 };

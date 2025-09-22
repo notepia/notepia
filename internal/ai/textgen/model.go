@@ -1,17 +1,17 @@
 package textgen
 
 type Model struct {
-	ID       string
-	Name     string
-	Provider string
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Provider string `json:"provider"`
 }
 
 type GenerateRequest struct {
-	Provider string `validate:"required"`
-	Model    string `validate:"required"`
-	Prompt   string `validate:"required"`
+	Provider string `json:"provider" validate:"required"`
+	Model    string `json:"model" validate:"required"`
+	Prompt   string `json:"prompt" validate:"required"`
 }
 
 type GenerateResponse struct {
-	Text string
+	Output string `json:"output"`
 }

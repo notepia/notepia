@@ -1,14 +1,22 @@
 import ReactDOM from "react-dom/client";
-import TextGenBlock from "./TextGenBlock";
+import TextGenBlock, { TextGenModel, TextGenRequest, TextGenResponse } from "./TextGenBlock";
+
+
+export interface TextGenToolConfig {
+  onListModels: () => TextGenModel[]
+  onGenerate: (req: TextGenRequest) => TextGenResponse
+}
 
 export default class TextGenTool {
   data: any;
   api: any;
+  config: TextGenToolConfig;
   root: ReactDOM.Root | null = null;
 
-  constructor({ data, api }: { data: any; api: any }) {
+  constructor({ data, api, config }: { data: any; api: any; config:any }) {
     this.data = data || {};
     this.api = api;
+    this.config = config
   }
 
   static get toolbox() {
@@ -24,14 +32,8 @@ export default class TextGenTool {
 
     this.root.render(
       <TextGenBlock
-        data={this.data}
-        onChange={() => {
-          //this.data = newData;
-        }}
-        onGenerate={(text)=>{
-          console.log(text)
-          this.api.blocks.insert("paragraph", { text: text})
-        }}
+        onListModels={this.config.onListModels}
+        onGenerate={this.config.onGenerate}
       />
     );
 

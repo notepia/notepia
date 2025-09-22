@@ -20,8 +20,11 @@ type UpdatePreferencesRequest struct {
 	Preferences json.RawMessage `json:"preferences" validate:"required"`
 }
 
-type SaveUserSettingsRequest struct {
+type SaveOpenaiKeyRequest struct {
 	OpenAIKey *string `json:"openai_api_key"`
+}
+
+type SaveGeminiKeyRequest struct {
 	GeminiKey *string `json:"gemini_api_key"`
 }
 
@@ -161,7 +164,7 @@ func (h Handler) GetUserSettings(c echo.Context) error {
 	return c.JSON(http.StatusOK, us)
 }
 
-func (h Handler) UpdateUserSettings(c echo.Context) error {
+func (h Handler) UpdateOpenAIKey(c echo.Context) error {
 	id := c.Param("id")
 
 	cookie, err := c.Cookie("token")
@@ -169,7 +172,7 @@ func (h Handler) UpdateUserSettings(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "missing or invalid token")
 	}
 
-	var req SaveUserSettingsRequest
+	var req SaveOpenaiKeyRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -200,6 +203,46 @@ func (h Handler) UpdateUserSettings(c echo.Context) error {
 
 		us.OpenAIKey = &encrypted
 	}
+	err = h.db.SaveUserSettings(us)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to update settings")
+	}
+
+	us.OpenAIKey = maskAPIKey(req.OpenAIKey)
+
+	return c.JSON(http.StatusOK, us)
+}
+
+func (h Handler) UpdateGeminiKey(c echo.Context) error {
+	id := c.Param("id")
+
+	cookie, err := c.Cookie("token")
+	if err != nil || cookie.Value == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "missing or invalid token")
+	}
+
+	var req SaveGeminiKeyRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	user, err := auth.GetUserFromCookie(cookie)
+	if err != nil || user == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
+	}
+
+	if user.ID != id {
+		return echo.NewHTTPError(http.StatusForbidden, "You do not have permission to update user settings")
+	}
+
+	us, err := h.db.FindUserSettingsByID(id)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to get user settings by id")
+	}
+
+	secret := config.C.GetString(config.APP_SECRET)
 
 	if req.GeminiKey != nil {
 		encrypted, err := util.Encrypt(*req.GeminiKey, secret)
@@ -210,14 +253,12 @@ func (h Handler) UpdateUserSettings(c echo.Context) error {
 
 		us.GeminiKey = &encrypted
 	}
-
 	err = h.db.SaveUserSettings(us)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "failed to update settings")
 	}
 
-	us.OpenAIKey = maskAPIKey(req.OpenAIKey)
 	us.GeminiKey = maskAPIKey(req.GeminiKey)
 
 	return c.JSON(http.StatusOK, us)
