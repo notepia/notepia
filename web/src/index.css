@@ -136,3 +136,24 @@ svg.lucide-icon{
   -ms-overflow-style: none;  /* IE, Edge */
   scrollbar-width: none;     /* Firefox */
 }
+
+p[data-placeholder]::before {
+  content: attr(data-placeholder);
+  color: #aaa;
+  pointer-events: none;
+  position: relative;
+  left: 0;
+  top: 0;
+}
+
+p[data-placeholder] br {
+  display: none;
+}
+
+p[data-placeholder] :not(.ProseMirror-trailingBreak) {
+  display: none;
+}
+
+div[contenteditable=true] {
+  outline: none;
+}
