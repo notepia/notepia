@@ -1,4 +1,4 @@
-import { useState, useEffect, useImperativeHandle, forwardRef } from 'react'
+import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react'
 import { CommandItem } from './SlashCommand'
 
 interface Props {
@@ -14,10 +14,18 @@ export interface SlashMenuRef {
 export const SlashMenu = forwardRef<SlashMenuRef, Props>(
   ({ items, command, editor }, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0)
+    const itemRefs = useRef<HTMLButtonElement[]>([])
 
     useEffect(() => {
       setSelectedIndex(0)
     }, [items])
+
+    useEffect(() => {
+      const el = itemRefs.current[selectedIndex]
+      if (el) {
+        el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }, [selectedIndex])
 
     const upHandler = () => {
       setSelectedIndex((prev) => (prev - 1 + items.length) % items.length)
@@ -56,20 +64,22 @@ export const SlashMenu = forwardRef<SlashMenuRef, Props>(
 
     return (
       <div className="bg-white shadow-lg rounded-lg border border-gray-200 p-2 w-56">
-        {items.map((item, i) => (
-          <button
-            key={i}
-            className={`w-full text-left px-3 py-1.5 rounded-md text-sm flex gap-2 items-center ${
-              i === selectedIndex
-                ? 'bg-gray-200 text-gray-900'
-                : 'hover:bg-gray-100 text-gray-800'
-            }`}
-            onClick={() => command(item)}
-          >
-            {item.icon}
-            {item.label}
-          </button>
-        ))}
+        <div className=' h-36 overflow-y-auto'>
+          {items.map((item, i) => (
+            <button
+              key={i}
+              ref={(el) => (itemRefs.current[i] = el!)}
+              className={`w-full text-left px-3 py-1.5 rounded-md text-sm flex gap-2 items-center ${i === selectedIndex
+                  ? 'bg-gray-200 text-gray-900'
+                  : 'hover:bg-gray-100 text-gray-800'
+                }`}
+              onClick={() => command(item)}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
     )
   }
