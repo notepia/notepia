@@ -146,8 +146,7 @@ p[data-placeholder]::before {
   top: 0;
 }
 .ProseMirror-selectednode {
-  outline: 2px solid #10b981; 
-  border-radius: 4px;
+  @apply rounded  
 }
 p[data-placeholder] br {
   display: none;
@@ -166,7 +165,7 @@ li > p {
 }
 
 ul[data-type="taskList"] > li input[type=checkbox]{
-   @apply transform scale-125 mx-2 
+   @apply transform scale-125 mr-2 
 }
 
 ul[data-type="taskList"] > li > div{

@@ -3,16 +3,14 @@ import Suggestion, { SuggestionOptions } from '@tiptap/suggestion'
 import { ReactRenderer } from '@tiptap/react'
 import tippy, { Instance as TippyInstance } from 'tippy.js'
 import { SlashMenu } from './SlashMenu'
+import { ReactNode } from 'react'
 
 export interface CommandItem {
+  icon?: ReactNode
   label: string
   command: (ctx: { editor: any }) => void
 }
 
-export interface SlashCommandOptions {
-  suggestion: Partial<SuggestionOptions>
-  commands: CommandItem[]
-}
 export const SlashCommand = Extension.create({
   name: 'slash-command',
 
@@ -20,27 +18,6 @@ export const SlashCommand = Extension.create({
     return {
       suggestion: {
         char: '/',
-        items: ({ query }: { query: string }): CommandItem[] => {
-          return [
-            {
-              label: 'Heading 1',
-              command: ({ editor }:any) =>
-                editor.chain().focus().toggleHeading({ level: 1 }).run(),
-            },
-            {
-              label: 'Bullet List',
-              command: ({ editor }:any) =>
-                editor.chain().focus().toggleBulletList().run(),
-            },
-            {
-              label: 'Task List',
-              command: ({ editor }:any) =>
-                editor.chain().focus().toggleTaskList().run(),
-            },
-          ].filter((item) =>
-            item.label.toLowerCase().includes(query.toLowerCase())
-          )
-        },
         command: ({ editor, range, props }) => {
           editor.chain().focus().deleteRange(range).run()
           props.command({ editor })

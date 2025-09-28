@@ -59,13 +59,14 @@ export const SlashMenu = forwardRef<SlashMenuRef, Props>(
         {items.map((item, i) => (
           <button
             key={i}
-            className={`w-full text-left px-3 py-1.5 rounded-md text-sm ${
+            className={`w-full text-left px-3 py-1.5 rounded-md text-sm flex gap-2 items-center ${
               i === selectedIndex
                 ? 'bg-gray-200 text-gray-900'
                 : 'hover:bg-gray-100 text-gray-800'
             }`}
             onClick={() => command(item)}
           >
+            {item.icon}
             {item.label}
           </button>
         ))}

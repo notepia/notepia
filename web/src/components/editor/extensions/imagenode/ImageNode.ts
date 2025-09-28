@@ -1,0 +1,44 @@
+import { Node, mergeAttributes } from '@tiptap/core'
+import ImageComponent from './ImageComponent'
+import { ReactNodeViewRenderer } from '@tiptap/react'
+
+export const ImageNode = Node.create({
+  name: 'image',
+
+  group: 'block',
+  atom: true,
+
+  addAttributes() {
+    return {
+      src: { default: null },
+      name: { default: null },
+    }
+  },
+
+  parseHTML() {
+    return [{ tag: 'image-node' }]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['image-node', mergeAttributes(HTMLAttributes)]
+  },
+
+  addCommands() {
+    return {
+      ...this.parent?.(),
+      setImage:
+        (options: { src: string; name: string }) =>
+        ({ chain }:any) =>
+          chain()
+            .insertContent({
+              type: this.name,
+              attrs: options,
+            })
+            .run(),
+    }
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageComponent)
+  },
+})

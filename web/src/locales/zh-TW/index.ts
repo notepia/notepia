@@ -1,6 +1,5 @@
 export default {
   placeholder: {
-    note: "輸入你的筆記 ...",
     search: "搜尋",
     searchWorkspace: "搜尋 / 新增工作區"
   },

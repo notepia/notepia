@@ -81,9 +81,9 @@ const NoteEdit = () => {
     }, [fetchedNote, noteId])
 
     return <TransitionWrapper
-        className="px-0 xl:px-6 bg-white dark:bg-neutral-900"
+        className="px-0 xl:px-6 bg-white dark:bg-neutral-900 h-dvh overflow-y-auto"
     >
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen ">
             <div className="py-2 px-4 sm:px-0  flex items-center justify-between border-b xl:border-b-0">
                 <div className="flex items-center gap-2">
                     <button title="back" onClick={() => navigate(-1)} className="inline-flex p-3 rounded-full ">
