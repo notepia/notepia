@@ -2,7 +2,7 @@ import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
 import { Image } from "lucide-react"
 import { useRef } from "react"
 
-const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes }) => {
+const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes }) => {
     const inputRef = useRef<HTMLInputElement>(null)
     const { src, name } = node.attrs
 
@@ -10,12 +10,14 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes }) => 
         const file = e.target.files?.[0]
         if (!file) return
 
-        const fakeUploadUrl = URL.createObjectURL(file)
+        const result = await extension.options?.upload(file)
 
-        updateAttributes({
-            src: fakeUploadUrl,
-            name: file.name,
-        })
+        if (result?.src) {
+            updateAttributes({
+                src: result.src,
+                name: result.name
+            })
+        }
     }
 
     if (!src) {

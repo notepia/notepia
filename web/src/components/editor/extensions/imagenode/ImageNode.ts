@@ -7,6 +7,16 @@ export const ImageNode = Node.create({
 
   group: 'block',
   atom: true,
+  
+  addOptions() {
+    return {
+      upload: async (file: File) => {
+        return{
+          url: URL.createObjectURL(file), name: file.name
+        }
+      }
+    }
+  },
 
   addAttributes() {
     return {
