@@ -71,7 +71,7 @@ const WorkspaceLayout = () => {
             <div className={twMerge(
                 isCollapse ? "max-w-[calc(100vw-72px)] 3xl:max-w-[1848px]" : "max-w-[calc(100vw-260px)] 3xl:max-w-[1660px]"
                 , isOver1280 ? 'flex flex-col' :
-                    isOpen ? '  overflow-hidden sm:overflow-auto'
+                    isOpen ? '  overflow-hidden sm:overflow-auto max-w-full'
                         : ' translate-x-0 max-w-full'
                 , '  w-full h-[100dvh] flex-1')}>
                 <Main>
