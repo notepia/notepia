@@ -142,6 +142,20 @@ const Editor: FC<Props> = ({ note, onChange }) => {
                   editor?.chain().focus().setImage({ src: null, name: null }).run()
               },
               {
+                icon: <Table size={16} />,
+                label: t("table.name"),
+                keywords: ["table"],
+                command: ({ editor }: any) =>
+                  editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: false }).run(),
+              },
+              {
+                icon: <Sparkles size={16} />,
+                label: t("textGen.name"),
+                keywords: ["ai","text gen"],
+                command: ({ editor }: any) =>
+                  editor.chain().focus().addTextGen().run(),
+              },
+              {
                 icon: <Heading1 size={16} />,
                 label: t("Heading 1"),
                 keywords: ["h1", "title", "header", "heading"],
@@ -182,20 +196,6 @@ const Editor: FC<Props> = ({ note, onChange }) => {
                 keywords: ["h6", "title", "header", "heading"],
                 command: ({ editor }: any) =>
                   editor.chain().focus().toggleHeading({ level: 6 }).run(),
-              },
-              {
-                icon: <Table size={16} />,
-                label: t("table.name"),
-                keywords: [],
-                command: ({ editor }: any) =>
-                  editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: false }).run(),
-              },
-              {
-                icon: <Sparkles size={16} />,
-                label: t("textGen.name"),
-                keywords: [],
-                command: ({ editor }: any) =>
-                  editor.chain().focus().addTextGen().run(),
               }
             ].filter((item) =>
               item.label.toLowerCase().includes(query.toLowerCase()) ||
