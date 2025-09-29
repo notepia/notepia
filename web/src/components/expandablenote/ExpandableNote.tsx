@@ -4,6 +4,7 @@ import BlockRenderer from "../blockrenderer/BlockRenderer"
 import { ArrowDownFromLine, ArrowUpToLine } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { PhotoProvider } from 'react-photo-view'
+import Renderer, { ConvertToNode } from "../renderer/Renderer"
 
 interface Props {
     note: NoteData
@@ -15,15 +16,9 @@ const ExpandableNote: FC<Props> = ({ note }) => {
 
     return <>
         <PhotoProvider>
+            <Renderer json={ConvertToNode({ ...note, blocks: note?.blocks?.slice(0, 3) ?? null })} />
             {
-                note?.blocks && note?.blocks.slice(0, 3).map((b: any, bidx: number) => (
-                    <BlockRenderer key={b.id || bidx} block={b} />
-                ))
-            }
-            {
-                isExpanded && note?.blocks?.slice(3, note.blocks.length).map((b: any, bidx: number) => (
-                    <BlockRenderer key={b.id || bidx} block={b} />
-                ))
+                isExpanded && <Renderer json={ConvertToNode({ ...note, blocks: note?.blocks?.slice(3, note.blocks.length) ?? null })} />
             }
             {
                 note?.blocks && note.blocks.length < 4 && <div className="py-2"></div>

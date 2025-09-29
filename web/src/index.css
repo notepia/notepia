@@ -165,7 +165,7 @@ li > p {
 }
 
 ul[data-type="taskList"] > li input[type=checkbox]{
-   @apply transform scale-125 mr-2 
+   @apply transform mr-2 
 }
 
 ul[data-type="taskList"] > li > div{

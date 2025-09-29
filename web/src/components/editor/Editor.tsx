@@ -9,13 +9,22 @@ import { Code, GripVertical, Heading1, Heading2, Heading3, Heading4, Heading5, H
 import { CommandItem, SlashCommand } from './extensions/slashcommand/SlashCommand'
 import { Attachment } from './extensions/attachment/Attachment'
 import { ImageNode } from './extensions/imagenode/ImageNode'
+import { uploadFile } from '../../api/file'
+import useCurrentWorkspaceId from '../../hooks/use-currentworkspace-id'
+import { NoteData } from '../../api/note'
 
 interface Props {
-  data: any
+  note: NoteData
   onChange?: (data: any) => void
 }
 
-const Editor: FC<Props> = ({ data, onChange }) => {
+const Editor: FC<Props> = ({ note, onChange }) => {
+  const doc = note ? {
+    type: "doc",
+    content: note.blocks?.map(b => ({ type: b.type, content: b.data.content, attrs: b.data.attrs }))
+  } : ``
+
+  const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation("editor")
   const editor = useEditor({
     extensions: [
@@ -40,8 +49,26 @@ const Editor: FC<Props> = ({ data, onChange }) => {
         },
       }),
       TaskItem,
-      Attachment,
-      ImageNode,
+      Attachment.configure({
+        upload: async (f: File) => {
+          const res = await uploadFile(currentWorkspaceId, f)
+
+          return {
+            src: `/api/v1/workspaces/${currentWorkspaceId}/files/${res.filename}`,
+            name: res.original_name
+          }
+        }
+      }),
+      ImageNode.configure({
+        upload: async (f: File) => {
+          const res = await uploadFile(currentWorkspaceId, f)
+
+          return {
+            src: `/api/v1/workspaces/${currentWorkspaceId}/files/${res.filename}`,
+            name: res.original_name
+          }
+        }
+      }),
       SlashCommand.configure({
         suggestion: {
           items: ({ query }: { query: string }): CommandItem[] => {
@@ -143,21 +170,36 @@ const Editor: FC<Props> = ({ data, onChange }) => {
         class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl p-3 focus:outline-none',
       },
     },
-    content: data ?? ``,
+    content: doc,
     onUpdate({ editor }) {
       if (onChange) {
-        onChange(editor.getJSON())
+        const doc = editor.getJSON()
+
+        const json = {
+          blocks: (doc.content || []).map(block => {
+            return {
+              type: block.type!,
+              data: {
+                content: block.content,
+                attrs: block.attrs
+              }
+            }
+          })
+        }
+
+        onChange(json)
       }
     },
   })
 
   const providerValue = useMemo(() => ({ editor }), [editor])
+  const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
 
   return (
     <EditorContext.Provider value={providerValue}>
-      <DragHandle editor={editor} className='border rounded shadow-sm p-1'>
+      {!isTouchDevice && <DragHandle editor={editor} className='border rounded shadow-sm p-1'>
         <GripVertical size={12} />
-      </DragHandle>
+      </DragHandle>}
       <EditorContent editor={editor} />
     </EditorContext.Provider>
   )

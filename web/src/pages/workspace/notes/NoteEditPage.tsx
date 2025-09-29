@@ -18,20 +18,17 @@ const NoteEdit = () => {
     const queryClient = useQueryClient()
     const navigate = useNavigate()
 
-    // Query for fetching single note
     const { data: fetchedNote } = useQuery({
         queryKey: ['note', currentWorkspaceId, noteId],
         queryFn: () => getNote(currentWorkspaceId, noteId!),
         enabled: !!noteId && !!currentWorkspaceId,
     })
 
-    // Mutation for creating note
     const createNoteMutation = useMutation({
         mutationFn: (data: NoteData) => createNote(currentWorkspaceId, data),
         onSuccess: async () => {
             try {
                 await queryClient.invalidateQueries({ queryKey: ['notes', currentWorkspaceId] })
-                // Wait a bit to ensure the invalidation is processed
                 await new Promise(resolve => setTimeout(resolve, 100))
                 navigate(-1)
             } catch (error) {
@@ -41,13 +38,11 @@ const NoteEdit = () => {
         },
     })
 
-    // Mutation for updating note
     const updateNoteMutation = useMutation({
         mutationFn: (data: NoteData) => updateNote(currentWorkspaceId, data),
         onSuccess: async () => {
             try {
                 await queryClient.invalidateQueries({ queryKey: ['notes', currentWorkspaceId] })
-                // Wait a bit to ensure the invalidation is processed
                 await new Promise(resolve => setTimeout(resolve, 100))
                 navigate(-1)
             } catch (error) {
@@ -106,7 +101,7 @@ const NoteEdit = () => {
             <div className="flex justify-start">
                 <div className=" w-full m-auto max-w-3xl p-2.5 sm:p-4">
                     {
-                        !isLoading && <Editor data={note.blocks} onChange={(data)=>console.log(data)} />
+                        !isLoading && <Editor note={note} onChange={handleContentChange} />
                     }
                 </div>
             </div>
