@@ -4,10 +4,9 @@ import { useSidebar } from "../sidebar/SidebarProvider"
 import { Link, Outlet } from "react-router-dom"
 import { useEffect } from "react"
 import Main from "../main/Main"
-import { Laptop2, LogIn, Monitor } from 'lucide-react'
+import { LogIn, Monitor } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import logo from '../../assets/app.png'
-import logotext from '../../assets/applogo_text.png'
 import { useCurrentUserStore } from "../../stores/current-user"
 
 const PublicLayout = () => {
@@ -26,9 +25,9 @@ const PublicLayout = () => {
                 >
                     <div className="flex flex-col gap-3">
                         <div className="pt-4">
-                            <div className={twMerge("flex gap-5 items-center ", isCollapse ? "justify-center": "justify-start px-4")}>
+                            <div className={twMerge("flex gap-2 items-center ", isCollapse ? "justify-center": "justify-start px-4")}>
                                 <img src={logo} className="w-8 h-8" aria-label="logo" />
-                                {!isCollapse && <img src={logotext} className='w-28' alt="logo" />}
+                                {!isCollapse && <h1 className='text-xl font-extrabold text-yellow-700 font-mono'>UNSEAL</h1>}
                             </div>
                         </div>
                         <div className=" flex flex-col gap-1 overflow-y-auto">

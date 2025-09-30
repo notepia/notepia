@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/model"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/model"
 
 	"github.com/golang-jwt/jwt"
 )

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pinbook/pinbook/internal/config"
+	"github.com/unsealdev/unseal/internal/config"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"

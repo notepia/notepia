@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pinbook/pinbook/internal/api/auth"
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/model"
-	"github.com/pinbook/pinbook/internal/util"
+	"github.com/unsealdev/unseal/internal/api/auth"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/model"
+	"github.com/unsealdev/unseal/internal/util"
 
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"

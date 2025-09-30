@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pinbook/pinbook/internal/api/auth"
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/util"
+	"github.com/unsealdev/unseal/internal/api/auth"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/util"
 	"golang.org/x/crypto/bcrypt"
 )
 

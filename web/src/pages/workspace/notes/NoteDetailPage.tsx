@@ -36,7 +36,7 @@ const NoteDetailPage = () => {
     }, [fetchedNote, noteId])
 
     return <TransitionWrapper
-        className="px-0 xl:px-6 bg-white dark:bg-neutral-900"
+        className="px-0 xl:px-6 bg-white dark:bg-stone-800"
     >
         {
             note &&

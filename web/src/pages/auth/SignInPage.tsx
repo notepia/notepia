@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { signIn } from '../../api/auth';
 import logo from '../../assets/app.png'
-import logotext from '../../assets/applogo_text.png'
 import { useTranslation } from 'react-i18next';
 import { toast } from '../../stores/toast';
 import TextInput from '../../components/textinput/TextInput';
@@ -36,9 +35,9 @@ const SignIn: React.FC = () => {
     return (
         <div className="min-h-dvh bg-stone-100 dark:bg-stone-900 flex justify-center pt-24">
             <div className="w-80 flex flex-col gap-10 pb-5">
-                <div className='flex items-center justify-center flex-col gap-3 sm:flex-row select-none '>
+                <div className='flex items-center justify-center flex-col sm:flex-row select-none '>
                     <img src={logo} className='w-14' alt="logo" />
-                    <img src={logotext} className='w-32' alt="logo" />
+                    <h1 className='text-3xl font-extrabold text-yellow-600 drop-shadow-sm font-mono'>UNSEAL</h1>
                 </div>
                 <form onSubmit={handleSubmit} className='px-3 sm:px-0'>
                     <div className="mb-4">
@@ -74,13 +73,13 @@ const SignIn: React.FC = () => {
                         </SubmitButton>
                         <Link
                             to="/signup"
-                            className="inline-block align-baseline text-right font-bold text-sm text-amber-500 hover:text-amber-800"
+                            className="inline-block align-baseline text-right font-bold text-sm text-yellow-600 hover:text-yellow-800"
                         >
                             {t("pages.signin.noAccount")}
                         </Link>
                         <Link
                             to="/explore/notes"
-                            className="flex gap-2 items-center text-right font-bold text-sm text-amber-500 hover:text-amber-800"
+                            className="flex gap-2 items-center text-right font-bold text-sm text-yellow-600 hover:text-yellow-800"
                         >
                             <Telescope size={20} />
                             {t("menu.explore")}

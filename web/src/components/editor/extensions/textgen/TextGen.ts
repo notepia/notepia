@@ -15,7 +15,7 @@ export const TextGenNode = Node.create({
                     models: []
                 }
             },
-            generate: async (prompt: string, model: string) => {
+            generate: async () => {
                 return {
                     text: ""
                 }

@@ -1,9 +1,9 @@
 services:
-  pinbook:
+  unseal:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pinbook
+    container_name: unseal
     ports:
       - "8080:8080"
     volumes:

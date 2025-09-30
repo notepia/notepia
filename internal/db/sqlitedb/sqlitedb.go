@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/db"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/db"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

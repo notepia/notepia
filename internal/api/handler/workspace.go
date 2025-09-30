@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pinbook/pinbook/internal/model"
-	"github.com/pinbook/pinbook/internal/util"
+	"github.com/unsealdev/unseal/internal/model"
+	"github.com/unsealdev/unseal/internal/util"
 
 	"github.com/labstack/echo/v4"
 )

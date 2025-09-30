@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/pinbook/pinbook/internal/model"
+	"github.com/unsealdev/unseal/internal/model"
 	"gorm.io/gorm"
 )
 

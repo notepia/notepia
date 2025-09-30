@@ -2,8 +2,8 @@ package route
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/pinbook/pinbook/internal/api/handler"
-	"github.com/pinbook/pinbook/internal/api/middlewares"
+	"github.com/unsealdev/unseal/internal/api/handler"
+	"github.com/unsealdev/unseal/internal/api/middlewares"
 )
 
 func RegisterPublic(api *echo.Group, h handler.Handler, a middlewares.AuthMiddleware) {

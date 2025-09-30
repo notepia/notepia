@@ -56,7 +56,7 @@ const AutoSaveInput: FC<Props> = ({ value: initialValue, placeholder, onSave }) 
                 onChange={handleChange}
                 onPaste={handlePaste}
                 placeholder={placeholder}
-                className="w-full"
+                className="w-full dark:bg-black"
             />
             {saving ? <Loader size={20} className="animate-spin" /> : <></>}
             {saved ? <CheckCircle2 size={20} className="text-green-600" /> : <></>}

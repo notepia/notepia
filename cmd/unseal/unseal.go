@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/pinbook/pinbook/internal/bootstrap"
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/server"
+	"github.com/unsealdev/unseal/internal/bootstrap"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/server"
 )
 
 func main() {

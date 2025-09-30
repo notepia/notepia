@@ -3,9 +3,9 @@ package bootstrap
 import (
 	"fmt"
 
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/storage"
-	"github.com/pinbook/pinbook/internal/storage/localfile"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/storage"
+	"github.com/unsealdev/unseal/internal/storage/localfile"
 )
 
 func NewStorage() (storage.Storage, error) {

@@ -4,7 +4,7 @@ import { useSidebar } from "../sidebar/SidebarProvider"
 import { Link, Outlet, useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import Main from "../main/Main"
-import { Brain, BrainCog, CornerUpLeft, LogOut, Settings, Settings2 } from 'lucide-react'
+import { Brain, CornerUpLeft, LogOut, Settings2 } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import { useMutation } from "@tanstack/react-query"
 import { signOut } from "../../api/auth"

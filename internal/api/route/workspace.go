@@ -3,8 +3,8 @@ package route
 import (
 	"strings"
 
-	"github.com/pinbook/pinbook/internal/api/handler"
-	"github.com/pinbook/pinbook/internal/api/middlewares"
+	"github.com/unsealdev/unseal/internal/api/handler"
+	"github.com/unsealdev/unseal/internal/api/middlewares"
 
 	"github.com/labstack/echo/v4"
 )

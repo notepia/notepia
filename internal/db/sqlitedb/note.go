@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/pinbook/pinbook/internal/model"
+	"github.com/unsealdev/unseal/internal/model"
 	"gorm.io/gorm"
 )
 
@@ -115,7 +115,7 @@ func (s SqliteDB) FindNotes(f model.NoteFilter) ([]model.Note, error) {
 		conds = append(conds, `
 		blocks.type IN ('paragraph','bulletList','orderedList','taskList','codeBlock','heading','blockquote','table','image','attachment') AND blocks.data LIKE ?
 		`)
-		args = append(args, query, query, query)
+		args = append(args, query)
 	}
 
 	err := s.getDB().Model(&model.Note{}).
