@@ -63,15 +63,15 @@ export const SlashMenu = forwardRef<SlashMenuRef, Props>(
     if (!items.length) return null
 
     return (
-      <div className="bg-white shadow-lg rounded-lg border border-gray-200 p-2 w-56">
+      <div className="bg-white dark:bg-stone-900 shadow-lg rounded-lg border border-gray-200 p-2 w-56">
         <div className=' h-40 overflow-y-auto'>
           {items.map((item, i) => (
             <button
               key={i}
               ref={(el) => (itemRefs.current[i] = el!)}
               className={`w-full text-left px-3 py-1.5 rounded-md text-sm flex gap-2 items-center ${i === selectedIndex
-                  ? 'bg-gray-200 text-gray-900'
-                  : 'hover:bg-gray-100 text-gray-800'
+                  ? 'bg-gray-200 text-gray-950 dark:bg-stone-950 dark:text-stone-200'
+                  : 'hover:bg-gray-100 text-gray-900 dark:hover:bg-stone-950 dark:text-stone-100'
                 }`}
               onClick={() => command(item)}
             >
