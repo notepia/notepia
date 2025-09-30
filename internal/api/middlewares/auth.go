@@ -3,8 +3,8 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/pinbook/pinbook/internal/api/auth"
-	"github.com/pinbook/pinbook/internal/db"
+	"github.com/unsealdev/unseal/internal/api/auth"
+	"github.com/unsealdev/unseal/internal/db"
 
 	"github.com/labstack/echo/v4"
 )

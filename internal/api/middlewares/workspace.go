@@ -3,9 +3,9 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/db"
-	"github.com/pinbook/pinbook/internal/model"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/db"
+	"github.com/unsealdev/unseal/internal/model"
 
 	"github.com/labstack/echo/v4"
 )

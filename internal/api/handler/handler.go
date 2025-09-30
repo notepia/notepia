@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/pinbook/pinbook/internal/db"
-	"github.com/pinbook/pinbook/internal/storage"
+	"github.com/unsealdev/unseal/internal/db"
+	"github.com/unsealdev/unseal/internal/storage"
 )
 
 type Handler struct {

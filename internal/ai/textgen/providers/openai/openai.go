@@ -7,7 +7,7 @@ import (
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
 	"github.com/openai/openai-go/v2/responses"
-	"github.com/pinbook/pinbook/internal/ai/textgen"
+	"github.com/unsealdev/unseal/internal/ai/textgen"
 )
 
 type OpenaiTextGen struct {

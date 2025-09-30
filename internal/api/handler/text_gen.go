@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pinbook/pinbook/internal/ai/textgen"
-	"github.com/pinbook/pinbook/internal/ai/textgen/providers/gemini"
-	"github.com/pinbook/pinbook/internal/ai/textgen/providers/openai"
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/model"
-	"github.com/pinbook/pinbook/internal/util"
+	"github.com/unsealdev/unseal/internal/ai/textgen"
+	"github.com/unsealdev/unseal/internal/ai/textgen/providers/gemini"
+	"github.com/unsealdev/unseal/internal/ai/textgen/providers/openai"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/model"
+	"github.com/unsealdev/unseal/internal/util"
 )
 
 func (h *Handler) ListTextModels(c echo.Context) error {

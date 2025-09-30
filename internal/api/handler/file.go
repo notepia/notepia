@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pinbook/pinbook/internal/model"
-	"github.com/pinbook/pinbook/internal/util"
+	"github.com/unsealdev/unseal/internal/model"
+	"github.com/unsealdev/unseal/internal/util"
 )
 
 func (h Handler) Upload(c echo.Context) error {

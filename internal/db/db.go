@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 
-	"github.com/pinbook/pinbook/internal/model"
+	"github.com/unsealdev/unseal/internal/model"
 )
 
 type DB interface {

@@ -12,7 +12,7 @@ export interface SlashMenuRef {
 }
 
 export const SlashMenu = forwardRef<SlashMenuRef, Props>(
-  ({ items, command, editor }, ref) => {
+  ({ items, command }, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0)
     const itemRefs = useRef<HTMLButtonElement[]>([])
 

@@ -3,9 +3,9 @@ package bootstrap
 import (
 	"fmt"
 
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/db"
-	"github.com/pinbook/pinbook/internal/db/sqlitedb"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/db"
+	"github.com/unsealdev/unseal/internal/db/sqlitedb"
 )
 
 func NewDB() (db.DB, error) {

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pinbook/pinbook/internal/storage"
+	"github.com/unsealdev/unseal/internal/storage"
 )
 
 type LocalFile struct {

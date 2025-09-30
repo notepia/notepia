@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pinbook/pinbook/internal/urlfetcher"
+	"github.com/unsealdev/unseal/internal/urlfetcher"
 )
 
 type FetchFileRequest struct {

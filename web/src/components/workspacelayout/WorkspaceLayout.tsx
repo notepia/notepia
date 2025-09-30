@@ -7,7 +7,7 @@ import Main from "../main/Main"
 import { useWorkspaceStore } from "../../stores/workspace"
 import WorkspaceMenu from "../workspacemenu/WorkspaceMenu"
 import useCurrentWorkspaceId from "../../hooks/use-currentworkspace-id"
-import { BookOpenText, BookText, MonitorCog } from 'lucide-react'
+import { BookText, MonitorCog } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import Tooltip from "../tooltip/Tooltip"
 

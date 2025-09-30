@@ -3,7 +3,7 @@ package gemini
 import (
 	"context"
 
-	"github.com/pinbook/pinbook/internal/ai/textgen"
+	"github.com/unsealdev/unseal/internal/ai/textgen"
 	"google.golang.org/genai"
 )
 

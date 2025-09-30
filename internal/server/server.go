@@ -8,13 +8,13 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/pinbook/pinbook/internal/api/handler"
-	"github.com/pinbook/pinbook/internal/api/middlewares"
-	"github.com/pinbook/pinbook/internal/api/route"
-	"github.com/pinbook/pinbook/internal/api/validate"
-	"github.com/pinbook/pinbook/internal/config"
-	"github.com/pinbook/pinbook/internal/db"
-	"github.com/pinbook/pinbook/internal/storage"
+	"github.com/unsealdev/unseal/internal/api/handler"
+	"github.com/unsealdev/unseal/internal/api/middlewares"
+	"github.com/unsealdev/unseal/internal/api/route"
+	"github.com/unsealdev/unseal/internal/api/validate"
+	"github.com/unsealdev/unseal/internal/config"
+	"github.com/unsealdev/unseal/internal/db"
+	"github.com/unsealdev/unseal/internal/storage"
 )
 
 //go:embed dist/*
