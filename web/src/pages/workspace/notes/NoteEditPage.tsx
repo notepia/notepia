@@ -92,7 +92,7 @@ const NoteEdit = () => {
                 </div>
                 <div className="">
                     <button title="save" onClick={handleSave} className="px-4 ">
-                        {isSaving ? <LoaderIcon size={16} className=" animate-spin" /> : <span className="text-blue-600 font-semibold">
+                        {isSaving ? <LoaderIcon size={16} className=" animate-spin" /> : <span className="text-blue-500 font-semibold">
                             {t("actions.save")}
                         </span>}
                     </button>
