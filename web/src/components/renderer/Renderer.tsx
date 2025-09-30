@@ -79,16 +79,16 @@ const Renderer: React.FC<RendererProps> = ({ json }) => {
                     node.marks.forEach(mark => {
                         switch (mark.type) {
                             case 'bold':
-                                text = <strong key={key}>{text}</strong>
+                                text = <strong key={key} className='font-bold'>{text}</strong>
                                 break
                             case 'italic':
-                                text = <em key={key}>{text}</em>
+                                text = <em key={key} className='italic'>{text}</em>
                                 break
                             case 'strike':
-                                text = <s key={key}>{text}</s>
+                                text = <s key={key} className="line-through">{text}</s>
                                 break
                             case 'code':
-                                text = <code key={key}>{text}</code>
+                                text = <code key={key} className='rounded text-sm bg-gray-300 text-gray-600 px-1 py-0.5'>{text}</code>
                                 break
                             case 'link':
                                 text = (
