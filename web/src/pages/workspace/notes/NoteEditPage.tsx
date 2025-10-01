@@ -76,7 +76,7 @@ const NoteEdit = () => {
     }, [fetchedNote, noteId])
 
     return <TransitionWrapper
-        className="px-0 xl:px-6 bg-white dark:bg-stone-800 h-dvh overflow-y-auto"
+        className="px-0 xl:px-6 bg-white dark:bg-neutral-800 h-dvh overflow-y-auto"
     >
         <div className="flex flex-col min-h-screen ">
             <div className="py-2 px-4 sm:px-0  flex items-center justify-between border-b xl:border-b-0">

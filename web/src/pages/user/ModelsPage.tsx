@@ -119,7 +119,7 @@ const ModelsPage = () => {
             <div className="grow flex justify-start">
                 <div className="flex-1">
                     <div className="w-full flex flex-col gap-4">
-                        <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm w-full p-5 max-w-3xl">
+                        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm w-full p-5 max-w-3xl">
                             <div className="flex flex-col gap-4">
                                 <div className="text-lg font-semibold flex items-center gap-2">
                                     <OpenAI className="w-5 h-5 dark:fill-white" />
@@ -146,7 +146,7 @@ const ModelsPage = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-white dark:bg-stone-800 rounded-xl shadow-sm w-full p-5 max-w-3xl">
+                        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm w-full p-5 max-w-3xl">
                             <div className="flex flex-col gap-4">
                                 <div className="text-lg font-semibold flex items-center gap-2">
                                     <Gemini className="w-5 h-5 dark:fill-white" />

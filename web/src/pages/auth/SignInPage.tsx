@@ -33,7 +33,7 @@ const SignIn: React.FC = () => {
     };
 
     return (
-        <div className="min-h-dvh bg-stone-100 dark:bg-stone-900 flex justify-center pt-24">
+        <div className="min-h-dvh bg-neutral-100 dark:bg-neutral-900 flex justify-center pt-24">
             <div className="w-80 flex flex-col gap-10 pb-5">
                 <div className='flex items-center justify-center flex-col sm:flex-row select-none '>
                     <img src={logo} className='w-14' alt="logo" />

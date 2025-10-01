@@ -52,7 +52,7 @@ const PreferencesPage = () => {
             <div className="grow flex justify-start">
                 <div className="flex-1">
                     <div className="w-full">
-                        <div className="bg-white dark:bg-stone-800 rounded shadow-sm w-full p-5 max-w-3xl">
+                        <div className="bg-white dark:bg-neutral-800 rounded shadow-sm w-full p-5 max-w-3xl">
                             <div className="flex flex-col gap-6">
                                 <div className="text-lg font-semibold">
                                     {t("pages.preferences.language")}

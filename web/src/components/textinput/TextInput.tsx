@@ -13,7 +13,7 @@ interface Props {
 
 const TextInput: FC<Props> = (props: Props) => {
     return <input
-        className={props.className ?? "appearance-none bg-white dark:text-white dark:bg-stone-800 focus:ring-2 focus:ring-yellow-600 rounded w-full py-2 px-3  leading-tight focus:outline-none focus:shadow-outline"}
+        className={props.className ?? "appearance-none bg-white dark:text-white dark:bg-neutral-800 focus:ring-2 focus:ring-yellow-600 rounded w-full py-2 px-3  leading-tight focus:outline-none focus:shadow-outline"}
         id={props.id}
         type={props.type ?? "text"}
         value={props.value}

@@ -74,14 +74,14 @@ const Settings = () => {
             <div className="grow flex justify-start">
                 <div className="flex-1">
                     <div className="w-full">
-                        <div className="bg-white dark:bg-stone-800 rounded shadow-sm w-full p-5 max-w-3xl">
+                        <div className="bg-white dark:bg-neutral-800 rounded shadow-sm w-full p-5 max-w-3xl">
                             <div className="flex flex-col gap-6">
                                 <div className="flex flex-col gap-2 ">
                                     <div className="text-lg font-semibold">
                                         {t("pages.settings.workspaceName")}
                                     </div>
                                     <div className="flex gap-3 flex-wrap">
-                                        <input className="flex-1 px-3 py-2 border rounded-lg dark:bg-stone-700" value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} title="rename workspace" />
+                                        <input className="flex-1 px-3 py-2 border rounded-lg dark:bg-neutral-700" value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} title="rename workspace" />
                                         <button onClick={handleRenameClick} className=" px-3 py-2 border shadow-sm rounded-lg">
                                             {isRenaming ? <Loader size={16} className="animate-spin" /> : t("actions.rename")}
                                         </button>

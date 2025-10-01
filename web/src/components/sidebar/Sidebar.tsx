@@ -23,7 +23,7 @@ const Sidebar: FC<Props> = function ({ children }) {
                 , isCollapse ? "w-[72px]" : " w-[260px]"
                 , " transition duration-200 ease-in-out transform fixed xl:static top-0 left-0 xl:flex-col gap-0.5 h-[100dvh] bg-opacity-100 ")}
             aria-label="Sidebar">
-            <div className="px-4 bg-neutral-100 dark:bg-stone-900 text-neutral-900 dark:text-neutral-100 flex flex-col justify-between h-full ">
+            <div className="px-4 bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 flex flex-col justify-between h-full ">
                 {children}
                 <div className={twMerge("pt-1 pb-3 flex gap-1 flex-wrap-reverse", isCollapse ? "flex-col" : "flex-row")}>
                     <Tooltip
