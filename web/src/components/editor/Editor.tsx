@@ -17,6 +17,7 @@ import { NoteData } from '../../api/note'
 import { TextGenNode } from './extensions/textgen/TextGen'
 import { listModels, textGen, TextGenModel } from '../../api/tool'
 import { toast } from '../../stores/toast'
+import MyBubbleMenu from './extensions/mybubblemenu/MyBubbleMenu'
 
 interface Props {
   note: NoteData
@@ -151,7 +152,7 @@ const Editor: FC<Props> = ({ note, onChange }) => {
               {
                 icon: <Sparkles size={16} />,
                 label: t("textGen.name"),
-                keywords: ["ai","text gen"],
+                keywords: ["ai", "text gen"],
                 command: ({ editor }: any) =>
                   editor.chain().focus().addTextGen().run(),
               },
@@ -240,7 +241,6 @@ const Editor: FC<Props> = ({ note, onChange }) => {
       {!isTouchDevice && <DragHandle editor={editor} className='border rounded shadow-sm p-1'>
         <GripVertical size={12} />
       </DragHandle>}
-
       <BubbleMenu
         editor={editor}
         shouldShow={() => editor.isActive('table') || editor.isActive('tableCell')}
@@ -266,7 +266,9 @@ const Editor: FC<Props> = ({ note, onChange }) => {
           <button className='p-2' onClick={() => editor.chain().focus().addRowAfter().run()}>{t("table.addRow")}</button>
         </div>
       </BubbleMenu>
-      <EditorContent editor={editor} />
+
+      <MyBubbleMenu editor={editor} />
+      <EditorContent editor={editor} className='relative' />
     </EditorContext.Provider>
   )
 }
