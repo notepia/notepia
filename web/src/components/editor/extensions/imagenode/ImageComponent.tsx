@@ -1,9 +1,10 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { Image } from "lucide-react"
-import { useRef } from "react"
+import { Image, Loader2 } from "lucide-react"
+import { useRef, useState } from "react"
 import { twMerge } from "tailwind-merge"
 
 const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes, selected }) => {
+    const [isUploading, setIsUploading] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
     const { src, name } = node.attrs
 
@@ -11,7 +12,11 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttrib
         const file = e.target.files?.[0]
         if (!file) return
 
+        setIsUploading(true)
+
         const result = await extension.options?.upload(file)
+
+        setIsUploading(false)
 
         if (result?.src) {
             updateAttributes({
@@ -28,8 +33,20 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttrib
                     className="rounded w-full h-32 flex gap-3 items-center justify-center"
                     onClick={() => inputRef.current?.click()}
                 >
-                    <Image size={20} />
-                    Upload
+                    {
+                        isUploading ?
+                            <>
+                                <Loader2 className="animate-spin" size={20} />
+                                Uploading
+                            </>
+                            :
+                            <>
+                                <Image size={20} />
+                                Upload
+                            </>
+                    }
+
+
                 </button>
                 <input
                     type="file"
@@ -43,8 +60,8 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttrib
     }
 
     return (
-        <NodeViewWrapper className={twMerge("image-node select-none rounded box-border flex items-center gap-2 bg-gray-50",selected ? "border-4 border-sky-300":"")}>
-            <img src={src} alt={name} />
+        <NodeViewWrapper >
+            <img src={src} className={twMerge("image-node select-none rounded box-border w-auto", selected ? "border-4 border-sky-300" : "")} alt={name} />
         </NodeViewWrapper>
     )
 }
