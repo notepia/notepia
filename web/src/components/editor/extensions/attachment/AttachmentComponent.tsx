@@ -1,8 +1,9 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { DownloadIcon, UploadCloud } from "lucide-react"
-import { useRef } from "react"
+import { DownloadIcon, Loader2, UploadCloud } from "lucide-react"
+import { useRef, useState } from "react"
 
 const AttachmentComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, extension }) => {
+  const [isUploading, setIsUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { src, name } = node.attrs
 
@@ -10,7 +11,11 @@ const AttachmentComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, 
     const file = e.target.files?.[0]
     if (!file) return
 
+    setIsUploading(true)
+
     const result = await extension.options?.upload(file)
+
+    setIsUploading(false)
 
     if (result?.src) {
       updateAttributes({
@@ -27,8 +32,18 @@ const AttachmentComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, 
           className="rounded w-full h-32 flex gap-3 items-center justify-center"
           onClick={() => inputRef.current?.click()}
         >
-          <UploadCloud size={20} />
-          Upload
+          {
+            isUploading ?
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                Uploading
+              </>
+              :
+              <>
+                <UploadCloud size={20} />
+                Upload
+              </>
+          }
         </button>
         <input
           type="file"
