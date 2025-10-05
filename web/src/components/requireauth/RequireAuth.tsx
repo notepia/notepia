@@ -21,9 +21,6 @@ const RequireAuth = () => {
 
       //load preferences
       if (currentUser?.preferences) {
-        console.log(theme)
-        console.log(currentUser.preferences.theme)
-        console.log(theme != currentUser.preferences.theme)
         if (i18n.language != currentUser.preferences.lang) {
           i18n.changeLanguage(currentUser.preferences.lang)
         }

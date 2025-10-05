@@ -90,7 +90,7 @@ func (h *Handler) SignIn(c echo.Context) error {
 		})
 	}
 
-	cookie, err := auth.GetUserCookie(existingUser)
+	cookie, err := auth.CreateUserCookie(existingUser)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
@@ -196,7 +196,7 @@ func (h *Handler) SignUp(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	cookie, err := auth.GetUserCookie(user)
+	cookie, err := auth.CreateUserCookie(user)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

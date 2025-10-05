@@ -12,7 +12,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func GetUserCookie(u model.User) (*http.Cookie, error) {
+func CreateUserCookie(u model.User) (*http.Cookie, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["id"] = u.ID
