@@ -19,6 +19,7 @@ import UserLayout from './components/userlayout/UserLayout';
 import PublicLayout from './components/publiclayout/PublicLayout';
 import ExploreNotesPage from './pages/explore/ExploreNotesPage';
 import ModelsPage from './pages/user/ModelsPage';
+import GenCommandsPage from './pages/user/GenCommandsPage';
 
 function App() {
   const location = useLocation();
@@ -44,6 +45,7 @@ function App() {
               <Route index element={<Navigate to="/user/preferences" replace />} />
               <Route path='preferences' element={<PreferencesPage />} />
               <Route path='models' element={<ModelsPage />} />
+              <Route path='gen-commands' element={<GenCommandsPage />} />
             </Route>
           </Route>
           <Route path='/' element={<PublicLayout />}>

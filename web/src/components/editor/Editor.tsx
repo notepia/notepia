@@ -13,10 +13,12 @@ import { Attachment } from './extensions/attachment/Attachment'
 import { ImageNode } from './extensions/imagenode/ImageNode'
 import { uploadFile } from '../../api/file'
 import useCurrentWorkspaceId from '../../hooks/use-currentworkspace-id'
-import { NoteData } from '../../api/note'
+import { NoteData } from '../../types/note'
 import { TextGenNode } from './extensions/textgen/TextGen'
-import { listModels, textGen, TextGenModel } from '../../api/tool'
+import { listModels, textGen } from '../../api/tool'
 import { toast } from '../../stores/toast'
+import TextSelectionMenu from './extensions/textselectionmenu/TextSelectionMenu'
+import { TextGenModel } from '../../types/textgen'
 
 interface Props {
   note: NoteData
@@ -151,7 +153,7 @@ const Editor: FC<Props> = ({ note, onChange }) => {
               {
                 icon: <Sparkles size={16} />,
                 label: t("textGen.name"),
-                keywords: ["ai","text gen"],
+                keywords: ["ai", "text gen"],
                 command: ({ editor }: any) =>
                   editor.chain().focus().addTextGen().run(),
               },
@@ -240,7 +242,6 @@ const Editor: FC<Props> = ({ note, onChange }) => {
       {!isTouchDevice && <DragHandle editor={editor} className='border rounded shadow-sm p-1'>
         <GripVertical size={12} />
       </DragHandle>}
-
       <BubbleMenu
         editor={editor}
         shouldShow={() => editor.isActive('table') || editor.isActive('tableCell')}
@@ -259,14 +260,16 @@ const Editor: FC<Props> = ({ note, onChange }) => {
         }}
         options={{ placement: 'top-start', offset: 8 }}
       >
-        <div className="flex gap-1 divide-x-2 bg-slate-50 border rounded shadow">
+        <div className="flex gap-1 divide-x-2 bg-slate-50 border rounded shadow text-sm">
           <button className='p-2' onClick={() => editor.chain().focus().deleteColumn().run()}>{t("table.deleteColumn")}</button>
           <button className='p-2' onClick={() => editor.chain().focus().addColumnAfter().run()}>{t("table.addColumn")}</button>
           <button className='p-2' onClick={() => editor.chain().focus().deleteRow().run()}>{t("table.deleteRow")}</button>
           <button className='p-2' onClick={() => editor.chain().focus().addRowAfter().run()}>{t("table.addRow")}</button>
         </div>
       </BubbleMenu>
-      <EditorContent editor={editor} />
+
+      <TextSelectionMenu editor={editor} />
+      <EditorContent editor={editor} className='relative' />
     </EditorContext.Provider>
   )
 }

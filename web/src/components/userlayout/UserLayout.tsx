@@ -4,7 +4,7 @@ import { useSidebar } from "../sidebar/SidebarProvider"
 import { Link, Outlet, useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import Main from "../main/Main"
-import { Brain, CornerUpLeft, LogOut, Settings2 } from 'lucide-react'
+import { Brain, CornerUpLeft, LogOut, Settings2, Sparkles } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import { useMutation } from "@tanstack/react-query"
 import { signOut } from "../../api/auth"
@@ -65,6 +65,15 @@ const UserLayout = () => {
                                 <Link to="/user/models" className="p-2 flex gap-2">
                                     <Brain size={20} />
                                     {!isCollapse && <>{t("menu.models")}</>}
+                                </Link>
+                            </Tooltip>
+                            <Tooltip
+                                text={t("menu.gencommands")}
+                                side="right"
+                                enabled={isCollapse}>
+                                <Link to="/user/gen-commands" className="p-2 flex gap-2">
+                                    <Sparkles size={20} />
+                                    {!isCollapse && <>{t("menu.gencommands")}</>}
                                 </Link>
                             </Tooltip>
                             <Tooltip

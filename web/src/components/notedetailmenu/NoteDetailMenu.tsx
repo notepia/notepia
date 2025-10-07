@@ -7,7 +7,7 @@ import useCurrentWorkspaceId from "../../hooks/use-currentworkspace-id"
 import { useTranslation } from "react-i18next"
 import { toast } from '../../stores/toast';
 import { FC, ReactNode } from "react"
-import { Visibility } from "../../types/visibility"
+import { Visibility } from "../../types/note"
 
 interface Props {
     note: NoteData
