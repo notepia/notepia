@@ -4,8 +4,9 @@ import { useTranslation } from "react-i18next"
 import { updatePreferences } from "../../api/user"
 import { useCurrentUserStore } from "../../stores/current-user"
 import { toast } from "../../stores/toast"
-import { useTheme, Theme } from "../../providers/Theme"
+import { useTheme } from "../../providers/Theme"
 import { useEffect } from "react"
+import { Theme } from "../../types/user"
 
 const PreferencesPage = () => {
     const { user } = useCurrentUserStore()

@@ -1,18 +1,5 @@
 import axios from 'axios';
-import { Visibility } from '../types/visibility';
-
-export interface NoteData {
-  id?: string;
-  created_at?: string;
-  updated_at?: string;
-  blocks: Block[] | null;
-  visibility?: Visibility;
-}
-
-interface Block {
-  type: string;
-  data: any;
-}
+import { NoteData, Visibility } from '../types/note';
 
 export const getPublicNotes = async (pageNum: number, pageSize: number, query: string) => {
   const response = await axios.get(`/api/v1/public/notes?pageSize=${pageSize}&pageNumber=${pageNum}&query=${query}`, { withCredentials: true });
