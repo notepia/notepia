@@ -1,11 +1,12 @@
 package model
 
-import "time"
-
 type FileFilter struct {
 	WorkspaceID string
 	ID          string
 	Exts        []string
+	Query       string
+	PageSize    int
+	PageNumber  int
 }
 
 type File struct {
@@ -15,8 +16,8 @@ type File struct {
 	Size             int64
 	Ext              string
 	OriginalFilename string `json:"original_filename"`
-	CreatedAt        time.Time
+	CreatedAt        string
 	CreatedBy        string
-	UpdatedAt        time.Time
+	UpdatedAt        string
 	UpdatedBy        string
 }

@@ -2,6 +2,7 @@ package sqlitedb
 
 import (
 	"context"
+	"strings"
 
 	"github.com/unsealdev/unseal/internal/model"
 	"gorm.io/gorm"
@@ -12,15 +13,44 @@ func (s SqliteDB) CreateFile(u model.File) error {
 }
 
 func (s SqliteDB) FindFiles(f model.FileFilter) ([]model.File, error) {
-	query := gorm.
-		G[model.File](s.getDB())
-
 	var conds []string
 	var args []interface{}
 
-	Files, err := query.
-		Where(conds, args...).
-		Find(context.Background())
+	if f.WorkspaceID != "" {
+		conds = append(conds, "workspace_id = ?")
+		args = append(args, f.WorkspaceID)
+	}
+
+	if f.ID != "" {
+		conds = append(conds, "id = ?")
+		args = append(args, f.ID)
+	}
+
+	if len(f.Exts) > 0 {
+		conds = append(conds, "ext IN ?")
+		args = append(args, f.Exts)
+	}
+
+	if f.Query != "" {
+		conds = append(conds, "original_filename LIKE ?")
+		args = append(args, "%"+f.Query+"%")
+	}
+
+	whereClause := strings.Join(conds, " AND ")
+	if whereClause == "" {
+		whereClause = "1 = 1"
+	}
+
+	query := gorm.
+		G[model.File](s.getDB()).
+		Where(whereClause, args...).
+		Order("created_at DESC")
+
+	if f.PageSize > 0 && f.PageNumber > 0 {
+		query = query.Offset((f.PageNumber - 1) * f.PageSize).Limit(f.PageSize)
+	}
+
+	Files, err := query.Find(context.Background())
 
 	return Files, err
 }

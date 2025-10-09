@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -41,6 +42,7 @@ func (h Handler) Upload(c echo.Context) error {
 	}
 	user := c.Get("user").(model.User)
 
+	now := time.Now().Format(time.RFC3339)
 	fileModel := model.File{
 		WorkspaceID:      workspaceId,
 		ID:               util.NewId(),
@@ -48,17 +50,23 @@ func (h Handler) Upload(c echo.Context) error {
 		Ext:              ext,
 		Size:             file.Size,
 		OriginalFilename: file.Filename,
-		CreatedAt:        time.Now(),
+		CreatedAt:        now,
 		CreatedBy:        user.ID,
+		UpdatedAt:        now,
+		UpdatedBy:        user.ID,
 	}
 	if err := h.db.CreateFile(fileModel); err != nil {
 		return c.String(http.StatusInternalServerError, "failed to save file record")
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
+		"id":            fileModel.ID,
 		"filename":      newFileName,
 		"original_name": file.Filename,
 		"size":          file.Size,
+		"ext":           ext,
+		"created_at":    fileModel.CreatedAt,
+		"updated_at":    fileModel.UpdatedAt,
 	})
 }
 
@@ -118,21 +126,100 @@ func (h Handler) List(c echo.Context) error {
 	if workspaceId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Workspace id is required")
 	}
-	filter := model.FileFilter{WorkspaceID: workspaceId}
+
+	// Get pagination parameters
+	pageSize := 20
+	pageNumber := 1
+	if ps := c.QueryParam("pageSize"); ps != "" {
+		if v, err := strconv.Atoi(ps); err == nil && v > 0 {
+			pageSize = v
+		}
+	}
+	if pn := c.QueryParam("pageNumber"); pn != "" {
+		if v, err := strconv.Atoi(pn); err == nil && v > 0 {
+			pageNumber = v
+		}
+	}
+
+	// Get query parameters
+	query := c.QueryParam("q")
+	extFilter := c.QueryParam("ext")
+
+	filter := model.FileFilter{
+		WorkspaceID: workspaceId,
+		Query:       query,
+		PageSize:    pageSize,
+		PageNumber:  pageNumber,
+	}
+
+	// Parse extension filter
+	if extFilter != "" {
+		filter.Exts = []string{extFilter}
+	}
+
 	files, err := h.db.FindFiles(filter)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to list files")
+		c.Logger().Errorf("Failed to list files for workspace %s: %v", workspaceId, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to list files: "+err.Error())
 	}
 	fileInfos := make([]map[string]interface{}, 0, len(files))
 	for _, f := range files {
 		fileInfos = append(fileInfos, map[string]interface{}{
+			"id":            f.ID,
 			"name":          f.Name,
 			"original_name": f.OriginalFilename,
 			"size":          f.Size,
 			"ext":           f.Ext,
+			"created_at":    f.CreatedAt,
+			"updated_at":    f.UpdatedAt,
 		})
 	}
 	return c.JSON(http.StatusOK, echo.Map{"files": fileInfos})
+}
+
+func (h Handler) RenameFile(c echo.Context) error {
+	workspaceId := c.Param("workspaceId")
+	id := c.Param("id")
+	if workspaceId == "" || id == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Workspace id and file id are required")
+	}
+
+	var req struct {
+		OriginalFilename string `json:"original_filename"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+
+	if req.OriginalFilename == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Original filename is required")
+	}
+
+	file, err := h.db.FindFileByID(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "File not found")
+	}
+
+	if file.WorkspaceID != workspaceId {
+		return echo.NewHTTPError(http.StatusForbidden, "File does not belong to this workspace")
+	}
+
+	user := c.Get("user").(model.User)
+	file.OriginalFilename = req.OriginalFilename
+	file.UpdatedAt = time.Now().Format(time.RFC3339)
+	file.UpdatedBy = user.ID
+
+	if err := h.db.UpdateFile(file); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to rename file")
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":            file.ID,
+		"name":          file.Name,
+		"original_name": file.OriginalFilename,
+		"size":          file.Size,
+		"ext":           file.Ext,
+	})
 }
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")

@@ -34,6 +34,7 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 	g.GET("/:workspaceId/files/:id", h.Download)
 	g.GET("/:workspaceId/files", h.List)
 	g.POST("/:workspaceId/files", h.Upload)
+	g.PATCH("/:workspaceId/files/:id", h.RenameFile)
 	g.DELETE("/:workspaceId/files/:id", h.Delete)
 
 	g.GET("/:workspaceId/gen-templates", h.GetGenTemplates)

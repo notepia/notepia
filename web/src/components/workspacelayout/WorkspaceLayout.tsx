@@ -4,7 +4,7 @@ import { useSidebar } from "../sidebar/SidebarProvider"
 import { useWorkspaceStore } from "@/stores/workspace"
 import WorkspaceMenu from "../workspacemenu/WorkspaceMenu"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { BookText, Sparkles, Clock } from 'lucide-react'
+import { BookText, Sparkles } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import Tooltip from "../tooltip/Tooltip"
 import BaseLayout from "../baselayout/BaseLayout"
