@@ -6,7 +6,7 @@ interface Props {
     editor: Editor
 }
 
-const TextSelectionMenu: FC<Props> = ({ editor }) => {
+const TextSelectionMenu: FC<Props> = ({ editor }:any) => {
 
     const editorState = useEditorState({
         editor,
@@ -28,7 +28,7 @@ const TextSelectionMenu: FC<Props> = ({ editor }) => {
             options={{ placement: 'bottom' }}
         >
             <div className="text-selection-menu">
-
+                <button onClick={()=>editor.chain().focus().addAIGeneration().run()}>add</button>
 
             </div>
         </BubbleMenu>

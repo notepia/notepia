@@ -97,6 +97,7 @@ const Editor: FC<Props> = ({ note, onChange }) => {
           }
         }
       }),
+      AIGenerationNode,
       SlashCommand.configure({
         suggestion: {
           items: ({ query }: { query: string }): CommandItem[] => {
@@ -267,7 +268,6 @@ const Editor: FC<Props> = ({ note, onChange }) => {
           <button className='p-2' onClick={() => editor.chain().focus().addRowAfter().run()}>{t("table.addRow")}</button>
         </div>
       </BubbleMenu>
-
       <TextSelectionMenu editor={editor} />
       <EditorContent editor={editor} className='relative' />
     </EditorContext.Provider>
