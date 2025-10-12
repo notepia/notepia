@@ -2,6 +2,7 @@ import { Node, mergeAttributes } from '@tiptap/core'
 import AIGenerationComponent from './AIGenerationComponent'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import { GenCommand } from '../../../../types/user'
+import { AIGenerateResponse } from '../../../../types/ai'
 
 export const AIGenerationNode = Node.create({
     name: 'AIGeneration',
@@ -11,14 +12,15 @@ export const AIGenerationNode = Node.create({
 
     addAttributes() {
         return {
-            command: { default: null }
+            command: { default: null },
+            selectedText: { default: '' }
         }
     },
 
     addOptions() {
         return {
-            generate: async () => {
-                return {}
+            generate: async (command: GenCommand, selectedText: string): Promise<AIGenerateResponse> => {
+                return { modality: command.modality }
             }
         }
     },
@@ -39,15 +41,24 @@ export const AIGenerationNode = Node.create({
                     ({ chain }: any) => {
                         const { state } = this.editor
                         const { selection } = state
+                        const selectedText = state.doc.textBetween(selection.from, selection.to, ' ')
                         const posAfter = selection.$to.end()
                         chain()
-                            .insertContentAt(posAfter, { type: this.name, attrs: { command: command } })
+                            .insertContentAt(posAfter, {
+                                type: this.name,
+                                attrs: {
+                                    command: command,
+                                    selectedText: selectedText
+                                }
+                            })
                             .run()
                     },
         }
     },
 
     addNodeView() {
-        return ReactNodeViewRenderer(AIGenerationComponent)
+        return ReactNodeViewRenderer(AIGenerationComponent, {
+            as: 'div'
+        })
     },
 })

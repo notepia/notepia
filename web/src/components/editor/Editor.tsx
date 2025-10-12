@@ -98,18 +98,18 @@ const Editor: FC<Props> = ({ note, onChange }) => {
         }
       }),
       AIGenerationNode.configure({
-        generate: async (command: GenCommand) => {
-          try {
-            const response = await generateContent({
-              modality: command.modality,
-              model: command.model,
-              prompt: command.prompt
-            })
-            return response
-          }
-          catch (e) {
-            toast.error(JSON.stringify(e))
-          }
+        generate: async (command: GenCommand, selectedText: string) => {
+          // Combine the command prompt with selected text
+          const fullPrompt = selectedText
+            ? `${command.prompt}\n\nSelected text: ${selectedText}`
+            : command.prompt
+
+          const response = await generateContent({
+            modality: command.modality,
+            model: command.model,
+            prompt: fullPrompt
+          })
+          return response
         }
       }),
       SlashCommand.configure({
