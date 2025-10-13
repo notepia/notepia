@@ -53,10 +53,10 @@ export default {
     },
     genCommands: {
       name: "Command Name",
-      containerType: "Container Type",
+      menuType: "Menu Type",
       prompt: "Prompt",
       model: "Model",
-      genType: "Generative Type",
+      modality: "Modality",
       searchPlaceholder: "Search gen command",
       createNew: "Create New Command",
       editing: "Editing Command",

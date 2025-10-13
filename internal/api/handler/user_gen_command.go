@@ -10,11 +10,11 @@ import (
 )
 
 type CreateOrUpdateUserGenCommandRequest struct {
-	Name          string `json:"name" validate:"required"`
-	ContainerType string `json:"container_type" validate:"required"`
-	Prompt        string `json:"prompt" validate:"required"`
-	GenType       string `json:"gen_type" validate:"required,oneof=text-to-text text-to-image text-and-image-to-text text-and-image-to-image"`
-	Model         string `json:"model" validate:"required"`
+	Name     string `json:"name" validate:"required"`
+	MenuType string `json:"menu_type" validate:"required"`
+	Prompt   string `json:"prompt" validate:"required"`
+	Modality string `json:"modality" validate:"required,oneof=text-to-text text-to-image text-and-image-to-text text-and-image-to-image"`
+	Model    string `json:"model" validate:"required"`
 }
 
 func (h Handler) GetUserGenCommands(c echo.Context) error {
@@ -56,13 +56,13 @@ func (h Handler) CreateUserGenCommand(c echo.Context) error {
 	}
 
 	command := model.UserGenCommand{
-		ID:            util.NewId(),
-		UserID:        userID,
-		Name:          req.Name,
-		ContainerType: req.ContainerType,
-		GenType:       req.GenType,
-		Model:         req.Model,
-		Prompt:        req.Prompt,
+		ID:       util.NewId(),
+		UserID:   userID,
+		Name:     req.Name,
+		MenuType: req.MenuType,
+		Modality: req.Modality,
+		Model:    req.Model,
+		Prompt:   req.Prompt,
 	}
 
 	err := h.db.CreateUserGenCommand(command)
@@ -96,12 +96,12 @@ func (h Handler) UpdateUserGenCommand(c echo.Context) error {
 	}
 
 	command := model.UserGenCommand{
-		ID:            id,
-		Name:          req.Name,
-		ContainerType: req.ContainerType,
-		GenType:       req.GenType,
-		Model:         req.Model,
-		Prompt:        req.Prompt,
+		ID:       id,
+		Name:     req.Name,
+		MenuType: req.MenuType,
+		Modality: req.Modality,
+		Model:    req.Model,
+		Prompt:   req.Prompt,
 	}
 
 	err := h.db.UpdateUserGenCommand(command)

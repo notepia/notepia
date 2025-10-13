@@ -18,9 +18,9 @@ import { TextGenNode } from './extensions/textgen/TextGen'
 import { listModels, textGen } from '@/api/tool'
 import { toast } from '@/stores/toast'
 import TextSelectionMenu from './extensions/textselectionmenu/TextSelectionMenu'
+import ImageSelectionMenu from './extensions/imageselectionmenu/ImageSelectionMenu'
 import { TextGenModel } from '@/types/textgen'
 import { AIGenerationNode } from './extensions/aigeneration/AIGeneration'
-import { GenCommand } from '@/types/user'
 import { generateContent } from '@/api/ai'
 import { AIGenerateRequest } from '@/types/ai'
 
@@ -278,6 +278,7 @@ const Editor: FC<Props> = ({ note, onChange }) => {
         </div>
       </BubbleMenu>
       <TextSelectionMenu editor={editor} />
+      <ImageSelectionMenu editor={editor} />
       <EditorContent editor={editor} className='relative' />
     </EditorContext.Provider>
   )

@@ -3,7 +3,7 @@ import TransitionWrapper from "../../components/transitionwrapper/TransitionWrap
 import { useTranslation } from "react-i18next"
 import { useCurrentUserStore } from "../../stores/current-user"
 import { Plus, Search, Pencil, Trash2, X, Save } from "lucide-react"
-import { GenCommand, ContainerType } from "../../types/user"
+import { GenCommand, MenuType } from "../../types/user"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getUserGenCommands, createUserGenCommand, updateUserGenCommand, deleteUserGenCommand } from "../../api/user"
 import { useState } from "react"
@@ -21,7 +21,7 @@ const GenCommandsPage = () => {
     const [isCreating, setIsCreating] = useState(false)
     const [formData, setFormData] = useState<Omit<GenCommand, 'id'>>({
         name: "",
-        container_type: "editorTextSelectionMenu",
+        menu_type: "editorTextSelectionMenu",
         prompt: "",
         modality: "text2text",
         model: ""
@@ -81,7 +81,7 @@ const GenCommandsPage = () => {
     const resetForm = () => {
         setFormData({
             name: "",
-            container_type: "editorTextSelectionMenu",
+            menu_type: "editorTextSelectionMenu",
             prompt: "",
             modality: "text2text",
             model: ""
@@ -92,7 +92,7 @@ const GenCommandsPage = () => {
         setEditingId(command.id!)
         setFormData({
             name: command.name,
-            container_type: command.container_type,
+            menu_type: command.menu_type,
             prompt: command.prompt,
             modality: command.modality,
             model: command.model
@@ -165,9 +165,9 @@ const GenCommandsPage = () => {
 
                         <div className="flex flex-col">
                             <div className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                                {t("pages.genCommands.containerType")}
+                                {t("pages.genCommands.menuType")}
                             </div>
-                            <div className="text-base mt-1">{command.container_type}</div>
+                            <div className="text-base mt-1">{command.menu_type}</div>
                         </div>
 
                         <div className="flex flex-col">
@@ -182,7 +182,7 @@ const GenCommandsPage = () => {
                         <div className="flex gap-3">
                             <div className="flex flex-col flex-1">
                                 <div className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                                    {t("pages.genCommands.genType")}
+                                    {t("pages.genCommands.modality")}
                                 </div>
                                 <div className="text-base mt-1">{command.modality}</div>
                             </div>
@@ -242,17 +242,16 @@ const GenCommandsPage = () => {
 
                         <div className="flex flex-col">
                             <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                                {t("pages.genCommands.containerType")} *
+                                {t("pages.genCommands.menuType")} *
                             </label>
                             <select
-                                value={formData.container_type}
-                                onChange={(e) => setFormData({ ...formData, container_type: e.target.value as ContainerType })}
+                                value={formData.menu_type}
+                                onChange={(e) => setFormData({ ...formData, menu_type: e.target.value as MenuType })}
                                 className="border dark:border-neutral-600 p-2 rounded bg-transparent"
-                                aria-label="container type"
+                                aria-label="menu type"
                             >
                                 <option value="editorTextSelectionMenu">Editor Text Selection Menu</option>
                                 <option value="editorImageSelectionMenu">Editor Image Selection Menu</option>
-                                <option value="notePageMenu">Note Page Menu</option>
                             </select>
                         </div>
 
@@ -272,7 +271,7 @@ const GenCommandsPage = () => {
                         <div className="flex gap-3 w-full min-w-0">
                             <div className="flex flex-col flex-1 w-full min-w-0">
                                 <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                                    {t("pages.genCommands.genType")} *
+                                    {t("pages.genCommands.modality")} *
                                 </label>
                                 <select
                                     value={formData.modality}

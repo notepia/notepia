@@ -15,11 +15,11 @@ interface Preferences {
 
 export type Theme = "light" | "dark";
 
-export type ContainerType = "editorTextSelectionMenu" | "editorImageSelectionMenu" | "notePageMenu"
+export type MenuType = "editorTextSelectionMenu" | "editorImageSelectionMenu" | "notePageMenu"
 
 export interface GenCommand {
     id?: string
-    container_type: ContainerType
+    menu_type: MenuType
     name: string
     prompt: string
     modality: AIModality

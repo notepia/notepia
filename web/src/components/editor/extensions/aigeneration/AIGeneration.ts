@@ -55,6 +55,22 @@ export const AIGenerationNode = Node.create({
                             })
                             .run()
                     },
+            addAIGenerationWithImage:
+                (command: GenCommand, imageBase64: string) =>
+                    ({ chain }: any) => {
+                        const { state } = this.editor
+                        const { selection } = state
+                        const posAfter = selection.$to.end()
+                        chain()
+                            .insertContentAt(posAfter, {
+                                type: this.name,
+                                attrs: {
+                                    command: command,
+                                    selectedImages: [imageBase64]
+                                }
+                            })
+                            .run()
+                    },
         }
     },
 

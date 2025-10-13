@@ -2,9 +2,9 @@ CREATE TABLE user_gencommands (
   id TEXT  PRIMARY KEY,
   user_id TEXT ,
   name TEXT,
-  container_type TEXT,
+  menu_type TEXT,
   prompt TEXT,
-  gen_type TEXT,
+  modality TEXT,
   model TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP

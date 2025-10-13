@@ -52,10 +52,10 @@ export default {
     },
     genCommands: {
       name: "指令名稱",
-      containerType: "容器類型",
+      menuType: "選單類型",
       prompt: "提示詞",
       model: "模型",
-      genType: "生成方式",
+      modality: "模態",
       searchPlaceholder: "搜尋生成指令",
       createNew: "建立新指令",
       editing: "編輯指令",

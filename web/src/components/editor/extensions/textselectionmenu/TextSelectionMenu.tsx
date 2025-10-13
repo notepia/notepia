@@ -22,19 +22,6 @@ const TextSelectionMenu: FC<Props> = ({ editor }: any) => {
         enabled: !!user?.id,
     })
 
-    const editorState = useEditorState({
-        editor,
-        selector: ({ editor }) => {
-            if (!editor) return null;
-
-            return {
-                isEditable: editor.isEditable,
-                currentSelection: editor.state.selection,
-                currentSelectionContent: editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, " "),
-            };
-        },
-    })
-
     return (
         <BubbleMenu
             editor={editor}

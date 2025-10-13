@@ -10,13 +10,6 @@ CREATE TABLE ai_generations (
   request_prompt TEXT NOT NULL,
   request_system_prompt TEXT,
   request_image_urls TEXT,  -- JSON array
-  request_mask_url TEXT,
-  request_temperature REAL,
-  request_max_tokens INTEGER,
-  request_size TEXT,
-  request_quality TEXT,
-  request_style TEXT,
-  request_n INTEGER,
 
   -- Response fields
   response_text TEXT,
