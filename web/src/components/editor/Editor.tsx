@@ -17,8 +17,12 @@ import { NoteData } from '@/api/note'
 import { TextGenNode } from './extensions/textgen/TextGen'
 import { listModels, textGen } from '@/api/tool'
 import { toast } from '@/stores/toast'
-import TextSelectionMenu from '@/components/editor/extensions/textselectionmenu/TextSelectionMenu'
+import TextSelectionMenu from './extensions/textselectionmenu/TextSelectionMenu'
 import { TextGenModel } from '@/types/textgen'
+import { AIGenerationNode } from './extensions/aigeneration/AIGeneration'
+import { GenCommand } from '@/types/user'
+import { generateContent } from '@/api/ai'
+import { AIGenerateRequest } from '@/types/ai'
 
 interface Props {
   note: NoteData
@@ -98,17 +102,8 @@ const Editor: FC<Props> = ({ note, onChange }) => {
         }
       }),
       AIGenerationNode.configure({
-        generate: async (command: GenCommand, selectedText: string) => {
-          // Combine the command prompt with selected text
-          const fullPrompt = selectedText
-            ? `${command.prompt}\n\nSelected text: ${selectedText}`
-            : command.prompt
-
-          const response = await generateContent({
-            modality: command.modality,
-            model: command.model,
-            prompt: fullPrompt
-          })
+        generate: async (req: AIGenerateRequest) => {
+          const response = await generateContent(req)
           return response
         }
       }),

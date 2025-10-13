@@ -1,19 +1,23 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
 import { useEffect, useState } from "react"
-import { AIGenerateResponse } from "../../../../types/ai"
+import { AIGenerateRequest, AIGenerateResponse } from "../../../../types/ai"
 import { Copy, Check } from "lucide-react"
+import { GenCommand } from "../../../../types/user"
 
-const AIGenerationComponent: React.FC<NodeViewProps> = ({ node, extension }) => {
+const AIGenerationComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes }) => {
     const [result, setResult] = useState<AIGenerateResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [elapsedTime, setElapsedTime] = useState(0)
     const [error, setError] = useState<string | null>(null)
     const [copied, setCopied] = useState(false)
 
-    const command = node.attrs.command
+    const command = node.attrs.command as GenCommand
     const selectedText = node.attrs.selectedText || ''
+    const selectedImages = node.attrs.selectedImages
 
     useEffect(() => {
+        if (result) return
+
         let timer: NodeJS.Timeout
         let startTime = Date.now()
 
@@ -25,10 +29,17 @@ const AIGenerationComponent: React.FC<NodeViewProps> = ({ node, extension }) => 
         // Call generate function from extension options
         const generate = async () => {
             try {
-                // Simulate delay
-                await new Promise(resolve => setTimeout(resolve, 2000))
 
-                const response = await extension.options.generate(command, selectedText)
+                let prompt = command.prompt;
+
+                const req: AIGenerateRequest = {
+                    modality: command.modality,
+                    model: command.model,
+                    prompt: prompt,
+                    image_base64s: selectedImages
+                }
+
+                const response = await extension.options.generate(req)
                 setResult(response)
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Generation failed')
@@ -36,6 +47,8 @@ const AIGenerationComponent: React.FC<NodeViewProps> = ({ node, extension }) => 
                 setLoading(false)
                 // Stop timer when generation completes or fails
                 if (timer) clearInterval(timer)
+
+                updateAttributes({ result: result, command: command })
             }
         }
 

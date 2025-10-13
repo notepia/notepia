@@ -2,7 +2,7 @@ import { Node, mergeAttributes } from '@tiptap/core'
 import AIGenerationComponent from './AIGenerationComponent'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import { GenCommand } from '../../../../types/user'
-import { AIGenerateResponse } from '../../../../types/ai'
+import { AIGenerateRequest } from '../../../../types/ai'
 
 export const AIGenerationNode = Node.create({
     name: 'AIGeneration',
@@ -13,14 +13,16 @@ export const AIGenerationNode = Node.create({
     addAttributes() {
         return {
             command: { default: null },
-            selectedText: { default: '' }
+            result: { default: null },
+            selectedText: { default: null },
+            selectedImages: { default: null }
         }
     },
 
     addOptions() {
         return {
-            generate: async (command: GenCommand, selectedText: string): Promise<AIGenerateResponse> => {
-                return { modality: command.modality }
+            generate: async (req: AIGenerateRequest) => {
+                return {}
             }
         }
     },
