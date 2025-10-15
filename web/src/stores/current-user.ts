@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { me } from "@/api/auth";
-import { User } from "@/api/user";
+import { User } from "@/types/user";
 
 interface CurrentUserStore {
   user: User | null;

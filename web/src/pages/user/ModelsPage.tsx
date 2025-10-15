@@ -5,11 +5,12 @@ import OpenAI from "@/components/icons/openai"
 import Gemini from "@/components/icons/gemini"
 import AutoSaveInput from "@/components/autosaveinput/AutoSaveInput"
 import { useEffect, useState } from "react"
-import { getUserSettings, updateGeminiKey, updateOpenAIKey, UserSettings } from "@/api/user-settings"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { toast } from "@/stores/toast"
 import { Edit, Loader, Trash2, X } from "lucide-react"
 import Card from "@/components/card/Card"
+import { getUserSettings, updateGeminiKey, updateOpenAIKey } from "@/api/user"
+import { UserSettings } from "@/types/usersettings"
 
 const ModelsPage = () => {
     const { t } = useTranslation();
