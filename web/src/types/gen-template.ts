@@ -5,6 +5,7 @@ export interface GenTemplate {
   workspace_id: string;
   name: string;
   prompt: string;
+  provider: string; // AI provider: openai, gemini, etc.
   model: string;
   modality: Modality;
   image_urls: string; // Comma-separated image URLs
@@ -17,6 +18,7 @@ export interface GenTemplate {
 export interface CreateGenTemplateRequest {
   name: string;
   prompt: string;
+  provider: string;
   model: string;
   modality: Modality;
   image_urls?: string; // Comma-separated image URLs
@@ -25,6 +27,7 @@ export interface CreateGenTemplateRequest {
 export interface UpdateGenTemplateRequest {
   name: string;
   prompt: string;
+  provider: string;
   model: string;
   modality: Modality;
   image_urls?: string; // Comma-separated image URLs

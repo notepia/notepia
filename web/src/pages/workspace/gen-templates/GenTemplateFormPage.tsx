@@ -21,6 +21,7 @@ const GenTemplateFormPage = () => {
 
     const [name, setName] = useState("")
     const [prompt, setPrompt] = useState("")
+    const [provider, setProvider] = useState("openai")
     const [model, setModel] = useState("")
     const [modality, setModality] = useState<Modality>("text2text")
     const [imageUrls, setImageUrls] = useState<string[]>([])
@@ -36,6 +37,7 @@ const GenTemplateFormPage = () => {
         if (existingTemplate) {
             setName(existingTemplate.name)
             setPrompt(existingTemplate.prompt)
+            setProvider(existingTemplate.provider || "openai")
             setModel(existingTemplate.model)
             setModality(existingTemplate.modality)
             setImageUrls(existingTemplate.image_urls ? existingTemplate.image_urls.split(',').filter(Boolean) : [])
@@ -55,6 +57,7 @@ const GenTemplateFormPage = () => {
         mutationFn: () => createGenTemplate(currentWorkspaceId, {
             name,
             prompt,
+            provider,
             model,
             modality,
             image_urls: imageUrls.filter(Boolean).join(',')
@@ -73,6 +76,7 @@ const GenTemplateFormPage = () => {
         mutationFn: () => updateGenTemplate(currentWorkspaceId, id!, {
             name,
             prompt,
+            provider,
             model,
             modality,
             image_urls: imageUrls.filter(Boolean).join(',')
@@ -188,6 +192,21 @@ const GenTemplateFormPage = () => {
 
                     <div>
                         <label className="block text-sm font-medium mb-2">
+                            {t("genTemplates.fields.provider")}
+                        </label>
+                        <select
+                            value={provider}
+                            onChange={(e) => setProvider(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800"
+                            required
+                        >
+                            <option value="openai">OpenAI</option>
+                            <option value="gemini">Google Gemini</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
                             {t("genTemplates.fields.model")}
                         </label>
                         <input
@@ -195,7 +214,7 @@ const GenTemplateFormPage = () => {
                             value={model}
                             onChange={(e) => setModel(e.target.value)}
                             className="w-full px-4 py-2 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800"
-                            placeholder="e.g., gpt-4, claude-3-opus"
+                            placeholder={provider === "openai" ? "e.g., gpt-4o, gpt-4o-mini" : "e.g., gemini-2.5-pro, gemini-2.5-flash"}
                             required
                         />
                     </div>

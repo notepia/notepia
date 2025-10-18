@@ -112,6 +112,7 @@ export default {
     fields: {
       name: "名稱",
       prompt: "提示詞",
+      provider: "提供商",
       model: "模型",
       modality: "模態",
       imageUrls: "預設圖片 (網址)"

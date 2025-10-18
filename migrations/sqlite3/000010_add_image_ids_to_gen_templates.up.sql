@@ -1,1 +1,0 @@
-ALTER TABLE `gen_templates` ADD COLUMN `image_urls` text;

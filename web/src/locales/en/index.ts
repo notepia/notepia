@@ -113,6 +113,7 @@ export default {
     fields: {
       name: "Name",
       prompt: "Prompt",
+      provider: "Provider",
       model: "Model",
       modality: "Modality",
       imageUrls: "Default Images (URLs)"

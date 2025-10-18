@@ -61,22 +61,20 @@ func (h Handler) GenerateFromTemplate(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	// Determine provider from model prefix (e.g., "gpt-4" -> "openai", "gemini-2.5" -> "gemini")
-	provider := ""
-	if strings.HasPrefix(template.Model, "gpt") {
-		provider = "openai"
-	} else if strings.HasPrefix(template.Model, "gemini") {
-		provider = "gemini"
-	} else {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Unknown model provider"})
+	// Use provider from template
+	provider := template.Provider
+	if provider == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Template provider is not set"})
 	}
 
 	// Get API key from user settings based on provider
 	var apiKey string
 	if provider == "openai" {
-		apiKey = userSettings.OpenaiAPIKey
+		apiKey = *userSettings.OpenAIKey
 	} else if provider == "gemini" {
-		apiKey = userSettings.GeminiAPIKey
+		apiKey = *userSettings.GeminiKey
+	} else {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("Unsupported provider: %s", provider)})
 	}
 
 	if apiKey == "" {

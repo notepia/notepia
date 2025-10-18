@@ -12,6 +12,7 @@ type GenTemplate struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Prompt      string `json:"prompt"`
+	Provider    string `json:"provider"` // AI provider: openai, gemini, etc.
 	Model       string `json:"model"`
 	Modality    string `json:"modality"`
 	ImageURLs   string `json:"image_urls"` // Comma-separated image URLs for template default images
