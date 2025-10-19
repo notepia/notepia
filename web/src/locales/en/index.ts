@@ -89,7 +89,8 @@ export default {
     networkError: "Network error. Please try again",
     fileUploaded: "File uploaded successfully",
     fileUploadFailed: "File upload failed",
-    copied: "Copied to clipboard"
+    copied: "Copied to clipboard",
+    copyFailed: "Failed to copy"
   },
   button: {
     new: "New",
@@ -145,6 +146,9 @@ export default {
     title: "Generation History",
     empty: "No generation history yet",
     emptyHint: "Your AI generation results will appear here",
+    noHistory: "No generation history yet",
+    generateToSee: "Generate content to see history here",
+    model: "Model",
     prompt: "Prompt",
     response: "Response",
     error: "Error",

@@ -88,7 +88,8 @@ export default {
     networkError: "網路異常",
     fileUploaded: "檔案上傳成功",
     fileUploadFailed: "檔案上傳失敗",
-    copied: "已複製到剪貼簿"
+    copied: "已複製到剪貼簿",
+    copyFailed: "複製失敗"
   },
   button: {
     new: "新增",
@@ -144,6 +145,9 @@ export default {
     title: "生成記錄",
     empty: "尚無生成記錄",
     emptyHint: "您的 AI 生成結果將會顯示在這裡",
+    noHistory: "尚無生成記錄",
+    generateToSee: "生成內容後將會顯示在這裡",
+    model: "模型",
     prompt: "提示詞",
     response: "回應",
     error: "錯誤",
