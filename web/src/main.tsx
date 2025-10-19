@@ -35,6 +35,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </QueryClientProvider>
       </SidebarProvider>
     </Tooltip.Provider>
-    <Toast.Viewport className="fixed top-4 right-4 flex flex-col gap-2 w-80 z-50 outline-none" />
+    <Toast.Viewport className="fixed bottom-4 right-4 flex flex-col gap-2 w-80 z-50 outline-none" />
   </Toast.Provider>,
 )
