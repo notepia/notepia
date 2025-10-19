@@ -236,7 +236,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
     const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
 
     return (
-        <div className="py-4 px-4">
+        <div className="py-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <button
@@ -245,7 +245,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <div className="hidden lg:block">
+                    <div className="hidden lg:flex items-center gap-2">
                         <span className="text-2xl font-semibold">{template.name}</span>
                         <span className="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                             {template.modality}
@@ -277,7 +277,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                     </div>
 
                     <div className="space-y-6 p-4 lg:p-6">
-                        <div className="lg:hidden ">
+                        <div className="lg:hidden flex items-center gap-2">
                             <span className="text-2xl font-semibold">{template.name}</span>
                             <span className="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                                 {template.modality}
