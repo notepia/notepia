@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { GenTemplate, CreateGenTemplateRequest, UpdateGenTemplateRequest, GenHistory, GenerateFromTemplateRequest, GenerateFromTemplateResponse } from '@/types/gen-template';
+import { GenTemplate, CreateGenTemplateRequest, UpdateGenTemplateRequest, GenHistory, GenerateFromTemplateRequest, GenerateFromTemplateResponse, GenModel } from '@/types/gen-template';
 
 export const getGenTemplates = async (workspaceId: string, pageNum: number, pageSize: number, query: string) => {
   const response = await axios.get<GenTemplate[]>(
@@ -78,6 +78,14 @@ export const getGenHistory = async (workspaceId: string, historyId: string) => {
 export const deleteGenHistory = async (workspaceId: string, historyId: string) => {
   const response = await axios.delete(
     `/api/v1/workspaces/${workspaceId}/gen-history/${historyId}`,
+    { withCredentials: true }
+  );
+  return response.data;
+};
+
+export const listGenModels = async (workspaceId: string) => {
+  const response = await axios.get<GenModel[]>(
+    `/api/v1/workspaces/${workspaceId}/gen-models`,
     { withCredentials: true }
   );
   return response.data;

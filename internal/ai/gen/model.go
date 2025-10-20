@@ -2,11 +2,12 @@ package gen
 
 // Model represents an AI model
 type Model struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Provider    string `json:"provider"`
-	Modality    string `json:"modality"`
-	Description string `json:"description,omitempty"`
+	ID                  string `json:"id"`
+	Name                string `json:"name"`
+	Provider            string `json:"provider"`
+	ProviderDisplayName string `json:"provider_display_name"`
+	Modality            string `json:"modality"`
+	Description         string `json:"description,omitempty"`
 }
 
 // GenerateRequest represents a generation request

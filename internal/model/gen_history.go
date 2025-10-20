@@ -20,3 +20,8 @@ type GenHistory struct {
 	CreatedAt        string `json:"created_at"`
 	CreatedBy        string `json:"created_by"`
 }
+
+// TableName specifies the table name for GenHistory
+func (GenHistory) TableName() string {
+	return "gen_history"
+}

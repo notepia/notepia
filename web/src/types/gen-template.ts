@@ -1,4 +1,4 @@
-export type Modality = 'text2text' | 'text2image' | 'text2video' | 'text2audio' | 'textimage2text' | 'textimage2image';
+export type Modality = 'text2text';
 
 export interface GenTemplate {
   id: string;
@@ -57,4 +57,13 @@ export interface GenerateFromTemplateResponse {
   history_id: string;
   content: string;
   error: string;
+}
+
+export interface GenModel {
+  id: string;
+  name: string;
+  provider: string;
+  provider_display_name: string;
+  modality: Modality;
+  description?: string;
 }

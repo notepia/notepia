@@ -21,3 +21,8 @@ type GenTemplate struct {
 	UpdatedAt   string `json:"updated_at"`
 	UpdatedBy   string `json:"updated_by"`
 }
+
+// TableName specifies the table name for GenTemplate
+func (GenTemplate) TableName() string {
+	return "gen_templates"
+}

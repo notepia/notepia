@@ -7,6 +7,9 @@ type Provider interface {
 	// Name returns the provider name (e.g., "openai", "gemini")
 	Name() string
 
+	// DisplayName returns the human-readable provider name (e.g., "OpenAI", "Google Gemini")
+	DisplayName() string
+
 	// Modality returns the modality this provider supports (e.g., "text2text", "text2image")
 	Modality() string
 

@@ -14,6 +14,7 @@ import (
 type CreateGenTemplateRequest struct {
 	Name      string `json:"name" validate:"required"`
 	Prompt    string `json:"prompt" validate:"required"`
+	Provider  string `json:"provider" validate:"required"`
 	Model     string `json:"model" validate:"required"`
 	Modality  string `json:"modality" validate:"required"`
 	ImageURLs string `json:"image_urls"`
@@ -22,6 +23,7 @@ type CreateGenTemplateRequest struct {
 type UpdateGenTemplateRequest struct {
 	Name      string `json:"name" validate:"required"`
 	Prompt    string `json:"prompt" validate:"required"`
+	Provider  string `json:"provider" validate:"required"`
 	Model     string `json:"model" validate:"required"`
 	Modality  string `json:"modality" validate:"required"`
 	ImageURLs string `json:"image_urls"`
@@ -31,6 +33,7 @@ type GetGenTemplateResponse struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Prompt      string `json:"prompt"`
+	Provider    string `json:"provider"`
 	Model       string `json:"model"`
 	Modality    string `json:"modality"`
 	ImageURLs   string `json:"image_urls"`
@@ -76,6 +79,7 @@ func (h Handler) GetGenTemplates(c echo.Context) error {
 			ID:          t.ID,
 			Name:        t.Name,
 			Prompt:      t.Prompt,
+			Provider:    t.Provider,
 			Model:       t.Model,
 			Modality:    t.Modality,
 			ImageURLs:   t.ImageURLs,
@@ -111,6 +115,7 @@ func (h Handler) GetGenTemplate(c echo.Context) error {
 		ID:          t.ID,
 		Name:        t.Name,
 		Prompt:      t.Prompt,
+		Provider:    t.Provider,
 		Model:       t.Model,
 		Modality:    t.Modality,
 		ImageURLs:   t.ImageURLs,
@@ -147,6 +152,7 @@ func (h Handler) CreateGenTemplate(c echo.Context) error {
 	t.ID = util.NewId()
 	t.Name = req.Name
 	t.Prompt = req.Prompt
+	t.Provider = req.Provider
 	t.Model = req.Model
 	t.Modality = req.Modality
 	t.ImageURLs = req.ImageURLs
@@ -230,6 +236,7 @@ func (h Handler) UpdateGenTemplate(c echo.Context) error {
 	t.ID = existingTemplate.ID
 	t.Name = req.Name
 	t.Prompt = req.Prompt
+	t.Provider = req.Provider
 	t.Model = req.Model
 	t.Modality = req.Modality
 	t.ImageURLs = req.ImageURLs
@@ -245,4 +252,20 @@ func (h Handler) UpdateGenTemplate(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, t)
+}
+
+// ListGenModels lists all available AI models from all providers with their modalities
+func (h Handler) ListGenModels(c echo.Context) error {
+	user := c.Get("user").(model.User)
+	if user.ID == "" {
+		return c.JSON(http.StatusUnauthorized, "")
+	}
+
+	// Get models from the gen service
+	models, err := h.genService.ListModels()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, models)
 }

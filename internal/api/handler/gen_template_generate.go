@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/unsealdev/unseal/internal/ai/gen"
+	"github.com/unsealdev/unseal/internal/config"
 	"github.com/unsealdev/unseal/internal/model"
 	"github.com/unsealdev/unseal/internal/util"
 )
@@ -67,19 +68,35 @@ func (h Handler) GenerateFromTemplate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Template provider is not set"})
 	}
 
-	// Get API key from user settings based on provider
-	var apiKey string
+	// Get and decrypt API key from user settings based on provider
+	secret := config.C.GetString(config.APP_SECRET)
+	var encryptedKey *string
+
 	if provider == "openai" {
-		apiKey = *userSettings.OpenAIKey
+		encryptedKey = userSettings.OpenAIKey
 	} else if provider == "gemini" {
-		apiKey = *userSettings.GeminiKey
+		encryptedKey = userSettings.GeminiKey
 	} else {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("Unsupported provider: %s", provider)})
 	}
 
-	if apiKey == "" {
+	if encryptedKey == nil || *encryptedKey == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": fmt.Sprintf("API key for %s not configured in user settings", provider),
+		})
+	}
+
+	// Decrypt the API key
+	apiKey, err := util.Decrypt(*encryptedKey, secret)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("Failed to decrypt API key: %s", err.Error()),
+		})
+	}
+
+	if apiKey == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": fmt.Sprintf("API key for %s is empty after decryption", provider),
 		})
 	}
 

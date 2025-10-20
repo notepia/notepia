@@ -8,7 +8,7 @@ import { getGenTemplate, deleteGenTemplate, generateFromTemplate, getGenHistorie
 import { uploadFile } from "@/api/file"
 import { useToastStore } from "@/stores/toast"
 import { TwoColumn, TwoColumnMain, TwoColumnSidebar, useTwoColumn } from "@/components/twocolumn"
-import GenHistoryCard from "./GenHistoryCard"
+import GenHistoryCard from "@/components/genhistorycard/GenHistoryCard"
 
 const GenTemplateDetailPage = () => {
     const { t } = useTranslation()
@@ -199,7 +199,7 @@ const GenTemplateSidebar = ({ histories, refetchHistories, t }: any) => {
             <div className="sticky top-0 bg-gray-50 dark:bg-neutral-900 border-b dark:border-neutral-700 px-4 py-4 flex items-center justify-between z-10">
                 <div className="flex items-center gap-2">
                     <History size={18} />
-                    <h2 className="text-lg font-semibold">{t("genHistory.title") || "Generation History"}</h2>
+                    <div className="text-lg font-semibold">{t("genHistory.title") || "Generation History"}</div>
                 </div>
                 <button
                     onClick={toggleSidebar}
@@ -236,7 +236,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
     const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
 
     return (
-        <div className="py-4">
+        <div className="py-4 ">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <button
@@ -284,16 +284,16 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                             </span>
                         </div>
                         <div>
-                            <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                 {t("genTemplates.fields.model")}
-                            </h2>
+                            </div>
                             <p className="text-lg">{template.model}</p>
                         </div>
 
                         <div>
-                            <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                 {t("genTemplates.fields.prompt")}
-                            </h2>
+                            </div>
                             <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border dark:border-neutral-700">
                                 <pre className="whitespace-pre-wrap text-sm">{template.prompt}</pre>
                             </div>
@@ -301,9 +301,9 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
 
                         {(template.modality === 'textimage2text' || template.modality === 'textimage2image') && templateImages.length > 0 && (
                             <div>
-                                <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                     {t("genTemplates.fields.imageUrls")}
-                                </h2>
+                                </div>
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                     {templateImages.map((img, index) => (
                                         <div key={index} className="relative group">
@@ -323,7 +323,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
 
                         {parameters.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-semibold mb-4">{t("genTemplates.fillParameters")}</h2>
+                                <div className="text-lg font-semibold mb-4">{t("genTemplates.fillParameters")}</div>
                                 <div className="space-y-4">
                                     {parameters.map(param => (
                                         <div key={param}>
@@ -348,9 +348,9 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
 
                         {parameters.length > 0 && (
                             <div>
-                                <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                     {t("genTemplates.assembledPrompt")}
-                                </h2>
+                                </div>
                                 <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                                     <pre className="whitespace-pre-wrap text-sm">{assembledPrompt}</pre>
                                 </div>
@@ -359,9 +359,9 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
 
                         {(template.modality === 'textimage2text' || template.modality === 'textimage2image') && (
                             <div>
-                                <h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                                     {t("genTemplates.additionalImages") || "Additional Images"}
-                                </h2>
+                                </div>
                                 <div className="space-y-3">
                                     {additionalImageUrls.map((url, index) => (
                                         <div key={index} className="flex gap-2 items-start">

@@ -140,7 +140,11 @@ export default {
     generatePlaceholder: "AI generation feature coming soon!",
     generationNotice: "Note: AI generation functionality is not implemented yet. This is a placeholder.",
     historyDeleteSuccess: "History deleted successfully",
-    historyDeleteError: "Failed to delete history"
+    historyDeleteError: "Failed to delete history",
+    selectProvider: "Select a provider",
+    selectModel: "Select a model",
+    noProvidersAvailable: "No providers available for this modality",
+    noModelsAvailable: "No models available for this provider and modality"
   },
   genHistory: {
     title: "Generation History",

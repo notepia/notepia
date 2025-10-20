@@ -139,7 +139,11 @@ export default {
     generatePlaceholder: "AI 生成功能即將推出!",
     generationNotice: "注意：AI 生成功能尚未實作。這是一個佔位符。",
     historyDeleteSuccess: "記錄已刪除",
-    historyDeleteError: "記錄刪除失敗"
+    historyDeleteError: "記錄刪除失敗",
+    selectProvider: "選擇提供商",
+    selectModel: "選擇模型",
+    noProvidersAvailable: "此模態沒有可用的提供商",
+    noModelsAvailable: "此提供商和模態沒有可用的模型"
   },
   genHistory: {
     title: "生成記錄",

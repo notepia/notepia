@@ -98,16 +98,16 @@ const GenHistoryCard = ({ history, onDeleted }: GenHistoryCardProps) => {
             {isExpanded && (
                 <div className="px-4 pb-4 space-y-3 border-t dark:border-neutral-700">
                     <div>
-                        <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             {t("genHistory.model") || "Model"}
-                        </h4>
+                        </div>
                         <p className="text-sm">{history.request_model}</p>
                     </div>
 
                     <div>
-                        <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             {t("genHistory.prompt") || "Prompt"}
-                        </h4>
+                        </div>
                         <div className="p-2 rounded bg-gray-50 dark:bg-neutral-900 border dark:border-neutral-700">
                             <pre className="text-xs whitespace-pre-wrap">{history.request_prompt}</pre>
                         </div>
@@ -115,9 +115,9 @@ const GenHistoryCard = ({ history, onDeleted }: GenHistoryCardProps) => {
 
                     {requestImages.length > 0 && (
                         <div>
-                            <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                                 {t("genHistory.images") || "Images"}
-                            </h4>
+                            </div>
                             <div className="grid grid-cols-2 gap-2">
                                 {requestImages.map((img, index) => (
                                     <img
@@ -136,9 +136,9 @@ const GenHistoryCard = ({ history, onDeleted }: GenHistoryCardProps) => {
 
                     <div>
                         <div className="flex items-center justify-between mb-1">
-                            <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-400">
                                 {history.response_error ? t("genHistory.error") || "Error" : t("genHistory.response") || "Response"}
-                            </h4>
+                            </div>
                             {!history.response_error && (
                                 <button
                                     onClick={handleCopy}

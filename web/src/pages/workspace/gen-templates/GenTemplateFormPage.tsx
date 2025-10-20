@@ -4,9 +4,9 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, Save, Upload, X } from "lucide-react"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { createGenTemplate, updateGenTemplate, getGenTemplate } from "@/api/gen-template"
+import { createGenTemplate, updateGenTemplate, getGenTemplate, listGenModels } from "@/api/gen-template"
 import { uploadFile } from "@/api/file"
-import { Modality } from "@/types/gen-template"
+import { Modality, GenModel } from "@/types/gen-template"
 import TransitionWrapper from "@/components/transitionwrapper/TransitionWrapper"
 import { useToastStore } from "@/stores/toast"
 
@@ -21,11 +21,46 @@ const GenTemplateFormPage = () => {
 
     const [name, setName] = useState("")
     const [prompt, setPrompt] = useState("")
-    const [provider, setProvider] = useState("openai")
+    const [provider, setProvider] = useState("")
     const [model, setModel] = useState("")
     const [modality, setModality] = useState<Modality>("text2text")
     const [imageUrls, setImageUrls] = useState<string[]>([])
     const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
+
+    // Fetch all available models
+    const { data: allModels = [] } = useQuery({
+        queryKey: ['gen-models', currentWorkspaceId],
+        queryFn: () => listGenModels(currentWorkspaceId),
+        enabled: !!currentWorkspaceId,
+    })
+
+    // Filter providers by selected modality and create provider info map
+    const availableProviders = useMemo(() => {
+        if (!modality) return []
+        const providers = [...new Set(
+            allModels
+                .filter(m => m.modality === modality)
+                .map(m => m.provider)
+        )]
+        return providers
+    }, [allModels, modality])
+
+    // Create a map of provider -> display name
+    const providerDisplayNames = useMemo(() => {
+        const map: Record<string, string> = {}
+        allModels.forEach(m => {
+            if (!map[m.provider]) {
+                map[m.provider] = m.provider_display_name
+            }
+        })
+        return map
+    }, [allModels])
+
+    // Filter models by selected provider and modality
+    const availableModels = useMemo(() => {
+        if (!provider || !modality) return []
+        return allModels.filter(m => m.provider === provider && m.modality === modality)
+    }, [allModels, provider, modality])
 
     const { data: existingTemplate, isLoading } = useQuery({
         queryKey: ['gen-template', currentWorkspaceId, id],
@@ -37,12 +72,41 @@ const GenTemplateFormPage = () => {
         if (existingTemplate) {
             setName(existingTemplate.name)
             setPrompt(existingTemplate.prompt)
-            setProvider(existingTemplate.provider || "openai")
-            setModel(existingTemplate.model)
             setModality(existingTemplate.modality)
+            setProvider(existingTemplate.provider || "")
+            setModel(existingTemplate.model)
             setImageUrls(existingTemplate.image_urls ? existingTemplate.image_urls.split(',').filter(Boolean) : [])
         }
     }, [existingTemplate])
+
+    // Reset provider when modality changes
+    useEffect(() => {
+        if (!isEdit && modality) {
+            setProvider("")
+            setModel("")
+        }
+    }, [modality, isEdit])
+
+    // Reset model when provider changes
+    useEffect(() => {
+        if (!isEdit && provider) {
+            setModel("")
+        }
+    }, [provider, isEdit])
+
+    // Auto-select first provider if only one available
+    useEffect(() => {
+        if (!isEdit && availableProviders.length === 1 && !provider) {
+            setProvider(availableProviders[0])
+        }
+    }, [availableProviders, provider, isEdit])
+
+    // Auto-select first model if only one available
+    useEffect(() => {
+        if (!isEdit && availableModels.length === 1 && !model) {
+            setModel(availableModels[0].id)
+        }
+    }, [availableModels, model, isEdit])
 
     // Extract parameters from prompt using regex {{xxx}}
     // Support all Unicode letters, numbers, and underscores
@@ -146,9 +210,9 @@ const GenTemplateFormPage = () => {
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <h1 className="text-2xl font-semibold">
+                    <div className="text-2xl font-semibold">
                         {isEdit ? t("genTemplates.edit") : t("genTemplates.new")}
-                    </h1>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-4 lg:p-6">
@@ -192,35 +256,6 @@ const GenTemplateFormPage = () => {
 
                     <div>
                         <label className="block text-sm font-medium mb-2">
-                            {t("genTemplates.fields.provider")}
-                        </label>
-                        <select
-                            value={provider}
-                            onChange={(e) => setProvider(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800"
-                            required
-                        >
-                            <option value="openai">OpenAI</option>
-                            <option value="gemini">Google Gemini</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            {t("genTemplates.fields.model")}
-                        </label>
-                        <input
-                            type="text"
-                            value={model}
-                            onChange={(e) => setModel(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800"
-                            placeholder={provider === "openai" ? "e.g., gpt-4o, gpt-4o-mini" : "e.g., gemini-2.5-pro, gemini-2.5-flash"}
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
                             {t("genTemplates.fields.modality")}
                         </label>
                         <select
@@ -230,83 +265,59 @@ const GenTemplateFormPage = () => {
                             required
                         >
                             <option value="text2text">Text to Text</option>
-                            <option value="text2image">Text to Image</option>
-                            <option value="textimage2text">Text+Image to Text</option>
-                            <option value="textimage2image">Text+Image to Image</option>
                         </select>
                     </div>
 
-                    {(modality === 'textimage2text' || modality === 'textimage2image') && (
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                {t("genTemplates.fields.imageUrls")}
-                            </label>
-                            <div className="space-y-3">
-                                {imageUrls.map((url, index) => (
-                                    <div key={index} className="flex gap-2 items-start">
-                                        {url && (
-                                            <img
-                                                src={getImageUrl(url)}
-                                                alt={`Preview ${index + 1}`}
-                                                className="w-20 h-20 object-cover rounded border dark:border-neutral-700"
-                                                onError={(e) => {
-                                                    e.currentTarget.style.display = 'none'
-                                                }}
-                                            />
-                                        )}
-                                        <div className="flex-1 flex flex-col gap-2">
-                                            <input
-                                                type="text"
-                                                value={url}
-                                                onChange={(e) => {
-                                                    const newUrls = [...imageUrls]
-                                                    newUrls[index] = e.target.value
-                                                    setImageUrls(newUrls)
-                                                }}
-                                                className="w-full px-4 py-2 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800"
-                                                placeholder={t("genTemplates.imageUrlPlaceholder")}
-                                            />
-                                            <div className="flex gap-2">
-                                                <label className="flex items-center gap-2 px-4 py-2 border dark:border-neutral-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer">
-                                                    <Upload size={16} />
-                                                    {uploadingIndex === index ? "Uploading..." : t("actions.selectFileToUpload")}
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className="hidden"
-                                                        disabled={uploadingIndex === index}
-                                                        onChange={(e) => {
-                                                            const file = e.target.files?.[0]
-                                                            if (file) {
-                                                                handleFileUpload(file, index)
-                                                            }
-                                                        }}
-                                                    />
-                                                </label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const newUrls = imageUrls.filter((_, i) => i !== index)
-                                                        setImageUrls(newUrls)
-                                                    }}
-                                                    className="px-4 py-2 border border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-                                                >
-                                                    <X size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                <button
-                                    type="button"
-                                    onClick={() => setImageUrls([...imageUrls, ""])}
-                                    className="px-4 py-2 border dark:border-neutral-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                                >
-                                    {t("genTemplates.addImageUrl")}
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
+                            {t("genTemplates.fields.provider")}
+                        </label>
+                        <select
+                            value={provider}
+                            onChange={(e) => setProvider(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800"
+                            required
+                            disabled={availableProviders.length === 0}
+                        >
+                            <option value="">{t("genTemplates.selectProvider") || "Select a provider"}</option>
+                            {availableProviders.map(p => (
+                                <option key={p} value={p}>
+                                    {providerDisplayNames[p] || p}
+                                </option>
+                            ))}
+                        </select>
+                        {availableProviders.length === 0 && (
+                            <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
+                                {t("genTemplates.noProvidersAvailable") || "No providers available for this modality"}
+                            </p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
+                            {t("genTemplates.fields.model")}
+                        </label>
+                        <select
+                            value={model}
+                            onChange={(e) => setModel(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800"
+                            required
+                            disabled={!provider || availableModels.length === 0}
+                        >
+                            <option value="">{t("genTemplates.selectModel") || "Select a model"}</option>
+                            {availableModels.map(m => (
+                                <option key={m.id} value={m.id}>
+                                    {m.name} {m.description && `- ${m.description}`}
+                                </option>
+                            ))}
+                        </select>
+                        {provider && availableModels.length === 0 && (
+                            <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
+                                {t("genTemplates.noModelsAvailable") || "No models available for this provider and modality"}
+                            </p>
+                        )}
+                    </div>
+
 
                     <div className="flex gap-3">
                         <button

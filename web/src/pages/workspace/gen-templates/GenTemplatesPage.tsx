@@ -155,7 +155,7 @@ const GenTemplatesPage = () => {
                                         className="p-4 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:shadow-md transition-shadow"
                                     >
                                         <div className="flex justify-between items-start mb-2">
-                                            <h3 className="font-semibold text-lg">{template.name}</h3>
+                                            <div className="font-semibold text-lg">{template.name}</div>
                                             <span className="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                                                 {template.modality}
                                             </span>
