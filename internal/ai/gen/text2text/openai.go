@@ -48,38 +48,6 @@ func (p *OpenAIText2TextProvider) ListModels() ([]gen.Model, error) {
 		Modality:            "text2text",
 		Description:         "Faster and more affordable GPT-4o model",
 	})
-	models = append(models, gen.Model{
-		ID:                  "gpt-4-turbo",
-		Name:                "GPT-4 Turbo",
-		Provider:            "openai",
-		ProviderDisplayName: p.DisplayName(),
-		Modality:            "text2text",
-		Description:         "High-performance GPT-4 model",
-	})
-	models = append(models, gen.Model{
-		ID:                  "gpt-3.5-turbo",
-		Name:                "GPT-3.5 Turbo",
-		Provider:            "openai",
-		ProviderDisplayName: p.DisplayName(),
-		Modality:            "text2text",
-		Description:         "Fast and affordable GPT-3.5 model",
-	})
-	models = append(models, gen.Model{
-		ID:                  "o1-preview",
-		Name:                "O1 Preview",
-		Provider:            "openai",
-		ProviderDisplayName: p.DisplayName(),
-		Modality:            "text2text",
-		Description:         "Advanced reasoning model (preview)",
-	})
-	models = append(models, gen.Model{
-		ID:                  "o1-mini",
-		Name:                "O1 Mini",
-		Provider:            "openai",
-		ProviderDisplayName: p.DisplayName(),
-		Modality:            "text2text",
-		Description:         "Efficient reasoning model",
-	})
 
 	return models, nil
 }

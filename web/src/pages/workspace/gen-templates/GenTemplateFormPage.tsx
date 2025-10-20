@@ -205,7 +205,7 @@ const GenTemplateFormPage = () => {
             <div className="py-4">
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => navigate(`/workspaces/${currentWorkspaceId}/gen-templates`)}
+                        onClick={() => navigate(-1)}
                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                     >
                         <ArrowLeft size={20} />
