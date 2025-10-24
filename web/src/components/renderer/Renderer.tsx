@@ -1,136 +1,74 @@
-import React from 'react'
-import { NoteData } from '@/api/note'
-import { PhotoView } from 'react-photo-view'
-import ShikiHighlighter from "react-shiki";
-
-interface Node {
-    type: string
-    content?: Node[]
-    text?: string
-    marks?: { type: string; attrs?: any }[]
-    attrs?: any
-}
+import React, { useMemo } from 'react'
 
 interface RendererProps {
-    json: Node
+    content: string
 }
 
-const Renderer: React.FC<RendererProps> = ({ json }) => {
-    const renderNode = (node: Node, key?: React.Key): React.ReactNode => {
-        if (!node) return null
+const Renderer: React.FC<RendererProps> = ({ content }) => {
+    const processedContent = useMemo(() => {
+        if (!content) return ''
 
-        const renderContent = () =>
-            node.content?.map((child, idx) => renderNode(child, idx))
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(content, 'text/html')
 
-        switch (node.type) {
-            case 'paragraph':
-                return node.content ? <p className='px-4 leading-6' key={key}>{renderContent()}</p> : <div className='h-4'></div>
-            case 'heading':
-                const level = node.attrs?.level || 1
-                const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements
-                return <HeadingTag key={key} className='px-4 py-2'>{renderContent()}</HeadingTag>
-            case 'bulletList':
-                return <ul key={key} className="">{renderContent()}</ul>
-            case 'orderedList':
-                return <ol key={key} className="">{renderContent()}</ol>
-            case 'taskList':
-                return <div key={key} className="">{renderContent()}</div>
-            case 'taskItem':
-                return <div className='px-4 flex'><input disabled={true} type='checkbox' checked={node.attrs.checked} aria-label='checkbox' />{renderContent()}</div>
-            case 'listItem':
-                return <li key={key} className="px-4">{renderContent()}</li>
-            case 'codeBlock':
-                return <div className='px-4 py-1'>
-                    <ShikiHighlighter language={node.attrs.language} showLineNumbers={true} theme="ayu-dark">
-                        {node.content?.map(d => d.text).join('') ?? ""}
-                    </ShikiHighlighter>
-                </div>
-            case 'blockquote':
-                return <div className='px-4 py-1'>
-                    <blockquote key={key} className="border-l-4 border-gray-300 italic">{renderContent()}</blockquote>
-                </div>
-            case 'horizontalRule':
-                return <div className='p-4'>
-                    <hr key={key} />
-                </div>
-            case 'image':
-                return <div className="px-4">
-                    <PhotoView src={node.attrs?.src} >
-                        <img className=" rounded overflow-hidden max-w-full max-h-[620px]" key={key} alt={node.attrs?.name || ''} src={node.attrs?.src} />
-                    </PhotoView>
-                </div>
-            case 'attachment':
-                return <a href={node.attrs.src} className="px-4 text-blue-600">{node.attrs.name}</a>
-            case 'table':
-                return <div className='px-4 max-w-full overflow-x-auto'>
-                    <table className='w-full table-fixed'>{renderContent()}</table>
-                </div>
-            case 'tableRow':
-                return <tr>{renderContent()}</tr>
-            case 'tableHeader':
-                return <th className='border bg-gray-200 dark:bg-gray-900'>{renderContent()}</th>
-            case 'tableCell':
-                return <td className='border'>{renderContent()}</td>
-            case 'hardBreak':
-                return <br key={key} />
-            case 'text':
-                let text: React.ReactNode = node.text
-                if (node.marks) {
-                    node.marks.forEach(mark => {
-                        switch (mark.type) {
-                            case 'bold':
-                                text = <strong key={key} className='font-bold'>{text}</strong>
-                                break
-                            case 'italic':
-                                text = <em key={key} className='italic'>{text}</em>
-                                break
-                            case 'strike':
-                                text = <s key={key} className="line-through">{text}</s>
-                                break
-                            case 'code':
-                                text = <code key={key} className='rounded text-sm bg-gray-300 text-gray-600 px-1 py-0.5'>{text}</code>
-                                break
-                            case 'link':
-                                text = (
-                                    <a
-                                        key={key}
-                                        href={mark.attrs?.href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        {text}
-                                    </a>
-                                )
-                                break
-                            default:
-                                break
-                        }
-                    })
-                }
-                return text
-            default:
-                return <></>
-        }
-    }
+        // Convert <image-node> tags to <img> tags
+        const imageNodes = doc.querySelectorAll('image-node')
+        imageNodes.forEach(node => {
+            const src = node.getAttribute('src')
+            const name = node.getAttribute('name')
 
-    return <div className=' max-w-full  overflow-x-auto'>{(json.content || []).map((node, idx) => renderNode(node, idx))}</div>
-}
+            if (src) {
+                const img = doc.createElement('img')
+                img.src = src
+                img.alt = name || ''
+                img.className = 'image-node select-none rounded box-border w-auto'
+                node.replaceWith(img)
+            }
+        })
 
-export const ConvertToNode: (n: NoteData) => Node = (noteData: NoteData) => {
-    let node: Node = {
-        type: 'doc',
-        content: []
-    }
+        // Convert <file-node> tags to download links
+        const fileNodes = doc.querySelectorAll('file-node')
+        fileNodes.forEach(node => {
+            const src = node.getAttribute('src')
+            const name = node.getAttribute('name')
 
-    node.content = noteData.blocks?.map(b => {
-        return {
-            type: b.type,
-            content: b.data.content,
-            attrs: b.data.attrs
-        }
-    })
+            if (src && name) {
+                const wrapper = doc.createElement('div')
+                wrapper.className = 'file-node select-none border rounded p-2 flex items-center gap-2 bg-gray-50 my-2'
 
-    return node
+                const link = doc.createElement('a')
+                link.href = src
+                link.textContent = name
+                link.target = '_blank'
+                link.rel = 'noopener noreferrer'
+                link.className = 'text-blue-700 underline'
+
+                const downloadLink = doc.createElement('a')
+                downloadLink.href = src
+                downloadLink.download = name
+                downloadLink.className = 'ml-auto text-sm text-gray-600 hover:text-gray-900'
+                downloadLink.innerHTML = '⬇'
+                downloadLink.title = 'Download'
+
+                wrapper.appendChild(link)
+                wrapper.appendChild(downloadLink)
+                node.replaceWith(wrapper)
+            }
+        })
+
+        // Remove <textgen-node> tags (they should not appear in saved content)
+        const textgenNodes = doc.querySelectorAll('textgen-node')
+        textgenNodes.forEach(node => node.remove())
+
+        return doc.body.innerHTML
+    }, [content])
+
+    return (
+        <div
+            className='prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl px-4 max-w-full overflow-x-auto'
+            dangerouslySetInnerHTML={{ __html: processedContent }}
+        />
+    )
 }
 
 export default Renderer

@@ -17,7 +17,7 @@ interface NoteDetailViewProps {
 
 const NoteDetailView: FC<NoteDetailViewProps> = ({ note, backLink, title, menu, isEditable = false, onChange }) => {
     return (
-        <TransitionWrapper className="bg-white dark:bg-neutral-800 w-full">
+        <TransitionWrapper className="w-full">
             {note && (
                 <div className="flex flex-col min-h-dvh">
                     <div className="p-2 flex items-center justify-between ">

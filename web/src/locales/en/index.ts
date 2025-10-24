@@ -90,7 +90,9 @@ export default {
     fileUploaded: "File uploaded successfully",
     fileUploadFailed: "File upload failed",
     copied: "Copied to clipboard",
-    copyFailed: "Failed to copy"
+    copyFailed: "Failed to copy",
+    createNoteFailed: "Failed to create note",
+    saveNoteFailed: "Failed to save note"
   },
   button: {
     new: "New",

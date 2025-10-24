@@ -41,7 +41,7 @@ const NotesPage = () => {
 
     const handleCreateNote = () => {
         createNoteMutation.mutate({
-            blocks: [],
+            content: "",
             visibility: "private"
         })
     }

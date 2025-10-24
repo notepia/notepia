@@ -104,34 +104,38 @@ const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChan
 
     return (
         <>
-            <TwoColumnMain>
-                <NoteDetailView
-                    note={note}
-                    backLink=".."
-                    title={t("pages.noteDetail.note")}
-                    menu={
-                        note ? (
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={toggleSidebar}
-                                    className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                                    title={isSidebarCollapsed ? "Show Info" : "Hide Info"}
-                                >
-                                    <Info size={18} />
-                                </button>
-                                <NoteDetailMenu note={note} />
-                            </div>
-                        ) : undefined
-                    }
-                    isEditable={true}
-                    onChange={handleNoteChange}
-                />
-            </TwoColumnMain>
-            <TwoColumnSidebar>
-                <div className="w-96">
-                    {note && <NoteDetailSidebar note={note} onClose={toggleSidebar} />}
-                </div>
-            </TwoColumnSidebar>
+            <TwoColumn>
+                <TwoColumnMain
+                    className="bg-white dark:bg-neutral-800 "
+                >
+                    <NoteDetailView
+                        note={note}
+                        backLink=".."
+                        title={t("pages.noteDetail.note")}
+                        menu={
+                            note ? (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={toggleSidebar}
+                                        className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                        title={isSidebarCollapsed ? "Show Info" : "Hide Info"}
+                                    >
+                                        <Info size={18} />
+                                    </button>
+                                    <NoteDetailMenu note={note} />
+                                </div>
+                            ) : undefined
+                        }
+                        isEditable={true}
+                        onChange={handleNoteChange}
+                    />
+                </TwoColumnMain>
+                <TwoColumnSidebar>
+                    <div className="w-96">
+                        {note && <NoteDetailSidebar note={note} onClose={toggleSidebar} />}
+                    </div>
+                </TwoColumnSidebar>
+            </TwoColumn>
         </>
     )
 }

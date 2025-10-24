@@ -156,7 +156,9 @@ const GenTemplateDetailPage = () => {
 
     return (
         <TwoColumn>
-            <TwoColumnMain>
+                <TwoColumnMain
+                    className="bg-white dark:bg-neutral-800 "
+                >
                 <GenTemplateContent
                     template={template}
                     parameters={parameters}

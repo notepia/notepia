@@ -12,24 +12,24 @@ import (
 )
 
 type CreateNoteRequest struct {
-	Visibility string        `json:"visibility"  validate:"required"`
-	Blocks     []model.Block `json:"blocks"  validate:"required"`
+	Visibility string `json:"visibility"  validate:"required"`
+	Content    string `json:"content"`
 }
 
 type UpdateNoteRequest struct {
-	Blocks []model.Block `json:"blocks"  validate:"required"`
+	Content string `json:"content"`
 }
 
 type GetNoteResponse struct {
-	ID         string        `json:"id"`
-	Visibility string        `json:"visibility"`
-	Blocks     []model.Block `json:"blocks"`
-	Tags       []string      `json:"tags"`
-	Files      []string      `json:"files"`
-	CreatedAt  string        `json:"created_at"`
-	CreatedBy  string        `json:"created_by"`
-	UpdatedAt  string        `json:"updated_at"`
-	UpdatedBy  string        `json:"updated_by"`
+	ID         string   `json:"id"`
+	Visibility string   `json:"visibility"`
+	Content    string   `json:"content"`
+	Tags       []string `json:"tags"`
+	Files      []string `json:"files"`
+	CreatedAt  string   `json:"created_at"`
+	CreatedBy  string   `json:"created_by"`
+	UpdatedAt  string   `json:"updated_at"`
+	UpdatedBy  string   `json:"updated_by"`
 }
 
 // Helper function to get username by user ID
@@ -87,7 +87,7 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 			res = append(res, GetNoteResponse{
 				ID:         b.ID,
 				Visibility: b.Visibility,
-				Blocks:     b.Blocks,
+				Content:    b.Content,
 				CreatedAt:  b.CreatedAt,
 				CreatedBy:  h.getUserNameByID(b.CreatedBy),
 				UpdatedAt:  b.UpdatedAt,
@@ -98,7 +98,7 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 				res = append(res, GetNoteResponse{
 					ID:         b.ID,
 					Visibility: b.Visibility,
-					Blocks:     b.Blocks,
+					Content:    b.Content,
 					CreatedAt:  b.CreatedAt,
 					CreatedBy:  h.getUserNameByID(b.CreatedBy),
 					UpdatedAt:  b.UpdatedAt,
@@ -149,7 +149,7 @@ func (h Handler) GetPublicNote(c echo.Context) error {
 	res := GetNoteResponse{
 		ID:         b.ID,
 		Visibility: b.Visibility,
-		Blocks:     b.Blocks,
+		Content:    b.Content,
 		CreatedAt:  b.CreatedAt,
 		CreatedBy:  h.getUserNameByID(b.CreatedBy),
 		UpdatedAt:  b.UpdatedAt,
@@ -197,7 +197,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 			res = append(res, GetNoteResponse{
 				ID:         b.ID,
 				Visibility: b.Visibility,
-				Blocks:     b.Blocks,
+				Content:    b.Content,
 				CreatedAt:  b.CreatedAt,
 				CreatedBy:  h.getUserNameByID(b.CreatedBy),
 				UpdatedAt:  b.UpdatedAt,
@@ -208,7 +208,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 				res = append(res, GetNoteResponse{
 					ID:         b.ID,
 					Visibility: b.Visibility,
-					Blocks:     b.Blocks,
+					Content:    b.Content,
 					CreatedAt:  b.CreatedAt,
 					CreatedBy:  h.getUserNameByID(b.CreatedBy),
 					UpdatedAt:  b.UpdatedAt,
@@ -255,7 +255,7 @@ func (h Handler) GetNote(c echo.Context) error {
 	res := GetNoteResponse{
 		ID:         b.ID,
 		Visibility: b.Visibility,
-		Blocks:     b.Blocks,
+		Content:    b.Content,
 		CreatedAt:  b.CreatedAt,
 		CreatedBy:  h.getUserNameByID(b.CreatedBy),
 		UpdatedAt:  b.UpdatedAt,
@@ -287,20 +287,11 @@ func (h Handler) CreateNote(c echo.Context) error {
 	n.WorkspaceID = workspaceId
 	n.ID = util.NewId()
 	n.Visibility = req.Visibility
+	n.Content = req.Content
 	n.CreatedAt = time.Now().UTC().String()
 	n.CreatedBy = user.ID
 	n.UpdatedAt = time.Now().UTC().String()
 	n.UpdatedBy = user.ID
-
-	for _, b := range req.Blocks {
-		n.Blocks = append(n.Blocks, model.Block{
-			WorkspaceID: workspaceId,
-			NoteID:      n.ID,
-			ID:          util.NewId(),
-			Type:        b.Type,
-			Data:        b.Data,
-		})
-	}
 
 	err := h.db.CreateNote(n)
 
@@ -374,20 +365,11 @@ func (h Handler) UpdateNote(c echo.Context) error {
 
 	n.WorkspaceID = workspaceId
 	n.ID = existingNote.ID
+	n.Content = req.Content
 	n.CreatedAt = existingNote.CreatedAt
 	n.CreatedBy = existingNote.CreatedBy
 	n.UpdatedAt = time.Now().UTC().String()
 	n.UpdatedBy = user.ID
-
-	for _, b := range req.Blocks {
-		n.Blocks = append(n.Blocks, model.Block{
-			WorkspaceID: workspaceId,
-			NoteID:      existingNote.ID,
-			ID:          util.NewId(),
-			Type:        b.Type,
-			Data:        b.Data,
-		})
-	}
 
 	err = h.db.UpdateNote(n)
 
@@ -434,20 +416,11 @@ func (h Handler) UpdateNoteVisibility(c echo.Context) error {
 	n.WorkspaceID = workspaceId
 	n.ID = existingNote.ID
 	n.Visibility = visibility
+	n.Content = existingNote.Content
 	n.CreatedAt = existingNote.CreatedAt
 	n.CreatedBy = existingNote.CreatedBy
 	n.UpdatedAt = time.Now().UTC().String()
 	n.UpdatedBy = user.ID
-
-	for _, b := range existingNote.Blocks {
-		n.Blocks = append(n.Blocks, model.Block{
-			WorkspaceID: workspaceId,
-			NoteID:      existingNote.ID,
-			ID:          util.NewId(),
-			Type:        b.Type,
-			Data:        b.Data,
-		})
-	}
 
 	err = h.db.UpdateNote(n)
 

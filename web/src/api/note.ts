@@ -7,13 +7,8 @@ export interface NoteData {
   created_by?: string;
   updated_at?: string;
   updated_by?: string;
-  blocks: Block[] | null;
+  content: string;
   visibility?: Visibility;
-}
-
-interface Block {
-  type: string;
-  data: any;
 }
 
 export const getPublicNotes = async (pageNum: number, pageSize: number, query: string) => {

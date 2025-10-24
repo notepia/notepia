@@ -89,7 +89,9 @@ export default {
     fileUploaded: "檔案上傳成功",
     fileUploadFailed: "檔案上傳失敗",
     copied: "已複製到剪貼簿",
-    copyFailed: "複製失敗"
+    copyFailed: "複製失敗",
+    createNoteFailed: "建立筆記失敗",
+    saveNoteFailed: "儲存筆記失敗"
   },
   button: {
     new: "新增",

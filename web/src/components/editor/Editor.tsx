@@ -24,10 +24,7 @@ interface Props {
 }
 
 const Editor: FC<Props> = ({ note, onChange }) => {
-  const doc = note ? {
-    type: "doc",
-    content: note.blocks?.map(b => ({ type: b.type, content: b.data.content, attrs: b.data.attrs }))
-  } : ``
+  const doc = note?.content || ''
 
   const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation("editor")
@@ -213,21 +210,8 @@ const Editor: FC<Props> = ({ note, onChange }) => {
     content: doc,
     onUpdate({ editor }) {
       if (onChange) {
-        const doc = editor.getJSON()
-
-        const json = {
-          blocks: (doc.content || []).map(block => {
-            return {
-              type: block.type!,
-              data: {
-                content: block.content,
-                attrs: block.attrs
-              }
-            }
-          })
-        }
-
-        onChange(json)
+        const html = editor.getHTML()
+        onChange({ content: html })
       }
     },
   })
