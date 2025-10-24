@@ -8,7 +8,7 @@ interface TwoColumnMainProps {
 
 export const TwoColumnMain = ({ children, className = "" }: TwoColumnMainProps) => {
     return (
-        <div className={twMerge("flex-1", className)}>
+        <div className={twMerge("flex-1 overflow-y-auto", className)}>
             {children}
         </div>
     )

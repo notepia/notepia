@@ -6,19 +6,6 @@ interface TwoColumnSidebarProps {
     className?: string
 }
 
-/**
- * Sidebar area of the two-column layout
- * - Hidden by default on mobile (<breakpoint)
- * - Always visible on desktop (>=breakpoint)
- * - Fixed position overlay on mobile when open
- *
- * @example
- * ```tsx
- * <TwoColumnSidebar>
- *   <div>Your sidebar content here</div>
- * </TwoColumnSidebar>
- * ```
- */
 export const TwoColumnSidebar = ({ children, className = "" }: TwoColumnSidebarProps) => {
     const { isSidebarCollapsed } = useTwoColumn()
 

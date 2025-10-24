@@ -34,7 +34,7 @@ const PreferencesPage = () => {
         try {
             await updatePreferences(updatedUser);
         } catch (err) {
-            toast.error(t("messages.updateFailed"));
+            toast.error(t("messages.preferencesUpdateFailed"));
         }
     }
 

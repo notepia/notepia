@@ -25,17 +25,6 @@ interface TwoColumnProps {
     breakpoint?: number
 }
 
-/**
- * Root container for two-column layout
- *
- * @example
- * ```tsx
- * <TwoColumn>
- *   <TwoColumnMain>Main content</TwoColumnMain>
- *   <TwoColumnSidebar>Sidebar content</TwoColumnSidebar>
- * </TwoColumn>
- * ```
- */
 export const TwoColumn = ({ children, breakpoint = 1024 }: TwoColumnProps) => {
     const { isSidebarCollapsed, toggleSidebar } = useSidebarToggle(breakpoint)
 
