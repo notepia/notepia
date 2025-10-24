@@ -1,14 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback, FC } from "react"
 import { getNote, NoteData, updateNote } from "@/api/note"
 import NoteDetailMenu from "@/components/notedetailmenu/NoteDetailMenu"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { useTranslation } from "react-i18next"
 import NoteDetailView from "@/components/notedetail/NoteDetailView"
-import { TwoColumn, TwoColumnMain, TwoColumnSidebar } from "@/components/twocolumn"
+import NoteDetailSidebar from "@/components/notedetailsidebar/NoteDetailSidebar"
+import { TwoColumn, TwoColumnMain, TwoColumnSidebar, useTwoColumn } from "@/components/twocolumn"
 import { toast } from "@/stores/toast"
+import { Info } from "lucide-react"
 
 const NoteDetailPage = () => {
     const [_, setIsLoading] = useState<boolean>(true)
@@ -82,23 +84,55 @@ const NoteDetailPage = () => {
 
     return (
         <TwoColumn>
+            <NoteDetailContent
+                note={note}
+                t={t}
+                handleNoteChange={handleNoteChange}
+            />
+        </TwoColumn>
+    )
+}
+
+interface NoteDetailContentProps {
+    note: NoteData | null
+    t: any
+    handleNoteChange: (data: any) => void
+}
+
+const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChange }) => {
+    const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
+
+    return (
+        <>
             <TwoColumnMain>
                 <NoteDetailView
                     note={note}
                     backLink=".."
                     title={t("pages.noteDetail.note")}
-                    authorName={user?.name}
-                    menu={note ? <NoteDetailMenu note={note} /> : undefined}
+                    menu={
+                        note ? (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={toggleSidebar}
+                                    className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                    title={isSidebarCollapsed ? "Show Info" : "Hide Info"}
+                                >
+                                    <Info size={18} />
+                                </button>
+                                <NoteDetailMenu note={note} />
+                            </div>
+                        ) : undefined
+                    }
                     isEditable={true}
                     onChange={handleNoteChange}
                 />
             </TwoColumnMain>
             <TwoColumnSidebar>
                 <div className="w-96">
-                    
+                    {note && <NoteDetailSidebar note={note} onClose={toggleSidebar} />}
                 </div>
             </TwoColumnSidebar>
-        </TwoColumn>
+        </>
     )
 }
 

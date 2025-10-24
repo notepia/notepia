@@ -99,7 +99,6 @@ const NotesPage = () => {
 
     return <>
         <OneColumn>
-
             <TransitionWrapper className="w-full">
                 <div className=" py-2 ">
                     {
