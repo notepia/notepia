@@ -8,6 +8,7 @@ export default {
     notes: "Notes",
     genTemplates: "Gen Templates",
     genHistory: "Generation History",
+    files: "Files",
     createWithName: "Create workspace：{{name}}",
     workspaceSettings: "Workspace Settings",
     workspace: "Workspace",
@@ -23,21 +24,21 @@ export default {
     comfirmPassword: "Confirm Password",
   },
   pages: {
-    signin:{
-      "noAccount":"Don't have an account? Sign up"
+    signin: {
+      "noAccount": "Don't have an account? Sign up"
     },
-    signup:{
-      "alreadyHaveAccount":"Already have an account? Log in."
+    signup: {
+      "alreadyHaveAccount": "Already have an account? Log in."
     },
     settings: {
       workspaceSettings: "Worksapce Settings",
       workspaceName: "Workspace name",
       deleteThisWorkspace: "Delete this workspace",
-      deleteThisWorkspaceMessage : "Delete this workspace ?"
+      deleteThisWorkspaceMessage: "Delete this workspace ?"
     },
     workspaceSetup: {
       createYourFirstWorkspace: "Create your first workspace",
-      pleaseEnterYourWorkspaceName:"Please enter your workspace name",
+      pleaseEnterYourWorkspaceName: "Please enter your workspace name",
       workspaceName: "Workspace name",
       workspaceNamePlaceholder: "workspace name",
     },
@@ -110,7 +111,10 @@ export default {
     author: "Author",
     public: "Public",
     private: "Private",
-    workspace: "Workspace"
+    workspace: "Workspace",
+    loading: "Loading...",
+    save: "Save",
+    cancel: "Cancel"
   },
   time: {
     just_now: "just now",
@@ -173,5 +177,24 @@ export default {
     deleteSuccess: "History deleted successfully",
     deleteError: "Failed to delete history",
     deleteConfirm: "Are you sure you want to delete this history?"
-  }
+  },
+  files: {
+    drag_drop: "Drag and drop files here or click to select",
+    select_files: "Select Files",
+    upload_success: "File uploaded successfully",
+    upload_error: "Failed to upload file",
+    delete: "Delete",
+    delete_success: "File deleted successfully",
+    delete_error: "Failed to delete file",
+    delete_confirm: "Are you sure you want to delete this file?",
+    rename: "Rename",
+    rename_success: "File renamed successfully",
+    rename_error: "Failed to rename file",
+    download: "Download",
+    preview: "Preview",
+    no_files: "No files yet. Upload your first file!",
+    no_results: "No files found matching your search",
+    search_placeholder: "Search files...",
+    all_types: "All file types"
+  },
 } as const;

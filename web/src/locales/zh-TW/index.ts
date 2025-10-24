@@ -7,6 +7,7 @@ export default {
     notes: "筆記",
     genTemplates: "生成模板",
     genHistory: "生成記錄",
+    files: "檔案",
     createWithName: "新增工作區：{{name}}",
     workspaceSettings: "工作區設定",
     workspace: "工作區",
@@ -109,7 +110,10 @@ export default {
     author: "作者",
     public: "公開",
     private: "私人",
-    workspace: "工作區"
+    workspace: "工作區",
+    loading: "載入中...",
+    save: "儲存",
+    cancel: "取消"
   },
   time: {
     just_now: "剛剛",
@@ -172,5 +176,24 @@ export default {
     deleteSuccess: "記錄已刪除",
     deleteError: "記錄刪除失敗",
     deleteConfirm: "確定要刪除這筆記錄嗎?"
-  }
+  },
+  files: {
+    drag_drop: "拖放檔案到這裡或點擊選擇檔案",
+    select_files: "選擇檔案",
+    upload_success: "檔案上傳成功",
+    upload_error: "檔案上傳失敗",
+    delete: "刪除",
+    delete_success: "檔案刪除成功",
+    delete_error: "檔案刪除失敗",
+    delete_confirm: "確定要刪除這個檔案嗎?",
+    rename: "重新命名",
+    rename_success: "檔案重新命名成功",
+    rename_error: "檔案重新命名失敗",
+    download: "下載",
+    preview: "預覽",
+    no_files: "尚無檔案。上傳你的第一個檔案!",
+    no_results: "找不到符合的檔案",
+    search_placeholder: "搜尋檔案...",
+    all_types: "所有檔案類型"
+  },
 } as const;
