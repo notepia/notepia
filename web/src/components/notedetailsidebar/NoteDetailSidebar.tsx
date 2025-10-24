@@ -14,7 +14,7 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
     const { t } = useTranslation()
 
     return (
-        <div className="max-w-sm h-screen overflow-y-auto sticky top-0 bg-gray-50 dark:bg-neutral-900">
+        <div className="max-w-sm h-screen overflow-y-auto sticky top-0 bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
             {/* Sticky Header with Close Button */}
             <div className=" border-b dark:border-neutral-700 px-4 py-4 flex items-center justify-between z-10">
                 <div className="flex items-center gap-2">
