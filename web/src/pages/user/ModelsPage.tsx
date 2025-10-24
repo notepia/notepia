@@ -147,7 +147,7 @@ const ModelsPage = () => {
     }
 
     return <TransitionWrapper
-        className="w-full"
+        className="px-4 xl:pl-0 w-full "
     >
         <div className="flex flex-col min-h-screen  flex-1 w-full min-w-0">
             <div className="py-2.5 flex items-center justify-between ">

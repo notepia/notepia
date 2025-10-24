@@ -110,7 +110,10 @@ export default {
     author: "作者",
     public: "公開",
     private: "私人",
-    workspace: "工作區"
+    workspace: "工作區",
+    loading: "載入中...",
+    save: "儲存",
+    cancel: "取消"
   },
   time: {
     just_now: "剛剛",
@@ -179,6 +182,7 @@ export default {
     select_files: "選擇檔案",
     upload_success: "檔案上傳成功",
     upload_error: "檔案上傳失敗",
+    delete: "刪除",
     delete_success: "檔案刪除成功",
     delete_error: "檔案刪除失敗",
     delete_confirm: "確定要刪除這個檔案嗎?",
@@ -192,9 +196,4 @@ export default {
     search_placeholder: "搜尋檔案...",
     all_types: "所有檔案類型"
   },
-  common: {
-    loading: "載入中...",
-    save: "儲存",
-    cancel: "取消"
-  }
 } as const;

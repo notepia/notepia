@@ -111,7 +111,10 @@ export default {
     author: "Author",
     public: "Public",
     private: "Private",
-    workspace: "Workspace"
+    workspace: "Workspace",
+    loading: "Loading...",
+    save: "Save",
+    cancel: "Cancel"
   },
   time: {
     just_now: "just now",
@@ -180,6 +183,7 @@ export default {
     select_files: "Select Files",
     upload_success: "File uploaded successfully",
     upload_error: "Failed to upload file",
+    delete: "Delete",
     delete_success: "File deleted successfully",
     delete_error: "Failed to delete file",
     delete_confirm: "Are you sure you want to delete this file?",
@@ -193,9 +197,4 @@ export default {
     search_placeholder: "Search files...",
     all_types: "All file types"
   },
-  common: {
-    loading: "Loading...",
-    save: "Save",
-    cancel: "Cancel"
-  }
 } as const;

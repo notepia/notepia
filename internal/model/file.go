@@ -16,6 +16,7 @@ type File struct {
 	Size             int64
 	Ext              string
 	OriginalFilename string `json:"original_filename"`
+	Visibility       string
 	CreatedAt        string
 	CreatedBy        string
 	UpdatedAt        string

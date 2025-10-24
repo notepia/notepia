@@ -1,47 +1,74 @@
-import { useCallback, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteFile, FileInfo, getFileDownloadUrl, listFiles, renameFile, uploadFile } from '../../../api/file';
+import { useCallback, useState, useEffect, useRef } from 'react';
+import { useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { deleteFile, FileInfo, getFileDownloadUrl, listFiles, renameFile } from '../../../api/file';
 import { useToastStore } from '../../../stores/toast';
-import { Download, FileIcon, Trash2, Upload, Edit2, X, Check, Search, Filter, Eye, Image as ImageIcon, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, FileIcon, Trash2, Edit2, X, Check, Search, Filter, Eye, Image as ImageIcon, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
+import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
+import SidebarButton from '@/components/sidebar/SidebarButton';
+import TransitionWrapper from '@/components/transitionwrapper/TransitionWrapper';
+import OneColumn from '@/components/onecolumn/OneColumn';
+import Loader from '@/components/loader/Loader';
+import { Tooltip } from 'radix-ui';
+
+const PAGE_SIZE = 20;
 
 const FilesPage = () => {
     const { t } = useTranslation();
-    const { workspaceId } = useParams<{ workspaceId: string }>();
-    const [isDragging, setIsDragging] = useState(false);
+    const currentWorkspaceId = useCurrentWorkspaceId();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+    const [extFilter, setExtFilter] = useState<string>('');
+    const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [editingFileId, setEditingFileId] = useState<string | null>(null);
     const [editingFileName, setEditingFileName] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [extFilter, setExtFilter] = useState<string>('');
     const [previewFile, setPreviewFile] = useState<FileInfo | null>(null);
-    const [pageNumber, setPageNumber] = useState(1);
-    const [pageSize] = useState(20);
     const queryClient = useQueryClient();
     const { addToast } = useToastStore();
+    const observerRef = useRef<IntersectionObserver | null>(null);
 
-    const { data: filesData, isLoading } = useQuery({
-        queryKey: ['files', workspaceId, searchQuery, extFilter, pageNumber, pageSize],
-        queryFn: () => listFiles(workspaceId!, searchQuery, extFilter, pageSize, pageNumber),
-        enabled: !!workspaceId,
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedQuery(searchQuery);
+        }, 500);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchQuery]);
+
+    const {
+        data,
+        isLoading,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        refetch
+    } = useInfiniteQuery({
+        queryKey: ['files', currentWorkspaceId, debouncedQuery, extFilter],
+        queryFn: async ({ pageParam = 1 }: { pageParam?: unknown }) => {
+            const result = await listFiles(currentWorkspaceId!, debouncedQuery, extFilter, PAGE_SIZE, Number(pageParam));
+            return result.files;
+        },
+        enabled: !!currentWorkspaceId,
+        getNextPageParam: (lastPage, allPages) => {
+            if (!lastPage || lastPage.length < PAGE_SIZE) return undefined;
+            return allPages.length + 1;
+        },
+        refetchOnWindowFocus: false,
+        staleTime: 0,
+        initialPageParam: 1
     });
 
-    const uploadMutation = useMutation({
-        mutationFn: (file: File) => uploadFile(workspaceId!, file),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['files', workspaceId] });
-            addToast({ type: 'success', message: t('files.upload_success') });
-        },
-        onError: () => {
-            addToast({ type: 'error', message: t('files.upload_error') });
-        },
-    });
+    useEffect(() => {
+        refetch();
+    }, [debouncedQuery, extFilter, refetch]);
 
     const deleteMutation = useMutation({
-        mutationFn: (fileId: string) => deleteFile(workspaceId!, fileId),
+        mutationFn: (fileId: string) => deleteFile(currentWorkspaceId!, fileId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['files', workspaceId] });
+            queryClient.invalidateQueries({ queryKey: ['files', currentWorkspaceId] });
             addToast({ type: 'success', message: t('files.delete_success') });
         },
         onError: () => {
@@ -51,9 +78,9 @@ const FilesPage = () => {
 
     const renameMutation = useMutation({
         mutationFn: ({ fileId, newName }: { fileId: string; newName: string }) =>
-            renameFile(workspaceId!, fileId, newName),
+            renameFile(currentWorkspaceId!, fileId, newName),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['files', workspaceId] });
+            queryClient.invalidateQueries({ queryKey: ['files', currentWorkspaceId] });
             setEditingFileId(null);
             addToast({ type: 'success', message: t('files.rename_success') });
         },
@@ -62,28 +89,19 @@ const FilesPage = () => {
         },
     });
 
-    const handleFileUpload = async (files: FileList | null) => {
-        if (!files) return;
-        for (let i = 0; i < files.length; i++) {
-            await uploadMutation.mutateAsync(files[i]);
+    const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
+        if (observerRef.current) {
+            observerRef.current.disconnect();
         }
-    };
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(true);
-    }, []);
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-    }, []);
-
-    const handleDrop = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-        handleFileUpload(e.dataTransfer.files);
-    }, [workspaceId]);
+        if (node && hasNextPage && !isLoading) {
+            observerRef.current = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    fetchNextPage();
+                }
+            }, { root: null });
+            observerRef.current.observe(node);
+        }
+    }, [hasNextPage, isLoading, fetchNextPage]);
 
     const formatFileSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
@@ -132,220 +150,227 @@ const FilesPage = () => {
     };
 
     const getFileExtensions = () => {
-        if (!filesData?.files) return [];
-        const exts = new Set(filesData.files.map(f => f.ext));
+        if (!data?.pages) return [];
+        const allFiles = data.pages.flat();
+        const exts = new Set(allFiles.map(f => f.ext));
         return Array.from(exts).filter(Boolean);
     };
 
-    // Reset page number when search query or filter changes
-    useEffect(() => {
-        setPageNumber(1);
-    }, [searchQuery, extFilter]);
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <div className="text-neutral-500">{t('common.loading')}</div>
-            </div>
-        );
-    }
+    const files = data?.pages.flat().filter(f => f !== null) || [];
 
     return (
-        <div className="h-full flex flex-col">
-            <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
-                <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
-                    {t('menu.files')}
-                </h1>
-
-                {/* Search and Filter Bar */}
-                <div className="flex gap-3 flex-wrap">
-                    <div className="flex-1 min-w-[200px] relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder={t('files.search_placeholder')}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
-                        />
-                    </div>
-                    <div className="relative">
-                        <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" size={18} />
-                        <select
-                            value={extFilter}
-                            onChange={(e) => setExtFilter(e.target.value)}
-                            className="pl-10 pr-8 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 appearance-none"
-                        >
-                            <option value="">{t('files.all_types')}</option>
-                            {getFileExtensions().map(ext => (
-                                <option key={ext} value={ext}>{ext}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex-1 overflow-auto p-6">
-                <div
-                    className={`border-2 border-dashed rounded-lg p-8 mb-6 transition-colors ${
-                        isDragging
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-neutral-300 dark:border-neutral-600'
-                    }`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                >
-                    <div className="text-center">
-                        <Upload className="mx-auto h-12 w-12 text-neutral-400" />
-                        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                            {t('files.drag_drop')}
-                        </p>
-                        <label className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-colors">
-                            <Upload size={16} />
-                            <span>{t('files.select_files')}</span>
-                            <input
-                                type="file"
-                                multiple
-                                className="hidden"
-                                onChange={(e) => handleFileUpload(e.target.files)}
-                            />
-                        </label>
-                    </div>
-                </div>
-
-                {filesData?.files && filesData.files.length > 0 ? (
-                    <>
-                        <div className="grid gap-4">
-                            {filesData.files.map((file) => (
-                                <motion.div
-                                    key={file.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="flex items-center gap-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-                                >
-                                    {isImageFile(file.ext) ? (
-                                        <ImageIcon className="h-8 w-8 text-blue-500 flex-shrink-0" />
-                                    ) : isTextFile(file.ext) ? (
-                                        <FileText className="h-8 w-8 text-green-500 flex-shrink-0" />
-                                    ) : (
-                                        <FileIcon className="h-8 w-8 text-neutral-400 flex-shrink-0" />
-                                    )}
-
-                                    <div className="flex-1 min-w-0">
-                                        {editingFileId === file.id ? (
-                                            <input
-                                                type="text"
-                                                value={editingFileName}
-                                                onChange={(e) => setEditingFileName(e.target.value)}
-                                                className="w-full px-2 py-1 border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') saveEdit(file.id);
-                                                    if (e.key === 'Escape') cancelEdit();
-                                                }}
-                                                autoFocus
-                                            />
-                                        ) : (
-                                            <h3 className="font-medium text-neutral-900 dark:text-neutral-100 truncate">
-                                                {file.original_name}
-                                            </h3>
-                                        )}
-                                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                            {formatFileSize(file.size)} • {formatDate(file.created_at)}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        {editingFileId === file.id ? (
-                                            <>
-                                                <button
-                                                    onClick={() => saveEdit(file.id)}
-                                                    className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors"
-                                                    title={t('common.save')}
-                                                >
-                                                    <Check size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={cancelEdit}
-                                                    className="p-2 text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md transition-colors"
-                                                    title={t('common.cancel')}
-                                                >
-                                                    <X size={18} />
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                {canPreview(file) && (
-                                                    <button
-                                                        onClick={() => setPreviewFile(file)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
-                                                        title={t('files.preview')}
-                                                    >
-                                                        <Eye size={18} />
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => startEdit(file)}
-                                                    className="p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md transition-colors"
-                                                    title={t('files.rename')}
-                                                >
-                                                    <Edit2 size={18} />
-                                                </button>
-                                                <a
-                                                    href={getFileDownloadUrl(workspaceId!, file.name)}
-                                                    download={file.original_name}
-                                                    className="p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md transition-colors"
-                                                    title={t('files.download')}
-                                                >
-                                                    <Download size={18} />
-                                                </a>
-                                                <button
-                                                    onClick={() => {
-                                                        if (confirm(t('files.delete_confirm'))) {
-                                                            deleteMutation.mutate(file.id);
-                                                        }
-                                                    }}
-                                                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
-                                                    title={t('files.delete')}
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-
-                        {/* Pagination Controls */}
-                        {filesData.files.length === pageSize && (
-                            <div className="flex justify-center items-center gap-2 mt-6">
-                                <button
-                                    onClick={() => setPageNumber(p => Math.max(1, p - 1))}
-                                    disabled={pageNumber === 1}
-                                    className="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                >
-                                    <ChevronLeft size={18} />
-                                </button>
-                                <span className="px-4 py-2 text-neutral-700 dark:text-neutral-300">
-                                    {pageNumber}
-                                </span>
-                                <button
-                                    onClick={() => setPageNumber(p => p + 1)}
-                                    disabled={filesData.files.length < pageSize}
-                                    className="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                >
-                                    <ChevronRight size={18} />
+        <OneColumn>
+            <TransitionWrapper className="w-full">
+                <div className="py-2">
+                    {
+                        isSearchVisible ? <div className="block sm:hidden py-1">
+                            <div className="w-full flex items-center gap-2 py-2 px-3 rounded-xl shadow-inner border dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-100">
+                                <Search size={16} className="text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    className="bg-transparent flex-1"
+                                    placeholder={t("placeholder.search")}
+                                />
+                                <button title="toggle search" onClick={() => setIsSearchVisible(false)}>
+                                    <X size={16} className="text-gray-400" />
                                 </button>
                             </div>
+                        </div>
+                            :
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-3 h-10">
+                                    <SidebarButton />
+                                    <div className="flex gap-2 items-center max-w-[calc(100vw-165px)] overflow-x-auto whitespace-nowrap sm:text-xl font-semibold hide-scrollbar">
+                                        {t("menu.files")}
+                                    </div>
+                                </div>
+                                <div className="flex items-center text-gray-600 dark:text-gray-400">
+                                    <div className="hidden sm:block px-1.5">
+                                        <div className="flex items-center gap-2 py-2 px-3 rounded-xl dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100">
+                                            <Search size={16} className="text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={searchQuery}
+                                                onChange={e => setSearchQuery(e.target.value)}
+                                                className="flex-1 bg-transparent w-32"
+                                                placeholder={t("placeholder.search")}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="hidden sm:block px-1.5">
+                                        <div className="flex items-center gap-2 py-2 px-3 rounded-xl dark:border-neutral-600 bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100">
+                                            <Filter size={16} className="text-gray-400" />
+                                            <select
+                                                value={extFilter}
+                                                onChange={(e) => setExtFilter(e.target.value)}
+                                                className="bg-transparent appearance-none"
+                                            >
+                                                <option value="">{t('files.all_types')}</option>
+                                                {getFileExtensions().map(ext => (
+                                                    <option key={ext} value={ext}>{ext}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="sm:hidden">
+                                        {
+                                            !isSearchVisible && <Tooltip.Root>
+                                                <Tooltip.Trigger asChild>
+                                                    <button aria-label="toggle the search" className="p-3" onClick={() => setIsSearchVisible(!isSearchVisible)}>
+                                                        <Search size={20} />
+                                                    </button>
+                                                </Tooltip.Trigger>
+                                                <Tooltip.Portal>
+                                                    <Tooltip.Content
+                                                        className="select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
+                                                        side="bottom"
+                                                    >
+                                                        <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
+                                                        {t("actions.filter")}
+                                                    </Tooltip.Content>
+                                                </Tooltip.Portal>
+                                            </Tooltip.Root>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                    }
+                </div>
+                <div className="flex flex-col gap-2 sm:gap-5">
+                    <div className="w-full">
+                        {
+                            isLoading ? <Loader /> :
+                                <div className="grid grid-cols-auto-fill-140 gap-4">
+                                    {files.map((file) => (
+                                        <motion.div
+                                            key={file.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="group relative border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden hover:shadow-lg transition-all bg-white dark:bg-neutral-800"
+                                        >
+                                            {/* Thumbnail/Icon Area */}
+                                            <div className="aspect-square relative bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center overflow-hidden">
+                                                {isImageFile(file.ext) ? (
+                                                    <img
+                                                        src={getFileDownloadUrl(currentWorkspaceId!, file.name)}
+                                                        alt={file.original_name}
+                                                        className="w-full h-full object-cover"
+                                                        loading="lazy"
+                                                    />
+                                                ) : isTextFile(file.ext) ? (
+                                                    <FileText className="h-16 w-16 text-green-500" />
+                                                ) : (
+                                                    <FileIcon className="h-16 w-16 text-neutral-400" />
+                                                )}
+
+                                                {/* Hover Actions Overlay */}
+                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                    {canPreview(file) && (
+                                                        <button
+                                                            onClick={() => setPreviewFile(file)}
+                                                            className="p-2 bg-white rounded-md hover:bg-gray-100 transition-colors"
+                                                            title={t('files.preview')}
+                                                        >
+                                                            <Eye size={18} className="text-gray-700" />
+                                                        </button>
+                                                    )}
+                                                    <a
+                                                        href={getFileDownloadUrl(currentWorkspaceId!, file.name)}
+                                                        download={file.original_name}
+                                                        className="p-2 bg-white rounded-md hover:bg-gray-100 transition-colors"
+                                                        title={t('files.download')}
+                                                    >
+                                                        <Download size={18} className="text-gray-700" />
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            {/* File Info */}
+                                            <div className="p-3">
+                                                {editingFileId === file.id ? (
+                                                    <div className="flex gap-1">
+                                                        <input
+                                                            type="text"
+                                                            value={editingFileName}
+                                                            onChange={(e) => setEditingFileName(e.target.value)}
+                                                            className="flex-1 px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') saveEdit(file.id);
+                                                                if (e.key === 'Escape') cancelEdit();
+                                                            }}
+                                                            autoFocus
+                                                        />
+                                                        <button
+                                                            onClick={() => saveEdit(file.id)}
+                                                            className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                                                            title={t('common.save')}
+                                                        >
+                                                            <Check size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={cancelEdit}
+                                                            className="p-1 text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+                                                            title={t('common.cancel')}
+                                                        >
+                                                            <X size={16} />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <h3 className="font-medium text-sm text-neutral-900 dark:text-neutral-100 truncate mb-1" title={file.original_name}>
+                                                            {file.original_name}
+                                                        </h3>
+                                                        <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+                                                            <span>{formatFileSize(file.size)}</span>
+                                                            <span className="px-1.5 py-0.5 bg-neutral-200 dark:bg-neutral-700 rounded text-xs">
+                                                                {file.ext}
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            {/* Action Buttons at Bottom */}
+                                            {editingFileId !== file.id && (
+                                                <div className="px-3 pb-3 flex gap-1">
+                                                    <button
+                                                        onClick={() => startEdit(file)}
+                                                        className="flex-1 p-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded transition-colors flex items-center justify-center gap-1"
+                                                        title={t('files.rename')}
+                                                    >
+                                                        <Edit2 size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (confirm(t('files.delete_confirm'))) {
+                                                                deleteMutation.mutate(file.id);
+                                                            }
+                                                        }}
+                                                        className="flex-1 p-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex items-center justify-center gap-1"
+                                                        title={t('files.delete')}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    ))}
+                                </div>
+                        }
+
+                        <div ref={loadMoreRef} className="h-8"></div>
+                        {isFetchingNextPage && <Loader />}
+                        {!isLoading && !hasNextPage && files.length > 0 && (
+                            <div className="text-center py-4 text-gray-400">{t("messages.noMore")}</div>
                         )}
-                    </>
-                ) : (
-                    <div className="text-center py-12 text-neutral-500">
-                        {searchQuery || extFilter ? t('files.no_results') : t('files.no_files')}
+                        {!isLoading && files.length === 0 && (
+                            <div className="text-center py-8 text-gray-400">{t('files.no_files')}</div>
+                        )}
                     </div>
-                )}
-            </div>
+                </div>
+            </TransitionWrapper>
 
             {/* Preview Modal */}
             <AnimatePresence>
@@ -378,13 +403,13 @@ const FilesPage = () => {
                             <div className="p-4 overflow-auto max-h-[calc(90vh-80px)]">
                                 {isImageFile(previewFile.ext) ? (
                                     <img
-                                        src={getFileDownloadUrl(workspaceId!, previewFile.name)}
+                                        src={getFileDownloadUrl(currentWorkspaceId!, previewFile.name)}
                                         alt={previewFile.original_name}
                                         className="max-w-full h-auto mx-auto"
                                     />
                                 ) : (
                                     <iframe
-                                        src={getFileDownloadUrl(workspaceId!, previewFile.name)}
+                                        src={getFileDownloadUrl(currentWorkspaceId!, previewFile.name)}
                                         className="w-full h-[70vh] border-0"
                                         title={previewFile.original_name}
                                     />
@@ -394,7 +419,7 @@ const FilesPage = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </OneColumn>
     );
 };
 
