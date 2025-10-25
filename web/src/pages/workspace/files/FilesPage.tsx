@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect, useRef } from 'react';
 import { useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteFile, FileInfo, getFileDownloadUrl, listFiles, renameFile } from '../../../api/file';
 import { useToastStore } from '../../../stores/toast';
-import { Download, FileIcon, Trash2, Edit2, X, Check, Search, Filter, Eye, Image as ImageIcon, FileText } from 'lucide-react';
+import { Download, FileIcon, Trash2, Edit2, X, Check, Search, Filter, Eye, Image as ImageIcon, FileText, Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
@@ -69,10 +69,10 @@ const FilesPage = () => {
         mutationFn: (fileId: string) => deleteFile(currentWorkspaceId!, fileId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['files', currentWorkspaceId] });
-            addToast({ type: 'success', message: t('files.delete_success') });
+            addToast({ type: 'success', title: t('files.delete_success') });
         },
         onError: () => {
-            addToast({ type: 'error', message: t('files.delete_error') });
+            addToast({ type: 'error', title: t('files.delete_error') });
         },
     });
 
@@ -82,10 +82,10 @@ const FilesPage = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['files', currentWorkspaceId] });
             setEditingFileId(null);
-            addToast({ type: 'success', message: t('files.rename_success') });
+            addToast({ type: 'success', title: t('files.rename_success') });
         },
         onError: () => {
-            addToast({ type: 'error', message: t('files.rename_error') });
+            addToast({ type: 'error', title: t('files.rename_error') });
         },
     });
 
@@ -134,6 +134,18 @@ const FilesPage = () => {
     const saveEdit = (fileId: string) => {
         if (editingFileName.trim()) {
             renameMutation.mutate({ fileId, newName: editingFileName });
+        }
+    };
+
+    const handleCopyUrl = async (file: FileInfo) => {
+        try {
+            const fileUrl = getFileDownloadUrl(currentWorkspaceId!, file.name);
+            // Get the full URL including origin
+            const fullUrl = new URL(fileUrl, window.location.origin).href;
+            await navigator.clipboard.writeText(fullUrl);
+            addToast({ type: 'success', title: t('files.copy_url_success') });
+        } catch (error) {
+            addToast({ type: 'error', title: t('files.copy_url_error') });
         }
     };
 
@@ -345,6 +357,13 @@ const FilesPage = () => {
                                                         title={t('files.rename')}
                                                     >
                                                         <Edit2 size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleCopyUrl(file)}
+                                                        className="flex-1 p-1.5 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors flex items-center justify-center gap-1"
+                                                        title={t('files.copy_url')}
+                                                    >
+                                                        <Copy size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => {
