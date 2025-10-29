@@ -87,6 +87,7 @@ export default {
     deleteTheNote: "Delete the note?",
     noMoreNotes: "No more notes",
     noMore: "No more items",
+    noMoreViews: "No more views",
     preferencesUpdated: "Preferences updated",
     preferencesUpdateFailed: "Could not update preferences",
     networkError: "Network error. Please try again",
@@ -120,7 +121,14 @@ export default {
     create: "Create",
     creating: "Creating...",
     close: "Close",
-    relatedViews: "Related Views"
+    relatedViews: "Related Views",
+    all: "All",
+    views: "Views"
+  },
+  visibility: {
+    private: "Private - Only visible to you",
+    workspace: "Workspace - Visible to workspace members",
+    public: "Public - Visible to everyone"
   },
   time: {
     just_now: "just now",
@@ -293,6 +301,9 @@ export default {
     locationError: "Could not get your location",
     locationPermissionDenied: "Location permission denied",
     locationUnavailable: "Location information unavailable",
-    locationTimeout: "Location request timed out"
+    locationTimeout: "Location request timed out",
+    calendarSettings: "Calendar Settings",
+    visibilityUpdated: "Visibility updated successfully",
+    visibilityUpdateError: "Failed to update visibility"
   },
 } as const;

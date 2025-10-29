@@ -12,9 +12,10 @@ import (
 )
 
 type CreateViewRequest struct {
-	Name string `json:"name" validate:"required"`
-	Type string `json:"type" validate:"required"`
-	Data string `json:"data"`
+	Name       string `json:"name" validate:"required"`
+	Type       string `json:"type" validate:"required"`
+	Data       string `json:"data"`
+	Visibility string `json:"visibility"`
 }
 
 type UpdateViewRequest struct {
@@ -29,6 +30,7 @@ type GetViewResponse struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"`
 	Data        string `json:"data"`
+	Visibility  string `json:"visibility"`
 	CreatedAt   string `json:"created_at"`
 	CreatedBy   string `json:"created_by"`
 	UpdatedAt   string `json:"updated_at"`
@@ -73,6 +75,7 @@ func (h Handler) GetViews(c echo.Context) error {
 			Name:        v.Name,
 			Type:        v.Type,
 			Data:        v.Data,
+			Visibility:  v.Visibility,
 			CreatedAt:   v.CreatedAt,
 			CreatedBy:   h.getUserNameByID(v.CreatedBy),
 			UpdatedAt:   v.UpdatedAt,
@@ -106,6 +109,7 @@ func (h Handler) GetView(c echo.Context) error {
 		Name:        v.Name,
 		Type:        v.Type,
 		Data:        v.Data,
+		Visibility:  v.Visibility,
 		CreatedAt:   v.CreatedAt,
 		CreatedBy:   h.getUserNameByID(v.CreatedBy),
 		UpdatedAt:   v.UpdatedAt,
@@ -141,12 +145,26 @@ func (h Handler) CreateView(c echo.Context) error {
 
 	user := c.Get("user").(model.User)
 
+	// Set default visibility to private if not provided
+	visibility := req.Visibility
+	if visibility == "" {
+		visibility = "private"
+	}
+
+	// Validate visibility
+	switch visibility {
+	case "public", "workspace", "private":
+	default:
+		return echo.NewHTTPError(http.StatusBadRequest, "View visibility must be 'public', 'workspace', or 'private'")
+	}
+
 	v := model.View{
 		WorkspaceID: workspaceId,
 		ID:          util.NewId(),
 		Name:        req.Name,
 		Type:        req.Type,
 		Data:        req.Data,
+		Visibility:  visibility,
 		CreatedAt:   time.Now().UTC().String(),
 		CreatedBy:   user.ID,
 		UpdatedAt:   time.Now().UTC().String(),
@@ -252,4 +270,182 @@ func (h Handler) DeleteView(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (h Handler) GetPublicViews(c echo.Context) error {
+	pageSize := 20
+	pageNumber := 1
+	if ps := c.QueryParam("pageSize"); ps != "" {
+		if v, err := strconv.Atoi(ps); err == nil && v > 0 {
+			pageSize = v
+		}
+	}
+	if pn := c.QueryParam("pageNumber"); pn != "" {
+		if v, err := strconv.Atoi(pn); err == nil && v > 0 {
+			pageNumber = v
+		}
+	}
+
+	viewType := c.QueryParam("type")
+
+	filter := model.ViewFilter{
+		WorkspaceID: "",
+		ViewType:    viewType,
+		PageSize:    pageSize,
+		PageNumber:  pageNumber,
+	}
+
+	views, err := h.db.FindViews(filter)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	var user *model.User
+	if u := c.Get("user"); u != nil {
+		if uu, ok := u.(model.User); ok {
+			user = &uu
+		}
+	}
+
+	var res []GetViewResponse
+
+	for _, v := range views {
+		switch v.Visibility {
+		case "public", "workspace":
+			res = append(res, GetViewResponse{
+				ID:          v.ID,
+				WorkspaceID: v.WorkspaceID,
+				Name:        v.Name,
+				Type:        v.Type,
+				Data:        v.Data,
+				Visibility:  v.Visibility,
+				CreatedAt:   v.CreatedAt,
+				CreatedBy:   h.getUserNameByID(v.CreatedBy),
+				UpdatedAt:   v.UpdatedAt,
+				UpdatedBy:   h.getUserNameByID(v.UpdatedBy),
+			})
+		case "private":
+			if user != nil && v.CreatedBy == user.ID {
+				res = append(res, GetViewResponse{
+					ID:          v.ID,
+					WorkspaceID: v.WorkspaceID,
+					Name:        v.Name,
+					Type:        v.Type,
+					Data:        v.Data,
+					Visibility:  v.Visibility,
+					CreatedAt:   v.CreatedAt,
+					CreatedBy:   h.getUserNameByID(v.CreatedBy),
+					UpdatedAt:   v.UpdatedAt,
+					UpdatedBy:   h.getUserNameByID(v.UpdatedBy),
+				})
+			}
+		}
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h Handler) GetPublicView(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "View id is required")
+	}
+
+	v := model.View{ID: id}
+	v, err := h.db.FindView(v)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	var user *model.User
+	if u := c.Get("user"); u != nil {
+		if uu, ok := u.(model.User); ok {
+			user = &uu
+		}
+	}
+
+	isVisible := false
+
+	switch v.Visibility {
+	case "public":
+		isVisible = true
+	case "workspace":
+		// For workspace visibility, allow if user is authenticated
+		isVisible = user != nil
+	case "private":
+		isVisible = user != nil && v.CreatedBy == user.ID
+	}
+
+	if !isVisible {
+		return echo.NewHTTPError(http.StatusForbidden, "you do not have permission to see this View")
+	}
+
+	res := GetViewResponse{
+		ID:          v.ID,
+		WorkspaceID: v.WorkspaceID,
+		Name:        v.Name,
+		Type:        v.Type,
+		Data:        v.Data,
+		Visibility:  v.Visibility,
+		CreatedAt:   v.CreatedAt,
+		CreatedBy:   h.getUserNameByID(v.CreatedBy),
+		UpdatedAt:   v.UpdatedAt,
+		UpdatedBy:   h.getUserNameByID(v.UpdatedBy),
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h Handler) UpdateViewVisibility(c echo.Context) error {
+	workspaceId := c.Param("workspaceId")
+	if workspaceId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "workspace id is required")
+	}
+	id := c.Param("id")
+	if id == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "View id is required")
+	}
+	visibility := c.Param("visibility")
+	if visibility == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "View visibility is required")
+	}
+
+	switch visibility {
+	case "public", "workspace", "private":
+	default:
+		return echo.NewHTTPError(http.StatusBadRequest, "View visibility is invalid")
+	}
+
+	existingView, err := h.db.FindView(model.View{ID: id})
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	user := c.Get("user").(model.User)
+
+	if existingView.CreatedBy != user.ID {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+
+	v := model.View{
+		WorkspaceID: workspaceId,
+		ID:          existingView.ID,
+		Name:        existingView.Name,
+		Type:        existingView.Type,
+		Data:        existingView.Data,
+		Visibility:  visibility,
+		CreatedAt:   existingView.CreatedAt,
+		CreatedBy:   existingView.CreatedBy,
+		UpdatedAt:   time.Now().UTC().String(),
+		UpdatedBy:   user.ID,
+	}
+
+	err = h.db.UpdateView(v)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, v)
 }

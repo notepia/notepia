@@ -20,6 +20,7 @@ const ViewsPage = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [newViewName, setNewViewName] = useState("");
     const [newViewType, setNewViewType] = useState<ViewType>("map");
+    const [newViewVisibility, setNewViewVisibility] = useState<string>("private");
     const [editingViewId, setEditingViewId] = useState<string | null>(null);
     const [editingViewName, setEditingViewName] = useState("");
 
@@ -35,13 +36,14 @@ const ViewsPage = () => {
     const viewsList = views ?? []
 
     const createMutation = useMutation({
-        mutationFn: (data: { name: string, type: ViewType }) =>
+        mutationFn: (data: { name: string, type: ViewType, visibility?: string }) =>
             createView(currentWorkspaceId, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['views', currentWorkspaceId] });
             setIsCreating(false);
             setNewViewName("");
             setNewViewType("map");
+            setNewViewVisibility("private");
             addToast({ type: 'success', title: t('views.objectCreatedSuccess') });
         },
         onError: () => {
@@ -76,7 +78,7 @@ const ViewsPage = () => {
 
     const handleCreateView = () => {
         if (newViewName.trim()) {
-            createMutation.mutate({ name: newViewName.trim(), type: newViewType });
+            createMutation.mutate({ name: newViewName.trim(), type: newViewType, visibility: newViewVisibility });
         }
     }
 
@@ -137,64 +139,102 @@ const ViewsPage = () => {
                     </div>
 
                     {isCreating && (
-                        <div className="mt-4 p-4 border dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-900">
-                            <h3 className="text-lg font-semibold mb-4">{t('views.createView')}</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">{t('views.viewName')}</label>
-                                    <input
-                                        type="text"
-                                        value={newViewName}
-                                        onChange={(e) => setNewViewName(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
-                                        placeholder={t('views.viewName')}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">{t('views.viewType')}</label>
-                                    <div className="flex gap-4">
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="viewType"
-                                                value="map"
-                                                checked={newViewType === "map"}
-                                                onChange={(e) => setNewViewType(e.target.value as ViewType)}
-                                            />
-                                            <MapPin size={16} />
-                                            <span>{t('views.map')}</span>
-                                        </label>
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="viewType"
-                                                value="calendar"
-                                                checked={newViewType === "calendar"}
-                                                onChange={(e) => setNewViewType(e.target.value as ViewType)}
-                                            />
-                                            <Calendar size={16} />
-                                            <span>{t('views.calendar')}</span>
-                                        </label>
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setIsCreating(false)}>
+                            <div className="bg-white dark:bg-neutral-900 rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                                <h3 className="text-lg font-semibold mb-4">{t('views.createView')}</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">{t('views.viewName')}</label>
+                                        <input
+                                            type="text"
+                                            value={newViewName}
+                                            onChange={(e) => setNewViewName(e.target.value)}
+                                            className="w-full px-3 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                                            placeholder={t('views.viewName')}
+                                        />
                                     </div>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={handleCreateView}
-                                        disabled={createMutation.isPending}
-                                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                                    >
-                                        {createMutation.isPending ? t('views.creating') : t('actions.create')}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setIsCreating(false);
-                                            setNewViewName("");
-                                            setNewViewType("map");
-                                        }}
-                                        className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                                    >
-                                        {t('actions.cancel')}
-                                    </button>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">{t('views.viewType')}</label>
+                                        <div className="flex gap-4">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="viewType"
+                                                    value="map"
+                                                    checked={newViewType === "map"}
+                                                    onChange={(e) => setNewViewType(e.target.value as ViewType)}
+                                                />
+                                                <MapPin size={16} />
+                                                <span>{t('views.map')}</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="viewType"
+                                                    value="calendar"
+                                                    checked={newViewType === "calendar"}
+                                                    onChange={(e) => setNewViewType(e.target.value as ViewType)}
+                                                />
+                                                <Calendar size={16} />
+                                                <span>{t('views.calendar')}</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">{t('common.visibility')}</label>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="visibility"
+                                                    value="private"
+                                                    checked={newViewVisibility === "private"}
+                                                    onChange={(e) => setNewViewVisibility(e.target.value)}
+                                                />
+                                                <span>{t('visibility.private')}</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="visibility"
+                                                    value="workspace"
+                                                    checked={newViewVisibility === "workspace"}
+                                                    onChange={(e) => setNewViewVisibility(e.target.value)}
+                                                />
+                                                <span>{t('visibility.workspace')}</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="visibility"
+                                                    value="public"
+                                                    checked={newViewVisibility === "public"}
+                                                    onChange={(e) => setNewViewVisibility(e.target.value)}
+                                                />
+                                                <span>{t('visibility.public')}</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 pt-2">
+                                        <button
+                                            onClick={handleCreateView}
+                                            disabled={createMutation.isPending}
+                                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 flex-1"
+                                        >
+                                            {createMutation.isPending ? t('views.creating') : t('actions.create')}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsCreating(false);
+                                                setNewViewName("");
+                                                setNewViewType("map");
+                                                setNewViewVisibility("private");
+                                            }}
+                                            className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                        >
+                                            {t('actions.cancel')}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

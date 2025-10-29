@@ -88,12 +88,13 @@ const MapViewComponent = ({ viewObjects = [], view }: MapViewComponentProps) => 
         <div className="h-full w-full flex flex-col">
 
             {/* Map container - fills remaining space */}
-            <div className="flex-1 w-full relative z-0">
+            <div className="flex-1 w-full relative">
                 <MapContainer
                     center={mapCenter}
                     zoom={mapZoom}
-                    className="h-full w-full z-0"
+                    className="h-full w-full"
                     scrollWheelZoom={true}
+                    zoomControl={true}
                 >
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

@@ -18,6 +18,8 @@ import UserLayout from './components/userlayout/UserLayout';
 import PublicLayout from './components/publiclayout/PublicLayout';
 import ExploreNotesPage from './pages/explore/ExploreNotesPage';
 import ExploreNoteDetailPage from './pages/explore/ExploreNoteDetailPage';
+import ExploreViewsPage from './pages/explore/ExploreViewsPage';
+import ExploreViewDetailPage from './pages/explore/ExploreViewDetailPage';
 import ModelsPage from './pages/user/ModelsPage';
 import GenTemplatesPage from './pages/workspace/gen-templates/GenTemplatesPage';
 import GenTemplateFormPage from './pages/workspace/gen-templates/GenTemplateFormPage';
@@ -60,6 +62,8 @@ function App() {
           <Route path='/' element={<PublicLayout />}>
             <Route path='explore/notes' element={<ExploreNotesPage />} />
             <Route path='explore/notes/:noteId' element={<ExploreNoteDetailPage />} />
+            <Route path='explore/views' element={<ExploreViewsPage />} />
+            <Route path='explore/views/:viewId' element={<ExploreViewDetailPage />} />
           </Route>
           <Route path='signin' element={<SignIn />}></Route>
           <Route path='signup' element={<SignUp />}></Route>

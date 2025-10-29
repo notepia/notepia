@@ -55,6 +55,7 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 	g.GET("/:workspaceId/views/:id", h.GetView)
 	g.PUT("/:workspaceId/views/:id", h.UpdateView)
 	g.DELETE("/:workspaceId/views/:id", h.DeleteView)
+	g.PATCH("/:workspaceId/views/:id/visibility/:visibility", h.UpdateViewVisibility)
 
 	g.GET("/:workspaceId/views/:viewId/objects", h.GetViewObjects)
 	g.POST("/:workspaceId/views/:viewId/objects", h.CreateViewObject)
