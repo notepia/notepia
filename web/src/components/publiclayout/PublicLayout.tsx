@@ -1,7 +1,7 @@
 import { twMerge } from "tailwind-merge"
 import { useSidebar } from "../sidebar/SidebarProvider"
 import { Link } from "react-router-dom"
-import { LogIn, Monitor } from 'lucide-react'
+import { LogIn, Monitor, FileText, LayoutGrid } from 'lucide-react'
 import { useTranslation } from "react-i18next"
 import logo from '@/assets/app.png'
 import { useCurrentUserStore } from "@/stores/current-user"
@@ -21,12 +21,24 @@ const PublicLayout = () => {
                 </div>
             </div>
             <div className=" flex flex-col gap-1 overflow-y-auto">
+                <Link to="/explore/notes" className="p-2 flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-lg">
+                    <FileText size={20} />
+                    {!isCollapse && <>{t("menu.notes")}</>}
+                </Link>
+
+                <Link to="/explore/views" className="p-2 flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-lg">
+                    <LayoutGrid size={20} />
+                    {!isCollapse && <>{t("menu.views")}</>}
+                </Link>
+
+                <div className="my-2 border-t dark:border-neutral-700"></div>
+
                 {
-                    user ? <Link to="/" className="p-2 flex items-center gap-2">
+                    user ? <Link to="/" className="p-2 flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-lg">
                         <Monitor size={20} />
                         {!isCollapse && <>{t("menu.workspace")}</>}
                     </Link>
-                        : <Link to="/signin" className="p-2 flex items-center gap-2">
+                        : <Link to="/signin" className="p-2 flex items-center gap-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-lg">
                             <LogIn size={20} />
                             {!isCollapse && <>{t("actions.signin")}</>}
                         </Link>

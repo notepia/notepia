@@ -1,8 +1,10 @@
-import { ArrowLeft, Calendar, PlusCircle } from "lucide-react"
+import { ArrowLeft, Calendar, PlusCircle, Settings } from "lucide-react"
 import { useTwoColumn } from "@/components/twocolumn"
 import TransitionWrapper from "@/components/transitionwrapper/TransitionWrapper"
 import CalendarViewComponent from "./CalendarViewComponent"
 import CreateViewObjectModal from "../CreateViewObjectModal"
+import CalendarViewSettingsModal from "./CalendarViewSettingsModal"
+import { useState } from "react"
 
 interface CalendarViewContentProps {
     view: any
@@ -36,6 +38,7 @@ const CalendarViewContent = ({
     createMutation
 }: CalendarViewContentProps) => {
     const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
     return (
         <TransitionWrapper className="px-4 w-full">
@@ -61,8 +64,15 @@ const CalendarViewContent = ({
                             <Calendar size={18} />
                         </button>
                         <button
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                            title="Settings"
+                        >
+                            <Settings size={18} />
+                        </button>
+                        <button
                             onClick={() => setIsCreating(true)}
-                            className="flex items-center gap-2 p-2 "
+                            className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                         >
                             <PlusCircle size={18} />
                         </button>
@@ -82,6 +92,13 @@ const CalendarViewContent = ({
                     setData={setNewObjectData}
                     onSubmit={handleCreate}
                     isSubmitting={createMutation.isPending}
+                />
+
+                <CalendarViewSettingsModal
+                    open={isSettingsOpen}
+                    onOpenChange={setIsSettingsOpen}
+                    view={view}
+                    workspaceId={currentWorkspaceId}
                 />
 
                 <CalendarViewComponent viewObjects={viewObjects} />

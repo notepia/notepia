@@ -86,6 +86,7 @@ export default {
     deleteTheNote: "刪除這個筆記?",
     noMoreNotes: "沒有更多的筆記",
     noMore: "沒有更多了",
+    noMoreViews: "沒有更多視圖",
     preferencesUpdated: "偏好設定已更新",
     preferencesUpdateFailed: "偏好設定更新失敗",
     networkError: "網路異常",
@@ -119,7 +120,14 @@ export default {
     create: "建立",
     creating: "建立中...",
     close: "關閉",
-    relatedViews: "相關視圖"
+    relatedViews: "相關視圖",
+    all: "全部",
+    views: "視圖"
+  },
+  visibility: {
+    private: "私人 - 僅自己可見",
+    workspace: "工作區 - 工作區成員可見",
+    public: "公開 - 所有人可見"
   },
   time: {
     just_now: "剛剛",
@@ -286,6 +294,9 @@ export default {
     selectOnMap: "在地圖上選擇",
     searchOrEnterCoordinates: "搜尋或輸入座標以顯示地圖",
     clickMapToSelect: "點擊地圖選擇位置",
-    loadingAddress: "載入地址中..."
+    loadingAddress: "載入地址中...",
+    calendarSettings: "行事曆設定",
+    visibilityUpdated: "可見性更新成功",
+    visibilityUpdateError: "可見性更新失敗"
   },
 } as const;

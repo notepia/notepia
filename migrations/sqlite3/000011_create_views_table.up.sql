@@ -4,6 +4,7 @@ CREATE TABLE `views` (
     `name` text,
     `type` text,
     `data` text,
+    `visibility` text,
     `created_at` text,
     `created_by` text,
     `updated_at` text,

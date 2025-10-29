@@ -2,7 +2,7 @@ import { Dialog } from "radix-ui"
 import { useTranslation } from "react-i18next"
 import { useState, useEffect } from "react"
 import { MapViewData, View } from "@/types/view"
-import { updateView } from "@/api/view"
+import { updateView, updateViewVisibility } from "@/api/view"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useToastStore } from "@/stores/toast"
 
@@ -26,24 +26,28 @@ const MapViewSettingsModal = ({
     const [centerLat, setCenterLat] = useState("")
     const [centerLng, setCenterLng] = useState("")
     const [zoom, setZoom] = useState("")
+    const [visibility, setVisibility] = useState(view.visibility || "private")
 
     // Parse existing view data when modal opens
     useEffect(() => {
-        if (open && view.data) {
-            try {
-                const mapData: MapViewData = JSON.parse(view.data)
-                if (mapData.center) {
-                    setCenterLat(mapData.center.lat.toString())
-                    setCenterLng(mapData.center.lng.toString())
+        if (open) {
+            setVisibility(view.visibility || "private")
+            if (view.data) {
+                try {
+                    const mapData: MapViewData = JSON.parse(view.data)
+                    if (mapData.center) {
+                        setCenterLat(mapData.center.lat.toString())
+                        setCenterLng(mapData.center.lng.toString())
+                    }
+                    if (mapData.zoom !== undefined) {
+                        setZoom(mapData.zoom.toString())
+                    }
+                } catch (e) {
+                    console.error('Failed to parse view data:', e)
                 }
-                if (mapData.zoom !== undefined) {
-                    setZoom(mapData.zoom.toString())
-                }
-            } catch (e) {
-                console.error('Failed to parse view data:', e)
             }
         }
-    }, [open, view.data])
+    }, [open, view.data, view.visibility])
 
     // Reset form when modal closes
     useEffect(() => {
@@ -67,28 +71,51 @@ const MapViewSettingsModal = ({
         }
     })
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const visibilityMutation = useMutation({
+        mutationFn: (newVisibility: string) => updateViewVisibility(workspaceId, view.id, newVisibility),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['view', workspaceId, view.id] })
+            queryClient.invalidateQueries({ queryKey: ['views', workspaceId] })
+        }
+    })
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        const mapData: MapViewData = {}
+        try {
+            // Update visibility if changed
+            if (visibility !== view.visibility) {
+                await visibilityMutation.mutateAsync(visibility)
+            }
 
-        const lat = parseFloat(centerLat)
-        const lng = parseFloat(centerLng)
-        const zoomValue = parseInt(zoom)
+            const mapData: MapViewData = {}
 
-        if (!isNaN(lat) && !isNaN(lng)) {
-            mapData.center = { lat, lng }
-        }
+            const lat = parseFloat(centerLat)
+            const lng = parseFloat(centerLng)
+            const zoomValue = parseInt(zoom)
 
-        if (!isNaN(zoomValue) && zoomValue >= 1 && zoomValue <= 20) {
-            mapData.zoom = zoomValue
-        }
+            if (!isNaN(lat) && !isNaN(lng)) {
+                mapData.center = { lat, lng }
+            }
 
-        // Only update if there's valid data
-        if (Object.keys(mapData).length > 0) {
-            updateMutation.mutate(JSON.stringify(mapData))
-        } else {
-            addToast({ type: 'error', title: 'Please provide valid settings' })
+            if (!isNaN(zoomValue) && zoomValue >= 1 && zoomValue <= 20) {
+                mapData.zoom = zoomValue
+            }
+
+            // Only update if there's valid data
+            if (Object.keys(mapData).length > 0) {
+                updateMutation.mutate(JSON.stringify(mapData))
+            } else {
+                // If only visibility was changed
+                if (visibility !== view.visibility) {
+                    addToast({ type: 'success', title: t('views.settingsUpdated') || 'Settings updated successfully' })
+                    onOpenChange(false)
+                } else {
+                    addToast({ type: 'error', title: 'Please provide valid settings' })
+                }
+            }
+        } catch (error) {
+            addToast({ type: 'error', title: t('views.settingsUpdateError') || 'Failed to update settings' })
         }
     }
 
@@ -109,6 +136,45 @@ const MapViewSettingsModal = ({
                     </Dialog.Title>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Visibility */}
+                        <div>
+                            <label className="block text-sm font-medium mb-2">
+                                {t('common.visibility')}
+                            </label>
+                            <div className="flex flex-col gap-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="visibility"
+                                        value="private"
+                                        checked={visibility === "private"}
+                                        onChange={(e) => setVisibility(e.target.value)}
+                                    />
+                                    <span className="text-sm">{t('visibility.private')}</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="visibility"
+                                        value="workspace"
+                                        checked={visibility === "workspace"}
+                                        onChange={(e) => setVisibility(e.target.value)}
+                                    />
+                                    <span className="text-sm">{t('visibility.workspace')}</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="visibility"
+                                        value="public"
+                                        checked={visibility === "public"}
+                                        onChange={(e) => setVisibility(e.target.value)}
+                                    />
+                                    <span className="text-sm">{t('visibility.public')}</span>
+                                </label>
+                            </div>
+                        </div>
+
                         {/* Map Center */}
                         <div>
                             <label className="block text-sm font-medium mb-2">

@@ -14,6 +14,7 @@ type View struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"`
 	Data        string `json:"data"`
+	Visibility  string `json:"visibility"`
 	CreatedAt   string `json:"created_at"`
 	CreatedBy   string `json:"created_by"`
 	UpdatedAt   string `json:"updated_at"`

@@ -2,7 +2,6 @@ import { FC, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { NoteData } from "@/api/note"
 import { getViewObjectsForNote } from "@/api/view"
-import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import NoteTime from "../notetime/NoteTime"
 import VisibilityLabel from "../visibilitylabel/VisibilityLabel"
 import { useTranslation } from "react-i18next"
@@ -10,7 +9,7 @@ import { Info, ChevronRight, Calendar, MapPin } from "lucide-react"
 import { CalendarSlotData, MapMarkerData } from "@/types/view"
 import MiniCalendarView from "./MiniCalendarView"
 import MiniMapView from "./MiniMapView"
-import { Link } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 
 interface NoteDetailSidebarProps {
     note: NoteData
@@ -19,7 +18,8 @@ interface NoteDetailSidebarProps {
 
 const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
     const { t } = useTranslation()
-    const currentWorkspaceId = useCurrentWorkspaceId()
+    const { workspaceId } = useParams<{ workspaceId?: string }>()
+    const currentWorkspaceId = workspaceId || note.workspace_id
 
     const { data: viewObjects = [] } = useQuery({
         queryKey: ['note-view-objects', currentWorkspaceId, note.id],
@@ -27,11 +27,17 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
         enabled: !!note.id && !!currentWorkspaceId,
     })
 
-    // Group view objects by view
+    // Group view objects by view and filter out private views
     const groupedByView = useMemo(() => {
         const grouped = new Map()
 
         viewObjects.forEach(item => {
+            // Only include views that are public or workspace-visible
+            // Skip private views when viewing from explore page (no workspace context)
+            if (!workspaceId && item.view.visibility === 'private') {
+                return
+            }
+
             const viewId = item.view.id
             if (!grouped.has(viewId)) {
                 grouped.set(viewId, {
@@ -43,7 +49,7 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
         })
 
         return Array.from(grouped.values())
-    }, [viewObjects])
+    }, [viewObjects, workspaceId])
 
     return (
         <div className="max-w-sm h-screen overflow-y-auto sticky top-0 bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
@@ -75,7 +81,10 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
                         {groupedByView.map((viewGroup, index) => (
                             <div key={viewGroup.view.id} className="space-y-2">
                                 <Link
-                                    to={`/workspaces/${currentWorkspaceId}/views/${viewGroup.view.id}`}
+                                    to={workspaceId
+                                        ? `/workspaces/${currentWorkspaceId}/views/${viewGroup.view.id}`
+                                        : `/explore/views/${viewGroup.view.id}`
+                                    }
                                     className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                                 >
                                     {viewGroup.view.type === 'calendar' ? (

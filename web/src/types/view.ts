@@ -21,6 +21,7 @@ export interface View {
   name: string;
   type: ViewType;
   data: string;
+  visibility?: string;
   created_at: string;
   created_by: string;
   updated_at: string;
@@ -31,6 +32,7 @@ export interface CreateViewRequest {
   name: string;
   type: ViewType;
   data?: string;
+  visibility?: string;
 }
 
 export interface UpdateViewRequest {
