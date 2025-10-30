@@ -1,5 +1,5 @@
-import { FC, useMemo, useState } from 'react'
-import { MapContainer, TileLayer, Marker } from 'react-leaflet'
+import { FC, useMemo, useState, useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import { Icon } from 'leaflet'
 import { MapMarkerData, ViewObject } from '@/types/view'
 import { X } from 'lucide-react'
@@ -9,8 +9,54 @@ interface MiniMapViewProps {
     viewObjects: ViewObject[]
 }
 
+// Component to force map to recalculate size
+const MapResizer: FC = () => {
+    const map = useMap()
+
+    useEffect(() => {
+        // Aggressive size recalculation on mount
+        const recalculate = () => {
+            map.invalidateSize(true)
+        }
+
+        // Call immediately
+        recalculate()
+
+        // Then call multiple times with delays
+        const timer1 = setTimeout(recalculate, 100)
+        const timer2 = setTimeout(recalculate, 300)
+        const timer3 = setTimeout(recalculate, 500)
+        const timer4 = setTimeout(recalculate, 1000)
+
+        // Also recalculate on any move/zoom
+        map.on('moveend', recalculate)
+        map.on('zoomend', recalculate)
+
+        return () => {
+            clearTimeout(timer1)
+            clearTimeout(timer2)
+            clearTimeout(timer3)
+            clearTimeout(timer4)
+            map.off('moveend', recalculate)
+            map.off('zoomend', recalculate)
+        }
+    }, [map])
+
+    return null
+}
+
 const MiniMapView: FC<MiniMapViewProps> = ({ markers, viewObjects }) => {
     const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null)
+    const [isReady, setIsReady] = useState(false)
+
+    // Delay map rendering to ensure container is fully sized
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsReady(true)
+        }, 1)
+        return () => clearTimeout(timer)
+    }, [])
+
     // Use the first marker as center point
     const mapCenter: [number, number] = useMemo(() => {
         if (markers.length === 0) {
@@ -61,32 +107,43 @@ const MiniMapView: FC<MiniMapViewProps> = ({ markers, viewObjects }) => {
 
     return (
         <div onClick={(e) => e.preventDefault()}>
-            <div className="h-48 w-full rounded-lg overflow-hidden border dark:border-neutral-700">
-                <MapContainer
-                    center={mapCenter}
-                    zoom={zoom}
-                    className="h-full w-full"
-                    scrollWheelZoom={true}
-                    dragging={true}
-                    zoomControl={true}
-                    doubleClickZoom={true}
-                    touchZoom={true}
-                >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {markers.map((marker, index) => (
-                        <Marker
-                            key={index}
-                            position={[marker.lat, marker.lng]}
-                            icon={markerIcon}
-                            eventHandlers={{
-                                click: () => handleMarkerClick(index)
-                            }}
+            <div
+                className="h-48 w-full rounded-lg overflow-hidden border dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800"
+                style={{ transform: 'translateZ(0)' }}
+            >
+                {isReady ? (
+                    <MapContainer
+                        center={mapCenter}
+                        zoom={zoom}
+                        className="h-full w-full"
+                        scrollWheelZoom={true}
+                        dragging={true}
+                        zoomControl={true}
+                        doubleClickZoom={true}
+                        touchZoom={true}
+                        preferCanvas={true}
+                    >
+                        <MapResizer />
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
-                    ))}
-                </MapContainer>
+                        {markers.map((marker, index) => (
+                            <Marker
+                                key={index}
+                                position={[marker.lat, marker.lng]}
+                                icon={markerIcon}
+                                eventHandlers={{
+                                    click: () => handleMarkerClick(index)
+                                }}
+                            />
+                        ))}
+                    </MapContainer>
+                ) : (
+                    <div className="h-full w-full flex items-center justify-center text-neutral-500">
+                        Loading map...
+                    </div>
+                )}
             </div>
 
             {/* Selected marker info */}

@@ -131,3 +131,20 @@ ul[data-type="taskList"] > li > div{
 .leaflet-pane {
   z-index: auto !important;
 }
+
+/* Ensure markers are always above tiles */
+.leaflet-marker-pane {
+  z-index: 600 !important;
+}
+
+.leaflet-marker-icon-high-z {
+  z-index: 1000 !important;
+}
+
+.leaflet-tile-pane {
+  z-index: 200 !important;
+}
+
+.leaflet-shadow-pane {
+  z-index: 500 !important;
+}
