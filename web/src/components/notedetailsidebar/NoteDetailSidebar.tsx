@@ -62,9 +62,9 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
     }, [viewObjects, workspaceId])
 
     return (
-        <div className="max-w-sm h-screen overflow-y-auto sticky top-0 bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
+        <div className="w-full h-full overflow-y-auto bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
             {/* Sticky Header with Close Button */}
-            <div className=" border-b dark:border-neutral-700 px-4 py-4 flex items-center justify-between z-10">
+            <div className="lg:hidden border-b dark:border-neutral-700 p-4 flex items-center justify-between sticky top-0 bg-neutral-100 dark:bg-neutral-900 z-10">
                 <div className="flex items-center gap-2">
                     <Info size={18} />
                     <div className="text-lg font-semibold">{t("pages.noteDetail.note")}</div>

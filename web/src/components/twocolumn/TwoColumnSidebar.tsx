@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useEffect, useState } from "react"
 import { useTwoColumn } from "./TwoColumn"
 
 interface TwoColumnSidebarProps {
@@ -8,6 +8,21 @@ interface TwoColumnSidebarProps {
 
 export const TwoColumnSidebar = ({ children, className = "" }: TwoColumnSidebarProps) => {
     const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
+    const [shouldHideOnMobile, setShouldHideOnMobile] = useState(isSidebarCollapsed)
+
+    // Handle animation and rendering state for mobile
+    useEffect(() => {
+        if (!isSidebarCollapsed) {
+            // Show immediately when opening
+            setShouldHideOnMobile(false)
+        } else {
+            // Delay hiding until animation completes (300ms)
+            const timer = setTimeout(() => {
+                setShouldHideOnMobile(true)
+            }, 300)
+            return () => clearTimeout(timer)
+        }
+    }, [isSidebarCollapsed])
 
     // Prevent body scroll when bottom sheet is open on mobile
     useEffect(() => {
@@ -39,8 +54,9 @@ export const TwoColumnSidebar = ({ children, className = "" }: TwoColumnSidebarP
                         ? 'translate-y-full lg:translate-y-0'
                         : 'translate-y-0'
                 }
+                ${shouldHideOnMobile ? 'max-lg:hidden' : ''}
                 fixed bottom-0 left-0 right-0 max-h-[85vh] rounded-t-2xl
-                lg:static lg:max-h-none lg:rounded-none lg:h-screen
+                lg:static lg:w-96 lg:max-h-none lg:rounded-none lg:h-screen lg:flex-shrink-0
                 border-x overflow-y-auto transition-transform duration-300 ease-out z-50 ${className}`}
             >
                 {children}

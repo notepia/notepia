@@ -5,7 +5,7 @@ interface Props {
 }
 const Main:React.FC<Props> = ({children})=>{
     return <>
-        <main className='h-full overflow-y-auto '>
+        <main className=''>
             {children}
         </main>
     </>

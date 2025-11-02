@@ -124,9 +124,7 @@ const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChan
                 />
             </TwoColumnMain>
             <TwoColumnSidebar>
-                <div className="w-96">
-                    {note && <NoteDetailSidebar note={note} onClose={toggleSidebar} />}
-                </div>
+                {note && <NoteDetailSidebar note={note} onClose={toggleSidebar} />}
             </TwoColumnSidebar>
         </>
     )

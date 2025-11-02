@@ -101,7 +101,7 @@ const MiniCalendarView: FC<MiniCalendarViewProps> = ({ slots, viewObjects }) => 
                         e.preventDefault()
                         previousMonth()
                     }}
-                    className="p-3 rounded border"
+                    className="p-3 rounded border border-neutral-500"
                     title="Previous month"
                 >
                     <ChevronLeft size={14} />
@@ -114,7 +114,7 @@ const MiniCalendarView: FC<MiniCalendarViewProps> = ({ slots, viewObjects }) => 
                         e.preventDefault()
                         nextMonth()
                     }}
-                    className="p-3 rounded border"
+                    className="p-3 rounded border border-neutral-500"
                     title="Next month"
                 >
                     <ChevronRight size={14} />
@@ -139,7 +139,7 @@ const MiniCalendarView: FC<MiniCalendarViewProps> = ({ slots, viewObjects }) => 
                             onClick={() => handleDayClick(d)}
                             className={`
                                 aspect-square flex items-center justify-center  rounded 
-                                ${d ? 'text-gray-700 dark:text-gray-300 border' : ''}
+                                ${d ? 'text-gray-700 dark:text-gray-300 border border-neutral-500' : ''}
                                 ${isHighlighted ? `font-bold text-white cursor-pointer hover:opacity-80 bg-neutral-500` : ''}
                                 ${isSelected ? '' : ''}
                             `}
