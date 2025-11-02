@@ -92,21 +92,21 @@ const MiniCalendarView: FC<MiniCalendarViewProps> = ({ slots, viewObjects }) => 
 
     return (
         <div
-            className="p-3 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-900"
+            className=""
             onClick={(e) => e.preventDefault()}
         >
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between py-3">
                 <button
                     onClick={(e) => {
                         e.preventDefault()
                         previousMonth()
                     }}
-                    className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    className="p-3 rounded border"
                     title="Previous month"
                 >
                     <ChevronLeft size={14} />
                 </button>
-                <div className="text-sm font-semibold">
+                <div className=" font-semibold">
                     {monthNames[month]} {year}
                 </div>
                 <button
@@ -114,7 +114,7 @@ const MiniCalendarView: FC<MiniCalendarViewProps> = ({ slots, viewObjects }) => 
                         e.preventDefault()
                         nextMonth()
                     }}
-                    className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    className="p-3 rounded border"
                     title="Next month"
                 >
                     <ChevronRight size={14} />
@@ -123,7 +123,7 @@ const MiniCalendarView: FC<MiniCalendarViewProps> = ({ slots, viewObjects }) => 
 
             <div className="grid grid-cols-7 gap-1">
                 {weekDays.map((d, i) => (
-                    <div key={i} className="text-center text-xs text-gray-500 dark:text-gray-400">
+                    <div key={i} className="flex items-center justify-center  text-gray-500 dark:text-gray-400 aspect-square">
                         {d}
                     </div>
                 ))}
@@ -131,7 +131,6 @@ const MiniCalendarView: FC<MiniCalendarViewProps> = ({ slots, viewObjects }) => 
                 {calendarDays.map((d, index) => {
                     const daySlotsData = getSlotsForDay(d)
                     const isHighlighted = daySlotsData.length > 0
-                    const firstSlotColor = daySlotsData[0]?.color || '#3b82f6'
                     const isSelected = d === selectedDay
 
                     return (
@@ -139,12 +138,11 @@ const MiniCalendarView: FC<MiniCalendarViewProps> = ({ slots, viewObjects }) => 
                             key={index}
                             onClick={() => handleDayClick(d)}
                             className={`
-                                aspect-square flex items-center justify-center text-xs rounded
-                                ${d ? 'text-gray-700 dark:text-gray-300' : ''}
-                                ${isHighlighted ? `font-bold text-white cursor-pointer hover:opacity-80` : ''}
+                                aspect-square flex items-center justify-center  rounded 
+                                ${d ? 'text-gray-700 dark:text-gray-300 border' : ''}
+                                ${isHighlighted ? `font-bold text-white cursor-pointer hover:opacity-80 bg-neutral-500` : ''}
                                 ${isSelected ? '' : ''}
                             `}
-                            style={isHighlighted ? { backgroundColor: firstSlotColor } : {}}
                         >
                             {d}
                         </div>
@@ -154,7 +152,7 @@ const MiniCalendarView: FC<MiniCalendarViewProps> = ({ slots, viewObjects }) => 
 
             {/* Selected day info */}
             {selectedDay && selectedDaySlots.length > 0 && (
-                <div className="mt-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded text-xs">
+                <div className="mt-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded ">
                     <div className="flex items-center justify-between mb-1">
                         <div className="font-semibold">
                             {monthNames[month]} {selectedDay}, {year}

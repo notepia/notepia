@@ -85,9 +85,6 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
                 {/* View Objects Section */}
                 {groupedByView.length > 0 && (
                     <div className="space-y-4">
-                        <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                            <span>{t("common.relatedViews")}</span>
-                        </div>
                         {groupedByView.map((viewGroup) => (
                             <div key={viewGroup.view.id} className="space-y-2">
                                 <Link
