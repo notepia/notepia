@@ -216,7 +216,7 @@ const GenTemplateSidebar = ({ histories, refetchHistories, t, isGenerating }: an
     const { toggleSidebar } = useTwoColumn()
 
     return (
-        <div className="max-w-sm">
+        <div className="w-full">
             <div className="sticky top-0 bg-gray-50 dark:bg-neutral-900 border-b dark:border-neutral-700 px-4 py-4 flex items-center justify-between z-10">
                 <div className="flex items-center gap-2">
                     <History size={18} />
