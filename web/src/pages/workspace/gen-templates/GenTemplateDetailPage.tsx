@@ -155,9 +155,9 @@ const GenTemplateDetailPage = () => {
 
     return (
         <TwoColumn>
-                <TwoColumnMain
-                    className="bg-white dark:bg-neutral-800 "
-                >
+            <TwoColumnMain
+                className="bg-white dark:bg-neutral-800 "
+            >
                 <GenTemplateContent
                     template={template}
                     parameters={parameters}
@@ -266,6 +266,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate(`/workspaces/${currentWorkspaceId}/gen-templates`)}
+                            aria-label="back"
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                         >
                             <ArrowLeft size={20} />
@@ -286,12 +287,14 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                             <History size={18} />
                         </button>
                         <button
+                            aria-label="edit template"
                             onClick={() => navigate(`/workspaces/${currentWorkspaceId}/gen-templates/${id}/edit`)}
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                         >
                             <Edit size={18} />
                         </button>
                         <button
+                            aria-label="delete template"
                             onClick={handleDelete}
                             disabled={deleteMutation.isPending}
                             className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 rounded-lg disabled:opacity-50"
@@ -330,7 +333,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                                 {t("genTemplates.fields.imageUrls")}
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {templateImages.map((img, index) => (
+                                {templateImages.map((img: string, index: number) => (
                                     <div key={index} className="relative group">
                                         <img
                                             src={getImageUrl(img)}
@@ -350,7 +353,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                         <div>
                             <div className="text-lg font-semibold mb-4">{t("genTemplates.fillParameters")}</div>
                             <div className="space-y-4">
-                                {parameters.map(param => (
+                                {parameters.map((param: any) => (
                                     <div key={param}>
                                         <label className="block text-sm font-medium mb-2">
                                             {param}
@@ -358,7 +361,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                                         <input
                                             type="text"
                                             value={paramValues[param] || ""}
-                                            onChange={(e) => setParamValues(prev => ({
+                                            onChange={(e) => setParamValues((prev: any) => ({
                                                 ...prev,
                                                 [param]: e.target.value
                                             }))}
@@ -388,7 +391,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                                 {t("genTemplates.additionalImages") || "Additional Images"}
                             </div>
                             <div className="space-y-3">
-                                {additionalImageUrls.map((url, index) => (
+                                {additionalImageUrls.map((url: string, index: number) => (
                                     <div key={index} className="flex gap-2 items-start">
                                         {url && (
                                             <img
@@ -432,9 +435,10 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        const newUrls = additionalImageUrls.filter((_, i) => i !== index)
+                                                        const newUrls = additionalImageUrls.filter((_: any, i: number) => i !== index)
                                                         setAdditionalImageUrls(newUrls)
                                                     }}
+                                                    aria-label="add image"
                                                     className="px-4 py-2 border border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
                                                 >
                                                     <X size={16} />
@@ -457,7 +461,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                     <div className="flex gap-3 pt-4">
                         <button
                             onClick={handleGenerate}
-                            disabled={parameters.some(param => !paramValues[param]) || generateMutation.isPending}
+                            disabled={parameters.some((param: any) => !paramValues[param]) || generateMutation.isPending}
                             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                         >
                             <Sparkles size={18} />

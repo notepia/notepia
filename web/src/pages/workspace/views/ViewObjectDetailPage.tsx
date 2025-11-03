@@ -65,6 +65,7 @@ const ViewObjectDetailPage = () => {
             <div className="sticky top-0 bg-gray-50 dark:bg-neutral-900 border-b dark:border-neutral-700 px-4 py-4 z-10">
                 <div className="flex items-center justify-between mb-3">
                     <button
+                        aria-label="back"
                         onClick={handleBack}
                         className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                     >
@@ -141,7 +142,6 @@ const ViewObjectDetailPage = () => {
                         viewId={viewId!}
                         viewObjectId={objectId!}
                         viewObjectName={viewObject.name}
-                        hideTitle={false}
                     />
                 </div>
             </div>

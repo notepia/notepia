@@ -122,6 +122,7 @@ const ViewObjectsList = () => {
                                         e.stopPropagation()
                                         handleDelete(obj.id)
                                     }}
+                                    aria-label="delete"
                                     disabled={deleteMutation.isPending}
                                     className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 rounded-lg disabled:opacity-50"
                                 >

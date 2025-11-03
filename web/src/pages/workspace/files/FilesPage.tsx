@@ -216,6 +216,7 @@ const FilesPage = () => {
                                             <select
                                                 value={extFilter}
                                                 onChange={(e) => setExtFilter(e.target.value)}
+                                                aria-label='filter'
                                                 className="bg-transparent appearance-none"
                                             >
                                                 <option value="">{t('files.all_types')}</option>
@@ -307,6 +308,7 @@ const FilesPage = () => {
                                                                 type="text"
                                                                 value={editingFileName}
                                                                 onChange={(e) => setEditingFileName(e.target.value)}
+                                                                aria-label='file name'
                                                                 className="flex-1 px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === 'Enter') saveEdit(file.id);
@@ -334,9 +336,9 @@ const FilesPage = () => {
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <h3 className="font-medium text-sm text-neutral-900 dark:text-neutral-100 truncate mb-1" title={file.original_name}>
+                                                        <div className="font-medium text-sm text-neutral-900 dark:text-neutral-100 truncate mb-1" title={file.original_name}>
                                                             {file.original_name}
-                                                        </h3>
+                                                        </div>
                                                         <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
                                                             <span>{formatFileSize(file.size)}</span>
                                                             <span className="px-1.5 py-0.5 bg-neutral-200 dark:bg-neutral-700 rounded text-xs">
@@ -412,11 +414,12 @@ const FilesPage = () => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
-                                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+                                <div className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 truncate">
                                     {previewFile.original_name}
-                                </h2>
+                                </div>
                                 <button
                                     onClick={() => setPreviewFile(null)}
+                                    aria-label='cancel'
                                     className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md"
                                 >
                                     <X size={20} />

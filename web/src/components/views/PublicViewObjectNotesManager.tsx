@@ -27,7 +27,7 @@ const PublicViewObjectNotesManager = ({
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <FileText size={14} />
-                    <h4 className="text-sm font-semibold">{t('views.linkedNotes')}</h4>
+                    <div className="text-sm font-semibold">{t('views.linkedNotes')}</div>
                     <span className="text-xs text-gray-500">({linkedNotes.length})</span>
                 </div>
             </div>

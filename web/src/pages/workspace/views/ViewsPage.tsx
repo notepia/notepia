@@ -129,6 +129,7 @@ const ViewsPage = () => {
                         </div>
                         <div className="flex items-center text-gray-600 dark:text-gray-400">
                             <button
+                                aria-label="create new"
                                 onClick={() => setIsCreating(!isCreating)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
                             >
@@ -276,10 +277,11 @@ const ViewsPage = () => {
                                                                 }
                                                             }}
                                                             className="w-full px-2 py-1 rounded border dark:border-neutral-600 bg-white dark:bg-neutral-800 font-semibold"
+                                                            aria-label="new view name"
                                                             autoFocus
                                                         />
                                                     ) : (
-                                                        <h3 className="font-semibold truncate">{view.name}</h3>
+                                                        <div className="font-semibold truncate">{view.name}</div>
                                                     )}
                                                     <p className="text-sm text-gray-500 capitalize">
                                                         {view.type === 'map' ? t('views.map') : t('views.calendar')}

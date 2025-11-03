@@ -187,6 +187,7 @@ const PublicViewContent = ({ view, viewObjects, navigate }: any) => {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => navigate('/explore/views')}
+                                aria-label="back"
                                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                             >
                                 <ArrowLeft size={20} />
@@ -221,6 +222,7 @@ const PublicViewContent = ({ view, viewObjects, navigate }: any) => {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => navigate('/explore/views')}
+                                aria-label="back"
                                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                             >
                                 <ArrowLeft size={20} />

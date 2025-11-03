@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import SidebarButton from "@/components/sidebar/SidebarButton"
 import { getNotes, NoteData, createNote } from "@/api/note"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query"
 import { useRef, useCallback, useState, useEffect } from "react"
 import { Tooltip } from "radix-ui"
@@ -157,7 +157,7 @@ const NotesPage = () => {
                                     <div className="flex items-center">
                                         <Tooltip.Root>
                                             <Tooltip.Trigger asChild>
-                                                <button onClick={handleCreateNote} disabled={createNoteMutation.isPending} className="p-3">
+                                                <button onClick={handleCreateNote} aria-label="edit" disabled={createNoteMutation.isPending} className="p-3">
                                                     <Edit size={20} />
                                                 </button>
                                             </Tooltip.Trigger>

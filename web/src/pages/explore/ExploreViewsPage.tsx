@@ -100,7 +100,7 @@ const ExploreViewsPage = () => {
                                             ) : (
                                                 <MapPin size={18} className="text-orange-500" />
                                             )}
-                                            <h3 className="font-semibold text-lg truncate">{view.name}</h3>
+                                            <div className="font-semibold text-lg truncate">{view.name}</div>
                                         </div>
                                         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                                             <span>{t(`views.${view.type}`)}</span>

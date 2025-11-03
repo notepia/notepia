@@ -114,9 +114,9 @@ const CalendarViewComponent = ({ viewObjects = [] }: CalendarViewComponentProps)
         <div className="p-6 rounded-lg border dark:border-neutral-700">
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-2xl font-semibold">
+                    <div className="text-2xl font-semibold">
                         {monthNames[month]} {year}
-                    </h3>
+                    </div>
                     <div className="flex gap-2">
                         <button
                             onClick={previousMonth}

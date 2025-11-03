@@ -109,7 +109,7 @@ const MapViewComponent = ({ viewObjects = [], view }: MapViewComponentProps) => 
                         >
                             <Popup>
                                 <div className="p-2">
-                                    <h4 className="font-semibold mb-1">{marker.name}</h4>
+                                    <div className="font-semibold mb-1">{marker.name}</div>
                                     <p className="text-xs text-gray-600">
                                         Lat: {marker.lat.toFixed(4)}<br />
                                         Lng: {marker.lng.toFixed(4)}
