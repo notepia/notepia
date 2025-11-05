@@ -1,13 +1,14 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { Plus, X, FileText, Search, Trash2 } from "lucide-react"
+import { Plus, Search, Trash2, FilePlus } from "lucide-react"
 import { getNotesForViewObject, addNoteToViewObject, removeNoteFromViewObject } from "@/api/view"
-import { getNotes } from "@/api/note"
+import { getNotes, createNote } from "@/api/note"
 import { useToastStore } from "@/stores/toast"
 import { Dialog } from "radix-ui"
 import Renderer from "@/components/renderer/Renderer"
 import NoteTime from "@/components/notetime/NoteTime"
+import { useNavigate, Link } from "react-router-dom"
 
 interface ViewObjectNotesManagerProps {
     workspaceId: string
@@ -25,6 +26,7 @@ const ViewObjectNotesManager = ({
     const { t } = useTranslation()
     const { addToast } = useToastStore()
     const queryClient = useQueryClient()
+    const navigate = useNavigate()
     const [isAddingNote, setIsAddingNote] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
 
@@ -68,6 +70,29 @@ const ViewObjectNotesManager = ({
         }
     })
 
+    const createAndLinkNoteMutation = useMutation({
+        mutationFn: async () => {
+            // First create the note
+            const newNote = await createNote(workspaceId, {
+                content: "",
+                visibility: "private"
+            })
+            // Then link it to the view object
+            await addNoteToViewObject(workspaceId, viewId, viewObjectId, newNote.id)
+            return newNote
+        },
+        onSuccess: (newNote) => {
+            addToast({ title: t('views.noteCreatedAndLinked'), type: 'success' })
+            refetchLinkedNotes()
+            queryClient.invalidateQueries({ queryKey: ['view-object-notes', workspaceId, viewId, viewObjectId] })
+            // Navigate to the note detail page
+            navigate(`/workspaces/${workspaceId}/note/${newNote.id}`)
+        },
+        onError: () => {
+            addToast({ title: t('views.noteCreateError'), type: 'error' })
+        }
+    })
+
     const linkedNoteIds = Array.isArray(linkedNotes) ? linkedNotes.map((note: any) => note.id) : []
     const availableNotes = Array.isArray(allNotes) ? allNotes.filter((note: any) => !linkedNoteIds.includes(note.id)) : []
 
@@ -88,27 +113,34 @@ const ViewObjectNotesManager = ({
                     {linkedNotes.map((note: any) => (
                         <div
                             key={note.id}
-                            className="flex flex-col rounded border shadow-sm py-4 group bg-white dark:bg-neutral-900"
+                            className="flex flex-col rounded border shadow-sm py-4 group bg-white dark:bg-neutral-900 relative"
                         >
                             <div className="flex justify-between px-4 pb-4">
                                 <div>
-                                    <NoteTime time={note.created_at} /> 
+                                    <NoteTime time={note.created_at} />
                                 </div>
 
                                 <button
-                                    onClick={() => removeNoteMutation.mutate(note.id)}
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        removeNoteMutation.mutate(note.id)
+                                    }}
                                     disabled={removeNoteMutation.isPending}
                                     aria-label="delete"
-                                    className=" hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 rounded disabled:opacity-50 flex-shrink-0 p-1"
+                                    className="relative z-10 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 rounded disabled:opacity-50 flex-shrink-0 p-1"
                                 >
                                     <Trash2 size={12} />
                                 </button>
                             </div>
-                            <div className="flex-1 min-w-0 overflow-hidden max-h-16">
+                            <Link
+                                to={`/workspaces/${workspaceId}/note/${note.id}`}
+                                className="flex-1 px-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 rounded transition-colors"
+                            >
                                 <div className="line-clamp-2 text-xs [&_.prose]:text-xs [&_.prose]:leading-tight">
                                     <Renderer content={note.content} />
                                 </div>
-                            </div>
+                            </Link>
                         </div>
                     ))}
                 </div>
@@ -126,6 +158,27 @@ const ViewObjectNotesManager = ({
                         <Dialog.Title className="text-xl font-semibold mb-4">
                             {t('views.addNoteToObject', { name: viewObjectName })}
                         </Dialog.Title>
+
+                        {/* Create New Note Button */}
+                        <button
+                            onClick={() => createAndLinkNoteMutation.mutate()}
+                            disabled={createAndLinkNoteMutation.isPending}
+                            className="w-full mb-4 px-4 py-3 bg-black text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <FilePlus size={18} />
+                            {createAndLinkNoteMutation.isPending ? t('common.creating') : t('views.createNewNote')}
+                        </button>
+
+                        <div className="relative mb-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t dark:border-neutral-600"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs">
+                                <span className="bg-white dark:bg-neutral-800 px-2 text-gray-500">
+                                    {t('views.orLinkExisting')}
+                                </span>
+                            </div>
+                        </div>
 
                         {/* Search */}
                         <div className="mb-4">
