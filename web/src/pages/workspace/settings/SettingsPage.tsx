@@ -11,7 +11,7 @@ import OneColumn from "@/components/onecolumn/OneColumn"
 
 const Settings = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
-    const { isFetched, reset, getWorkspaceById } = useWorkspaceStore()
+    const { isFetched, resetWorkspaces, getWorkspaceById } = useWorkspaceStore()
     const [workspaceName, setWorkspaceName] = useState("")
     const [isRenaming, SetIsRenaming] = useState(false)
     const { t } = useTranslation()
@@ -35,7 +35,7 @@ const Settings = () => {
             name: workspaceName
         }),
         onSuccess: () => {
-            reset()
+            resetWorkspaces()
             setTimeout(() => {
                 SetIsRenaming(false)
             }, 200)
@@ -45,7 +45,7 @@ const Settings = () => {
     const deleteWorkspaceMutation = useMutation({
         mutationFn: () => deleteWorkspace(currentWorkspaceId),
         onSuccess: () => {
-            reset()
+            resetWorkspaces()
             navigate("/")
         }
     })

@@ -1,14 +1,17 @@
 import { useNavigate, useParams } from "react-router-dom"
 import { useEffect } from "react"
 import { useWorkspaceStore } from "@/stores/workspace"
+import { useCurrentUserStore } from "@/stores/current-user"
 
 const WorkspaceLoader = () => {
     const { isFetched, workspaces, fetchWorkspaces } = useWorkspaceStore()
+    const { user } = useCurrentUserStore()
     const { workspaceId } = useParams();
     const navigate = useNavigate();
 
     useEffect(() => {
         (async () => {
+            if (!user) navigate("/explore/notes")
             await fetchWorkspaces();
         })();
     }, [])

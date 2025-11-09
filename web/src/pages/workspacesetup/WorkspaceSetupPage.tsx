@@ -10,12 +10,12 @@ const WorkspaceSetupPage = () => {
     const [workspaceName, setWorkspaceName] = useState("");
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const { reset } = useWorkspaceStore()
+    const { resetWorkspaces } = useWorkspaceStore()
 
     const handleCreate = async () => {
         await createWorkspace({ name: workspaceName })
 
-        reset()
+        resetWorkspaces()
 
         navigate("/")
     };
