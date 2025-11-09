@@ -5,6 +5,7 @@ import { User } from "@/api/user";
 interface CurrentUserStore {
   user: User | null;
   fetchUser: () => Promise<User | null>;
+  resetCurrentUser: () => void;
 }
 
 export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
@@ -19,4 +20,9 @@ export const useCurrentUserStore = create<CurrentUserStore>((set) => ({
       return null;
     }
   },
+  resetCurrentUser: () => {
+    set({
+      user: null,
+    })
+  }
 }));

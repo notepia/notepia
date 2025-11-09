@@ -15,6 +15,8 @@ const RequireAuth = () => {
     (async () => {
       const currentUser = await fetchUser();
 
+      console.log(currentUser)
+
       if (!currentUser) {
         navigate("/explore/notes");
       }

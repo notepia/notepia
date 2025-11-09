@@ -7,17 +7,21 @@ import { signOut } from "@/api/auth"
 import { useWorkspaceStore } from "@/stores/workspace"
 import Tooltip from "../tooltip/Tooltip"
 import BaseLayout from "../baselayout/BaseLayout"
+import { useCurrentUserStore } from "@/stores/current-user"
 
 const UserLayout = () => {
     const { t } = useTranslation()
     const { isCollapse } = useSidebar()
     const navigate = useNavigate()
-    const { reset } = useWorkspaceStore()
+    const { resetWorkspaces } = useWorkspaceStore()
+    const { resetCurrentUser } = useCurrentUserStore()
     const signoutMutation = useMutation({
         mutationFn: () => signOut(),
         onSuccess: async () => {
             try {
-                reset();
+                resetWorkspaces();
+                resetCurrentUser();
+                console.log("navigate to /")
                 navigate(`/`)
             } catch (error) {
                 console.error('Error invalidating queries:', error)
