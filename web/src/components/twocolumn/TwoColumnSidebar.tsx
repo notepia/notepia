@@ -50,14 +50,6 @@ export const TwoColumnSidebar = ({ children, className = "" }: TwoColumnSidebarP
         if (window.innerWidth >= 1024) return // Only on mobile
         if (isSidebarCollapsed) return // Only when open
 
-        // Don't start drag if user is interacting with form elements
-        if (target instanceof Element) {
-            const tagName = target.tagName.toLowerCase()
-            const isInteractive = ['input', 'textarea', 'select', 'button', 'a'].includes(tagName)
-            const isContentEditable = target.getAttribute('contenteditable') === 'true'
-            if (isInteractive || isContentEditable) return 
-        }
-
         // Only start drag if the container is scrolled to top
         const container = containerRef.current
         if (container && container.scrollTop > 0) return
@@ -139,13 +131,6 @@ export const TwoColumnSidebar = ({ children, className = "" }: TwoColumnSidebarP
                 <div
                     className="fixed inset-0 bg-black/50 z-40 lg:hidden"
                     onClick={(e) => {
-                        // Don't close if clicking from an input element losing focus
-                        const activeElement = document.activeElement
-                        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-                            console.log('Prevented backdrop close - input is focused')
-                            return
-                        }
-                        console.log('Backdrop clicked - closing sidebar')
                         toggleSidebar()
                     }}
                 />
@@ -163,14 +148,14 @@ export const TwoColumnSidebar = ({ children, className = "" }: TwoColumnSidebarP
                 ${isDragging ? '' : 'transition-transform duration-300 ease-out'}
                 fixed bottom-0 left-0 right-0 max-h-[85vh] rounded-t-2xl
                 lg:static lg:w-96 lg:max-h-none lg:rounded-none lg:h-screen lg:flex-shrink-0
-                border-x overflow-y-auto z-50 ${className}`}
+                overflow-y-auto z-50 ${className}`}
                 style={{
                     transform: isDragging ? `translateY(${dragOffset}px)` : undefined,
                 }}
             >
                 {/* Drag handle - only visible on mobile */}
                 <div
-                    className="sticky top-0 z-10 flex items-center justify-center py-2 cursor-grab active:cursor-grabbing lg:hidden bg-neutral-100 dark:bg-neutral-900 border-t touch-none"
+                    className="sticky top-0 z-10 flex items-center justify-center py-2 cursor-grab active:cursor-grabbing lg:hidden bg-neutral-100 dark:bg-neutral-800  touch-none"
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}

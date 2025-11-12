@@ -1,5 +1,5 @@
 import { FC, ReactNode } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { NoteData } from "@/api/note"
 import FullNote from "../fullnote/FullNote"

@@ -72,6 +72,7 @@ export default {
     filter: "Filter",
     toggleTheme: "Toggle theme",
     selectFileToUpload: "Select file to upload",
+    openNoteInfo: "Info",
     makePublic: "Make Public",
     makeWorkspace: "Make Workspace",
     makePrivate: "Make Private",
