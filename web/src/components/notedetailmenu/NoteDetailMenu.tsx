@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Building, Ellipsis, Globe, Lock, Trash2 } from "lucide-react"
+import { Building, Ellipsis, Globe, Info, Lock, Trash2 } from "lucide-react"
 import { DropdownMenu } from "radix-ui"
 import { useNavigate } from "react-router-dom"
 import { deleteNote, NoteData, updateNoteVisibility } from "@/api/note"
@@ -8,6 +8,8 @@ import { useTranslation } from "react-i18next"
 import { toast } from '@/stores/toast';
 import { FC, ReactNode } from "react"
 import { Visibility } from "@/types/visibility"
+import { useTwoColumn } from "@/components/twocolumn"
+import { twMerge } from "tailwind-merge"
 
 interface Props {
     note: NoteData
@@ -15,6 +17,7 @@ interface Props {
 
 const NoteDetailMenu: React.FC<Props> = ({ note }) => {
     const { t } = useTranslation()
+    const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
     const currentWorkspaceId = useCurrentWorkspaceId()
     const queryClient = useQueryClient()
     const navigate = useNavigate()
@@ -65,6 +68,18 @@ const NoteDetailMenu: React.FC<Props> = ({ note }) => {
                 align="end"
             >
                 {
+                    <DropdownItem className="lg:hidden">
+                        <button
+                            onClick={toggleSidebar}
+                            className=" flex gap-3 p-3 items-center w-full"
+                            title={isSidebarCollapsed ? "Show Info" : "Hide Info"}
+                        >
+                            <Info size={18} />
+                            {t("actions.openNoteInfo")}
+                        </button>
+                    </DropdownItem>
+                }
+                {
                     note.visibility != "public" && <DropdownItem>
                         <button onClick={() => handleUpdateVisibility("public")} className="flex gap-3 p-3 items-center w-full" >
                             <Globe size={20} />
@@ -104,10 +119,11 @@ const NoteDetailMenu: React.FC<Props> = ({ note }) => {
 
 interface DropdownItemProps {
     children: ReactNode
+    className?: string
 }
 
-const DropdownItem: FC<DropdownItemProps> = ({ children }) => {
-    return <DropdownMenu.Item className="select-none dark:text-gray-100 rounded-lg leading-none outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-neutral-300 dark:data-[highlighted]:text-neutral-700">
+const DropdownItem: FC<DropdownItemProps> = ({ children, className }) => {
+    return <DropdownMenu.Item className={twMerge("select-none dark:text-gray-100 rounded-lg leading-none outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-neutral-300 dark:data-[highlighted]:text-neutral-700", className)}>
         {children}
     </DropdownMenu.Item>
 }

@@ -94,25 +94,19 @@ interface NoteDetailContentProps {
 }
 
 const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChange }) => {
-    const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
+    const { toggleSidebar } = useTwoColumn()
 
     return (
         <>
             <TwoColumnMain
-                className="bg-white dark:bg-neutral-800 "
+                className="bg-white dark:bg-neutral-950 "
             >
                 <NoteDetailView
                     note={note}
                     menu={
                         note ? (
                             <div className="flex items-center gap-2">
-                                <button
-                                    onClick={toggleSidebar}
-                                    className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                                    title={isSidebarCollapsed ? "Show Info" : "Hide Info"}
-                                >
-                                    <Info size={18} />
-                                </button>
+                                
                                 <NoteDetailMenu note={note} />
                             </div>
                         ) : undefined

@@ -71,6 +71,7 @@ export default {
     filter: "篩選",
     toggleTheme: "切換主題",
     selectFileToUpload: "選擇檔案",
+    openNoteInfo: "資訊",
     makePublic: "設為公開",
     makeWorkspace: "設為工作區可見",
     makePrivate: "設為私人",

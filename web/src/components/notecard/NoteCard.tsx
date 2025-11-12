@@ -11,7 +11,7 @@ interface NoteCardProps {
 
 const NoteCard: FC<NoteCardProps> = ({ note, linkTo }) => {
     return (
-        <Link to={linkTo} className="bg-white dark:bg-neutral-800 border sm:shadow-sm dark:border-neutral-600 rounded-lg overflow-auto flex flex-col gap-2 py-4">
+        <Link to={linkTo} className="bg-white dark:bg-neutral-800 border sm:shadow-sm dark:border-none rounded-lg overflow-auto flex flex-col gap-2 py-4">
             <div className="flex justify-between text-gray-500 px-4">
                 <div>
                     <NoteTime time={note.updated_at ?? ""} />
