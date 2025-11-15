@@ -111,7 +111,8 @@ const ViewObjectNotesManager = ({
             {linkedNotes.length > 0 ? (
                 <div className="space-y-2">
                     {linkedNotes.map((note: any) => (
-                        <div
+                        <Link
+                            to={`/workspaces/${workspaceId}/note/${note.id}`}
                             key={note.id}
                             className="flex flex-col rounded shadow-sm group bg-white dark:bg-neutral-800 relative"
                         >
@@ -133,15 +134,10 @@ const ViewObjectNotesManager = ({
                                     <Trash2 size={12} />
                                 </button>
                             </div>
-                            <Link
-                                to={`/workspaces/${workspaceId}/note/${note.id}`}
-                                className="flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 rounded transition-colors"
-                            >
-                                <div className="line-clamp-2 ">
-                                    <Renderer content={note.content} />
-                                </div>
-                            </Link>
-                        </div>
+                            <div className="line-clamp-2 ">
+                                <Renderer content={note.content} />
+                            </div>
+                        </Link>
                     ))}
                 </div>
             ) : (

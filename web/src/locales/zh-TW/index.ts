@@ -311,6 +311,11 @@ export default {
     objectData: "物件資料",
     calendarSlot: "行事曆時段",
     mapMarker: "地圖標記",
-    createdAt: "建立時間"
+    createdAt: "建立時間",
+    pinTo: "釘選到...",
+    pinNoteToObject: "將筆記釘選到視圖物件",
+    searchViews: "搜尋視圖...",
+    noViewsFound: "找不到視圖",
+    allObjectsLinked: "此視圖中的所有物件都已經與此筆記關聯"
   },
 } as const;

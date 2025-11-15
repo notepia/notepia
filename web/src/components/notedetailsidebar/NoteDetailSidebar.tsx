@@ -1,28 +1,37 @@
-import { FC, useMemo } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { FC, useMemo, useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { NoteData } from "@/api/note"
-import { getViewObjectsForNote, getPublicViewObjectsForNote } from "@/api/view"
-import NoteTime from "../notetime/NoteTime"
-import VisibilityLabel from "../visibilitylabel/VisibilityLabel"
+import { getViewObjectsForNote, getPublicViewObjectsForNote, getViews, getViewObjects, addNoteToViewObject, createViewObject } from "@/api/view"
 import { useTranslation } from "react-i18next"
-import { Info, ChevronRight, Calendar, MapPin } from "lucide-react"
-import { CalendarSlotData, MapMarkerData, ViewObject } from "@/types/view"
+import { ChevronRight, Calendar, MapPin, Pin, Search, Plus, ArrowUpRight, Link2, LinkIcon } from "lucide-react"
+import { CalendarSlotData, MapMarkerData, ViewObject, ViewObjectType } from "@/types/view"
 import MiniCalendarView from "./MiniCalendarView"
 import MiniMapView from "./MiniMapView"
 import { Link, useParams } from "react-router-dom"
+import { Dialog } from "radix-ui"
+import { useToastStore } from "@/stores/toast"
+import CreateViewObjectModal from "@/components/views/CreateViewObjectModal"
 
 interface NoteDetailSidebarProps {
     note: NoteData
-    onClose?: () => void
+    showPinButton?: boolean
 }
 
-const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
+const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, showPinButton = true }) => {
     const { t } = useTranslation()
     const { workspaceId } = useParams<{ workspaceId?: string }>()
+    const { addToast } = useToastStore()
+    const queryClient = useQueryClient()
+    const [isPinning, setIsPinning] = useState(false)
+    const [selectedViewId, setSelectedViewId] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [isCreatingObject, setIsCreatingObject] = useState(false)
+    const [newObjectName, setNewObjectName] = useState("")
+    const [newObjectData, setNewObjectData] = useState("")
 
     // Use public endpoint when viewing from explore page (no workspaceId in URL)
     // Use workspace endpoint when viewing from workspace context
-    const { data: viewObjects = [] } = useQuery({
+    const { data: viewObjects = [], refetch: refetchViewObjects } = useQuery({
         queryKey: workspaceId
             ? ['note-view-objects', workspaceId, note.id]
             : ['public-note-view-objects', note.id],
@@ -36,6 +45,88 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
         },
         enabled: !!note.id,
     })
+
+    // Fetch all views when pin dialog is open
+    const { data: allViews = [] } = useQuery({
+        queryKey: ['views', workspaceId],
+        queryFn: () => workspaceId ? getViews(workspaceId, 1, 100) : Promise.resolve([]),
+        enabled: isPinning && !!workspaceId
+    })
+
+    // Fetch view objects for selected view
+    const { data: selectedViewObjects = [] } = useQuery({
+        queryKey: ['view-objects', workspaceId, selectedViewId],
+        queryFn: () => workspaceId && selectedViewId ? getViewObjects(workspaceId, selectedViewId, 1, 100) : Promise.resolve([]),
+        enabled: !!selectedViewId && !!workspaceId
+    })
+
+    // Add note to view object mutation
+    const pinNoteMutation = useMutation({
+        mutationFn: ({ viewId, objectId }: { viewId: string, objectId: string }) => {
+            if (!workspaceId || !note.id) throw new Error('Missing required parameters')
+            return addNoteToViewObject(workspaceId, viewId, objectId, note.id)
+        },
+        onSuccess: () => {
+            addToast({ title: t('views.noteAddedSuccess'), type: 'success' })
+            refetchViewObjects()
+            queryClient.invalidateQueries({ queryKey: ['note-view-objects', workspaceId, note.id] })
+            setIsPinning(false)
+            setSelectedViewId(null)
+            setSearchQuery("")
+        },
+        onError: () => {
+            addToast({ title: t('views.noteAddedError'), type: 'error' })
+        }
+    })
+
+    // Get selected view
+    const selectedView = useMemo(() => {
+        return allViews.find(v => v.id === selectedViewId)
+    }, [allViews, selectedViewId])
+
+    // Determine the object type based on view type
+    const getObjectType = (): ViewObjectType => {
+        if (selectedView?.type === 'calendar') return 'calendar_slot'
+        if (selectedView?.type === 'map') return 'map_marker'
+        return 'calendar_slot' // default
+    }
+
+    // Create view object and link to note mutation
+    const createAndLinkMutation = useMutation({
+        mutationFn: async (data: { name: string; data: string }) => {
+            if (!workspaceId || !selectedViewId || !note.id) throw new Error('Missing required parameters')
+            // First create the view object
+            const newObject = await createViewObject(workspaceId, selectedViewId, {
+                name: data.name,
+                type: getObjectType(),
+                data: data.data
+            })
+            // Then link it to the note
+            await addNoteToViewObject(workspaceId, selectedViewId, newObject.id, note.id)
+            return newObject
+        },
+        onSuccess: () => {
+            addToast({ title: t('views.noteCreatedAndLinked') || 'Object created and linked successfully', type: 'success' })
+            refetchViewObjects()
+            queryClient.invalidateQueries({ queryKey: ['note-view-objects', workspaceId, note.id] })
+            queryClient.invalidateQueries({ queryKey: ['view-objects', workspaceId, selectedViewId] })
+            setIsCreatingObject(false)
+            setNewObjectName("")
+            setNewObjectData("")
+            setIsPinning(false)
+            setSelectedViewId(null)
+            setSearchQuery("")
+        },
+        onError: () => {
+            addToast({ title: t('views.objectCreatedError'), type: 'error' })
+        }
+    })
+
+    const handleCreateObject = () => {
+        if (newObjectName.trim()) {
+            createAndLinkMutation.mutate({ name: newObjectName.trim(), data: newObjectData })
+        }
+    }
 
     // Group view objects by view and filter out private views
     const groupedByView = useMemo(() => {
@@ -61,107 +152,244 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, onClose }) => {
         return Array.from(grouped.values())
     }, [viewObjects, workspaceId])
 
+    // Get already linked view object IDs
+    const linkedViewObjectIds = useMemo(() => {
+        return viewObjects.map(item => item.view_object.id)
+    }, [viewObjects])
+
+    // Filter view objects that are not already linked
+    const availableViewObjects = useMemo(() => {
+        return selectedViewObjects.filter(obj => !linkedViewObjectIds.includes(obj.id))
+    }, [selectedViewObjects, linkedViewObjectIds])
+
+    // Filter views by search query
+    const filteredViews = useMemo(() => {
+        if (!searchQuery) return allViews
+        return allViews.filter(view =>
+            view.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+    }, [allViews, searchQuery])
+
     return (
         <div className="w-full h-full overflow-y-auto bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
-            {/* Content */}
-            <div className="p-6 space-y-6">
-                {/* View Objects Section */}
-                {groupedByView.length > 0 && (
-                    <div className="space-y-4">
-                        {groupedByView.map((viewGroup) => (
-                            <div key={viewGroup.view.id} className="space-y-2">
-                                <Link
-                                    to={workspaceId
-                                        ? `/workspaces/${workspaceId}/views/${viewGroup.view.id}`
-                                        : `/explore/views/${viewGroup.view.id}`
-                                    }
-                                    className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                                >
-                                    {viewGroup.view.type === 'calendar' ? (
-                                        <Calendar size={14} />
-                                    ) : (
-                                        <MapPin size={14} />
-                                    )}
-                                    <span>
-                                        {viewGroup.view.name}
-                                        {viewGroup.viewObjects.length === 1 && (
-                                            <span> - {viewGroup.viewObjects[0].name}</span>
-                                        )}
-                                        {viewGroup.viewObjects.length > 1 && (
-                                            <span> ({viewGroup.viewObjects.length} items)</span>
-                                        )}
-                                    </span>
-                                </Link>
-                                {viewGroup.view.type === 'calendar' && (() => {
-                                    try {
-                                        const calendarViewObjects = viewGroup.viewObjects.filter((obj: ViewObject) => obj.type === 'calendar_slot')
-                                        const slots: CalendarSlotData[] = calendarViewObjects.map((obj: ViewObject) => ({
-                                            date: obj.data, // data is already a date string like "2024-01-15"
-                                            color: undefined
-                                        }))
-                                        return <MiniCalendarView
-                                            slots={slots}
-                                            viewObjects={calendarViewObjects}
-                                            viewId={viewGroup.view.id}
-                                            workspaceId={workspaceId}
-                                        />
-                                    } catch (e) {
-                                        console.error('Failed to parse calendar slot data:', e)
-                                        return null
-                                    }
-                                })()}
-                                {viewGroup.view.type === 'map' && (() => {
-                                    try {
-                                        const mapViewObjects = viewGroup.viewObjects.filter((obj: ViewObject) => obj.type === 'map_marker')
-                                        const markers: MapMarkerData[] = mapViewObjects.map((obj: ViewObject) => JSON.parse(obj.data))
-                                        return <MiniMapView
-                                            markers={markers}
-                                            viewObjects={mapViewObjects}
-                                            viewId={viewGroup.view.id}
-                                            workspaceId={workspaceId}
-                                        />
-                                    } catch (e) {
-                                        console.error('Failed to parse map marker data:', e)
-                                        return null
-                                    }
-                                })()}
-                            </div>
-                        ))}
+            <div className="flex flex-col gap-4 p-4">
+                {showPinButton && (
+                    <div>
+                        <button
+                            onClick={() => setIsPinning(true)}
+                            disabled={!workspaceId}
+                            className="p-1 text-white bg-black dark:bg-neutral-800 flex justify-center items-center gap-2 rounded-lg w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Pin size={16} />
+                            {t('views.pinTo') || 'Pin to...'}
+                        </button>
                     </div>
                 )}
-
-                {/* Visibility Section */}
-                <div className="space-y-2">
-                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        {t("common.visibility")}
-                    </div>
-                    <div className="text-gray-500 dark:text-gray-400">
-                        <VisibilityLabel value={note.visibility} showText={true} />
-                    </div>
-                </div>
-
-                {/* Creator Section */}
-                {note.created_by && (
-                    <div className="space-y-2">
-                        <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                            {t("common.creator")}
+                <div>
+                    {/* View Objects Section */}
+                    {groupedByView.length > 0 && (
+                        <div className="space-y-4">
+                            {groupedByView.map((viewGroup) => (
+                                <div key={viewGroup.view.id} className="flex flex-col gap-2">
+                                    <div className=" text-gray-400 ">
+                                        <Link
+                                            to={workspaceId
+                                                ? `/workspaces/${workspaceId}/views/${viewGroup.view.id}`
+                                                : `/explore/views/${viewGroup.view.id}`
+                                            }>
+                                            <span>
+                                                {viewGroup.view.name}
+                                            </span>
+                                        </Link>
+                                    </div>
+                                    {viewGroup.view.type === 'calendar' && (() => {
+                                        try {
+                                            const calendarViewObjects = viewGroup.viewObjects.filter((obj: ViewObject) => obj.type === 'calendar_slot')
+                                            const slots: CalendarSlotData[] = calendarViewObjects.map((obj: ViewObject) => ({
+                                                date: obj.data, // data is already a date string like "2024-01-15"
+                                                color: undefined
+                                            }))
+                                            return <MiniCalendarView
+                                                slots={slots}
+                                                viewObjects={calendarViewObjects}
+                                                viewId={viewGroup.view.id}
+                                                workspaceId={workspaceId}
+                                            />
+                                        } catch (e) {
+                                            console.error('Failed to parse calendar slot data:', e)
+                                            return null
+                                        }
+                                    })()}
+                                    {viewGroup.view.type === 'map' && (() => {
+                                        try {
+                                            const mapViewObjects = viewGroup.viewObjects.filter((obj: ViewObject) => obj.type === 'map_marker')
+                                            const markers: MapMarkerData[] = mapViewObjects.map((obj: ViewObject) => JSON.parse(obj.data))
+                                            return <MiniMapView
+                                                markers={markers}
+                                                viewObjects={mapViewObjects}
+                                                viewId={viewGroup.view.id}
+                                                workspaceId={workspaceId}
+                                            />
+                                        } catch (e) {
+                                            console.error('Failed to parse map marker data:', e)
+                                            return null
+                                        }
+                                    })()}
+                                    <div className="text-gray-400 flex flex-col gap-2">
+                                        {
+                                            viewGroup.viewObjects.map((vo: any) => (
+                                                <div className="">
+                                                    <Link
+                                                        to={workspaceId
+                                                            ? `/workspaces/${workspaceId}/views/${viewGroup.view.id}/objects/${vo.id}`
+                                                            : `/explore/views/${viewGroup.view.id}/objects/${vo.id}`
+                                                        }
+                                                        className=" inline"
+                                                    >
+                                                        <span>{vo.name}</span>
+                                                    </Link>
+                                                </div>
+                                            ))
+                                        }
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                        <div className="text-orange-500">
-                            {note.created_by}
-                        </div>
-                    </div>
-                )}
-
-                {/* Last Updated Section */}
-                <div className="space-y-2">
-                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        {t("common.lastUpdated")}
-                    </div>
-                    <div className="text-gray-500 dark:text-gray-400">
-                        <NoteTime time={note.updated_at ?? ""} />
-                    </div>
+                    )}
                 </div>
             </div>
+
+            {/* Pin to View Object Dialog */}
+            <Dialog.Root open={isPinning} onOpenChange={setIsPinning}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
+                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[600px] z-50 max-h-[85vh] overflow-y-auto">
+                        <Dialog.Title className="text-xl font-semibold mb-4">
+                            {t('views.pinNoteToObject') || 'Pin Note to View Object'}
+                        </Dialog.Title>
+
+                        {/* Search */}
+                        <div className="mb-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder={t('views.searchViews') || 'Search views...'}
+                                    className="w-full pl-10 pr-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                                />
+                            </div>
+                        </div>
+
+                        {!selectedViewId ? (
+                            /* Views List */
+                            <div className="space-y-2">
+                                {filteredViews.length > 0 ? (
+                                    filteredViews.map((view) => (
+                                        <button
+                                            key={view.id}
+                                            onClick={() => setSelectedViewId(view.id)}
+                                            className="w-full text-left p-4 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 flex items-center justify-between"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                {view.type === 'calendar' ? (
+                                                    <Calendar size={20} className="text-gray-500" />
+                                                ) : (
+                                                    <MapPin size={20} className="text-gray-500" />
+                                                )}
+                                                <span className="font-medium">{view.name}</span>
+                                            </div>
+                                            <ChevronRight size={20} className="text-gray-400" />
+                                        </button>
+                                    ))
+                                ) : (
+                                    <p className="text-center text-gray-500 py-8">
+                                        {searchQuery ? (t('views.noViewsFound') || 'No views found') : (t('views.noViews') || 'No views available')}
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            /* View Objects List */
+                            <div className="space-y-2">
+                                <button
+                                    onClick={() => setSelectedViewId(null)}
+                                    className="mb-4 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
+                                >
+                                    <ChevronRight size={16} className="rotate-180" />
+                                    {t('common.back') || 'Back'}
+                                </button>
+
+                                {/* Create New Object Button */}
+                                <button
+                                    onClick={() => setIsCreatingObject(true)}
+                                    className="w-full mb-4 px-4 py-3 bg-black text-white dark:bg-neutral-700 rounded-lg flex items-center justify-center gap-2 hover:bg-neutral-800 dark:hover:bg-neutral-600 transition-colors"
+                                >
+                                    <Plus size={18} />
+                                    {selectedView?.type === 'calendar' ? (t('views.newSlot') || 'New Slot') : (t('views.newMarker') || 'New Marker')}
+                                </button>
+
+                                {availableViewObjects.length > 0 ? (
+                                    availableViewObjects.map((obj) => (
+                                        <button
+                                            key={obj.id}
+                                            onClick={() => pinNoteMutation.mutate({ viewId: selectedViewId, objectId: obj.id })}
+                                            disabled={pinNoteMutation.isPending}
+                                            className="w-full text-left p-4 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 disabled:opacity-50"
+                                        >
+                                            <div className="font-medium">{obj.name}</div>
+                                            {obj.type === 'calendar_slot' && (
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    {new Date(obj.data).toLocaleDateString()}
+                                                </div>
+                                            )}
+                                            {obj.type === 'map_marker' && (
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    {(() => {
+                                                        try {
+                                                            const markerData = JSON.parse(obj.data)
+                                                            return `${markerData.lat.toFixed(4)}, ${markerData.lng.toFixed(4)}`
+                                                        } catch {
+                                                            return ''
+                                                        }
+                                                    })()}
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))
+                                ) : (
+                                    <p className="text-center text-gray-500 py-8">
+                                        {t('views.allObjectsLinked') || 'All objects in this view are already linked to this note'}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="mt-6 flex justify-end">
+                            <Dialog.Close asChild>
+                                <button className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                                    {t('common.close') || 'Close'}
+                                </button>
+                            </Dialog.Close>
+                        </div>
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+
+            {/* Create View Object Modal */}
+            {selectedView && (
+                <CreateViewObjectModal
+                    open={isCreatingObject}
+                    onOpenChange={setIsCreatingObject}
+                    viewType={selectedView.type}
+                    name={newObjectName}
+                    setName={setNewObjectName}
+                    data={newObjectData}
+                    setData={setNewObjectData}
+                    onSubmit={handleCreateObject}
+                    isSubmitting={createAndLinkMutation.isPending}
+                />
+            )}
         </div>
     )
 }

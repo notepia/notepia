@@ -318,6 +318,11 @@ export default {
     objectData: "Object Data",
     calendarSlot: "Calendar Slot",
     mapMarker: "Map Marker",
-    createdAt: "Created At"
+    createdAt: "Created At",
+    pinTo: "Pin to...",
+    pinNoteToObject: "Pin Note to View Object",
+    searchViews: "Search views...",
+    noViewsFound: "No views found",
+    allObjectsLinked: "All objects in this view are already linked to this note"
   },
 } as const;
