@@ -6,7 +6,7 @@ import { useWorkspaceStore } from "@/stores/workspace"
 import { deleteWorkspace, updateWorkspace } from "@/api/workspace"
 import { useEffect, useState } from "react"
 import SidebarButton from "@/components/sidebar/SidebarButton"
-import { Loader, Trash, Trash2 } from "lucide-react"
+import { Loader, RotateCcw, Trash2 } from "lucide-react"
 import OneColumn from "@/components/onecolumn/OneColumn"
 
 const Settings = () => {
@@ -84,8 +84,15 @@ const Settings = () => {
                                         </div>
                                         <div className="flex gap-3 flex-wrap">
                                             <input className="flex-1 px-3 py-2 border dark:border-none rounded-lg dark:bg-neutral-700" value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} title="rename workspace" />
-                                            <button onClick={handleRenameClick} className=" px-3 py-2 border dark:border-none shadow-sm rounded-lg text-white bg-black">
-                                                {isRenaming ? <Loader size={16} className="animate-spin" /> : t("actions.rename")}
+                                            <button onClick={handleRenameClick} className=" px-3 py-2  flex gap-2 items-center text-neutral-600 dark:text-neutral-300">
+                                                
+                                                {isRenaming 
+                                                ? <Loader size={16} className="animate-spin" /> 
+                                                : <>
+                                                    <RotateCcw size={16} />
+                                                    {t("actions.rename")}
+                                                </>
+                                                }
                                             </button>
                                         </div>
                                     </div>
@@ -96,8 +103,9 @@ const Settings = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <button onClick={handleDeleteClick} className="p-3 text-white bg-red-600 shadow-sm rounded-lg" aria-label="delete">
+                                            <button onClick={handleDeleteClick} className="p-3 text-red-500 flex items-center gap-2" aria-label="delete">
                                                 <Trash2 size={16} />
+                                                {t("actions.delete")}
                                             </button>
                                         </div>
                                     </div>
