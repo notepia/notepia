@@ -72,9 +72,13 @@ export default {
     toggleTheme: "切換主題",
     selectFileToUpload: "選擇檔案",
     openNoteInfo: "資訊",
+    closeNoteInfo: "關閉資訊",
     makePublic: "設為公開",
     makeWorkspace: "設為工作區可見",
     makePrivate: "設為私人",
+    private: "私人",
+    workspace: "工作區可見",
+    public: "公開",
     copy: "複製",
     showMore: "顯示更多",
     showLess: "顯示較少",
@@ -96,7 +100,12 @@ export default {
     copied: "已複製到剪貼簿",
     copyFailed: "複製失敗",
     createNoteFailed: "建立筆記失敗",
-    saveNoteFailed: "儲存筆記失敗"
+    saveNoteFailed: "儲存筆記失敗",
+    visibilityUpdated: "可見性更新成功",
+    updateVisibilityFailed: "可見性更新失敗",
+    confirmDelete: "確定要刪除這個筆記嗎？",
+    noteDeleted: "筆記刪除成功",
+    deleteNoteFailed: "筆記刪除失敗"
   },
   button: {
     new: "新增",
@@ -128,6 +137,8 @@ export default {
     noResults: "找不到結果"
   },
   visibility: {
+    selectVisibility: "選擇可見性",
+    current: "（目前）",
     private: "私人 - 僅自己可見",
     workspace: "工作區 - 工作區成員可見",
     public: "公開 - 所有人可見"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef } from 'react';
+import React, { useState, useEffect, useRef, FC } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { useSidebar } from '../sidebar/SidebarProvider';
 import { Tooltip } from 'radix-ui';
@@ -11,7 +11,7 @@ type DropdownProps = {
   buttonTooltip: string;
 };
 
-const WorkspaceDropdown = forwardRef(({ children, className, buttonClassName, buttonTooltip, buttonContent }: DropdownProps) => {
+const WorkspaceDropdown:FC<DropdownProps> = ({ children, className, buttonClassName, buttonTooltip, buttonContent }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { isCollapse } = useSidebar();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -65,6 +65,6 @@ const WorkspaceDropdown = forwardRef(({ children, className, buttonClassName, bu
       )}
     </div>
   );
-});
+};
 
 export { WorkspaceDropdown };

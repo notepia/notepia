@@ -73,9 +73,13 @@ export default {
     toggleTheme: "Toggle theme",
     selectFileToUpload: "Select file to upload",
     openNoteInfo: "Info",
+    closeNoteInfo: "Close Info",
     makePublic: "Make Public",
     makeWorkspace: "Make Workspace",
     makePrivate: "Make Private",
+    private: "Private",
+    workspace: "Workspace",
+    public: "Public",
     copy: "Copy",
     showMore: "Show more",
     showLess: "Show less",
@@ -97,7 +101,12 @@ export default {
     copied: "Copied to clipboard",
     copyFailed: "Failed to copy",
     createNoteFailed: "Failed to create note",
-    saveNoteFailed: "Failed to save note"
+    saveNoteFailed: "Failed to save note",
+    visibilityUpdated: "Visibility updated successfully",
+    updateVisibilityFailed: "Failed to update visibility",
+    confirmDelete: "Are you sure you want to delete this note?",
+    noteDeleted: "Note deleted successfully",
+    deleteNoteFailed: "Failed to delete note"
   },
   button: {
     new: "New",
@@ -129,6 +138,8 @@ export default {
     noResults: "No results found"
   },
   visibility: {
+    selectVisibility: "Select Visibility",
+    current: "(Current)",
     private: "Private - Only visible to you",
     workspace: "Workspace - Visible to workspace members",
     public: "Public - Visible to everyone"

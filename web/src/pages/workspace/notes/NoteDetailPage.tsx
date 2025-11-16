@@ -3,13 +3,12 @@ import { useParams } from "react-router-dom"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import { useEffect, useState, useRef, useCallback, FC } from "react"
 import { getNote, NoteData, updateNote } from "@/api/note"
-import NoteDetailMenu from "@/components/notedetailmenu/NoteDetailMenu"
 import { useTranslation } from "react-i18next"
 import NoteDetailView from "@/components/notedetail/NoteDetailView"
 import NoteDetailSidebar from "@/components/notedetailsidebar/NoteDetailSidebar"
 import { TwoColumn, TwoColumnMain, TwoColumnSidebar, useTwoColumn } from "@/components/twocolumn"
 import { toast } from "@/stores/toast"
-import { Info } from "lucide-react"
+import { EllipsisIcon } from "lucide-react"
 
 const NoteDetailPage = () => {
     const [note, setNote] = useState<NoteData | null>(null)
@@ -94,7 +93,7 @@ interface NoteDetailContentProps {
 }
 
 const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChange }) => {
-    const { toggleSidebar } = useTwoColumn()
+    const { toggleSidebar,isSidebarCollapsed } = useTwoColumn()
 
     return (
         <>
@@ -105,10 +104,13 @@ const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChan
                     note={note}
                     menu={
                         note ? (
-                            <div className="flex items-center gap-2">
-                                
-                                <NoteDetailMenu note={note} />
-                            </div>
+                            <button
+                                onClick={toggleSidebar}
+                                className="lg:hidden p-3 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                title={isSidebarCollapsed ? t("actions.openNoteInfo") : t("actions.closeNoteInfo")}
+                            >
+                                <EllipsisIcon size={20} />
+                            </button>
                         ) : undefined
                     }
                     isEditable={true}
