@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next"
 import NoteDetailView from "@/components/notedetail/NoteDetailView"
 import NoteDetailSidebar from "@/components/notedetailsidebar/NoteDetailSidebar"
 import { TwoColumn, TwoColumnMain, TwoColumnSidebar, useTwoColumn } from "@/components/twocolumn"
-import { Info } from "lucide-react"
+import { Ellipsis, Info } from "lucide-react"
 
 const ExploreNoteDetailPage = () => {
     const [note, setNote] = useState<NoteData | null>(null)
@@ -54,13 +54,13 @@ const ExploreNoteDetailContent: FC<ExploreNoteDetailContentProps> = ({ note, t }
                             className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                             title={isSidebarCollapsed ? "Show Info" : "Hide Info"}
                         >
-                            <Info size={18} />
+                            <Ellipsis size={18} />
                         </button>
                     }
                 />
             </TwoColumnMain>
             <TwoColumnSidebar>
-                {note && <NoteDetailSidebar note={note} showPinButton={false} />}
+                {note && <NoteDetailSidebar note={note} />}
             </TwoColumnSidebar>
         </>
     )

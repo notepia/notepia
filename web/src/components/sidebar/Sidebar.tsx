@@ -32,11 +32,9 @@ const Sidebar: FC<Props> = function ({ children }) {
                             side="right"
                             enabled={isCollapse}
                         >
-                            <>
-                                <Link to="/user/" className="p-2">
-                                    <Settings size={20} />
-                                </Link>
-                            </>
+                            <Link to="/user/" className="p-2">
+                                <Settings size={20} />
+                            </Link>
                         </Tooltip>
                     }
                     {

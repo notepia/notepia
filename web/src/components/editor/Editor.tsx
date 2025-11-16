@@ -25,14 +25,9 @@ interface Props {
 
 const Editor: FC<Props> = ({ note, onChange }) => {
   const doc = note?.content || ''
-  const [title, setTitle] = useState(note?.title || '')
 
   const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation("editor")
-
-  useEffect(() => {
-    setTitle(note?.title || '')
-  }, [note?.title])
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -224,23 +219,8 @@ const Editor: FC<Props> = ({ note, onChange }) => {
   const providerValue = useMemo(() => ({ editor }), [editor])
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value
-    setTitle(newTitle)
-    if (onChange) {
-      onChange({ title: newTitle })
-    }
-  }
-
   return (
     <EditorContext.Provider value={providerValue}>
-      <input
-        type="text"
-        value={title}
-        onChange={handleTitleChange}
-        placeholder={t("titlePlaceholder") || "Untitled"}
-        className="w-full px-4 mb-4 text-4xl font-bold border-none outline-none bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600"
-      />
       {!isTouchDevice && <DragHandle editor={editor} className='border rounded shadow-sm p-1'>
         <GripVertical size={12} />
       </DragHandle>}
