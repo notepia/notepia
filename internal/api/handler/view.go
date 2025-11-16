@@ -311,7 +311,7 @@ func (h Handler) GetPublicViews(c echo.Context) error {
 
 	for _, v := range views {
 		switch v.Visibility {
-		case "public", "workspace":
+		case "public":
 			res = append(res, GetViewResponse{
 				ID:          v.ID,
 				WorkspaceID: v.WorkspaceID,
@@ -324,6 +324,22 @@ func (h Handler) GetPublicViews(c echo.Context) error {
 				UpdatedAt:   v.UpdatedAt,
 				UpdatedBy:   h.getUserNameByID(v.UpdatedBy),
 			})
+		case "workspace":
+			// For workspace visibility, check if user is a member of that workspace
+			if user != nil && h.isUserWorkspaceMember(user.ID, v.WorkspaceID) {
+				res = append(res, GetViewResponse{
+					ID:          v.ID,
+					WorkspaceID: v.WorkspaceID,
+					Name:        v.Name,
+					Type:        v.Type,
+					Data:        v.Data,
+					Visibility:  v.Visibility,
+					CreatedAt:   v.CreatedAt,
+					CreatedBy:   h.getUserNameByID(v.CreatedBy),
+					UpdatedAt:   v.UpdatedAt,
+					UpdatedBy:   h.getUserNameByID(v.UpdatedBy),
+				})
+			}
 		case "private":
 			if user != nil && v.CreatedBy == user.ID {
 				res = append(res, GetViewResponse{
@@ -370,8 +386,8 @@ func (h Handler) GetPublicView(c echo.Context) error {
 	case "public":
 		isVisible = true
 	case "workspace":
-		// For workspace visibility, allow if user is authenticated
-		isVisible = user != nil
+		// For workspace visibility, check if user is a member of that workspace
+		isVisible = user != nil && h.isUserWorkspaceMember(user.ID, v.WorkspaceID)
 	case "private":
 		isVisible = user != nil && v.CreatedBy == user.ID
 	}
