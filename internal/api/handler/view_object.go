@@ -351,8 +351,8 @@ func (h Handler) GetPublicViewObjects(c echo.Context) error {
 	case "public":
 		isVisible = true
 	case "workspace":
-		// For workspace visibility, allow if user is authenticated
-		isVisible = user != nil
+		// For workspace visibility, check if user is a member of that workspace
+		isVisible = user != nil && h.isUserWorkspaceMember(user.ID, view.WorkspaceID)
 	case "private":
 		isVisible = user != nil && view.CreatedBy == user.ID
 	}
@@ -426,8 +426,8 @@ func (h Handler) GetPublicViewObject(c echo.Context) error {
 	case "public":
 		isVisible = true
 	case "workspace":
-		// For workspace visibility, allow if user is authenticated
-		isVisible = user != nil
+		// For workspace visibility, check if user is a member of that workspace
+		isVisible = user != nil && h.isUserWorkspaceMember(user.ID, view.WorkspaceID)
 	case "private":
 		isVisible = user != nil && view.CreatedBy == user.ID
 	}

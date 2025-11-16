@@ -47,6 +47,26 @@ func (h Handler) getUserNameByID(userID string) string {
 	return user.Name
 }
 
+// Helper function to check if a user is a member of a workspace
+func (h Handler) isUserWorkspaceMember(userID string, workspaceID string) bool {
+	if userID == "" || workspaceID == "" {
+		return false
+	}
+
+	users, err := h.db.FindWorkspaceUsers(model.WorkspaceUserFilter{WorkspaceID: workspaceID})
+	if err != nil {
+		return false
+	}
+
+	for _, u := range users {
+		if u.UserID == userID {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (h Handler) GetPublicNotes(c echo.Context) error {
 	pageSize := 20
 	pageNumber := 1
@@ -86,7 +106,7 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 
 	for _, b := range notes {
 		switch b.Visibility {
-		case "public", "workspace":
+		case "public":
 			res = append(res, GetNoteResponse{
 				ID:         b.ID,
 				Visibility: b.Visibility,
@@ -97,6 +117,20 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 				UpdatedAt:  b.UpdatedAt,
 				UpdatedBy:  h.getUserNameByID(b.UpdatedBy),
 			})
+		case "workspace":
+			// For workspace visibility, check if user is a member of that workspace
+			if user != nil && h.isUserWorkspaceMember(user.ID, b.WorkspaceID) {
+				res = append(res, GetNoteResponse{
+					ID:         b.ID,
+					Visibility: b.Visibility,
+					Title:      b.Title,
+					Content:    b.Content,
+					CreatedAt:  b.CreatedAt,
+					CreatedBy:  h.getUserNameByID(b.CreatedBy),
+					UpdatedAt:  b.UpdatedAt,
+					UpdatedBy:  h.getUserNameByID(b.UpdatedBy),
+				})
+			}
 		case "private":
 			if user != nil && b.CreatedBy == user.ID {
 				res = append(res, GetNoteResponse{
@@ -141,8 +175,8 @@ func (h Handler) GetPublicNote(c echo.Context) error {
 	case "public":
 		isVisible = true
 	case "workspace":
-		// For workspace visibility, allow if user is authenticated
-		isVisible = user != nil
+		// For workspace visibility, check if user is a member of that workspace
+		isVisible = user != nil && h.isUserWorkspaceMember(user.ID, b.WorkspaceID)
 	case "private":
 		isVisible = user != nil && b.CreatedBy == user.ID
 	}

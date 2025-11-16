@@ -249,8 +249,8 @@ func (h Handler) GetPublicViewObjectsForNote(c echo.Context) error {
 	case "public":
 		isVisible = true
 	case "workspace":
-		// For workspace visibility, allow if user is authenticated
-		isVisible = user != nil
+		// For workspace visibility, check if user is a member of that workspace
+		isVisible = user != nil && h.isUserWorkspaceMember(user.ID, note.WorkspaceID)
 	case "private":
 		isVisible = user != nil && note.CreatedBy == user.ID
 	}
@@ -280,8 +280,8 @@ func (h Handler) GetPublicViewObjectsForNote(c echo.Context) error {
 		case "public":
 			isViewVisible = true
 		case "workspace":
-			// For workspace visibility, allow if user is authenticated
-			isViewVisible = user != nil
+			// For workspace visibility, check if user is a member of that workspace
+			isViewVisible = user != nil && h.isUserWorkspaceMember(user.ID, view.WorkspaceID)
 		case "private":
 			isViewVisible = user != nil && view.CreatedBy == user.ID
 		}
@@ -330,7 +330,8 @@ func (h Handler) GetPublicNotesForViewObject(c echo.Context) error {
 	case "public":
 		isViewVisible = true
 	case "workspace":
-		isViewVisible = user != nil
+		// For workspace visibility, check if user is a member of that workspace
+		isViewVisible = user != nil && h.isUserWorkspaceMember(user.ID, view.WorkspaceID)
 	case "private":
 		isViewVisible = user != nil && view.CreatedBy == user.ID
 	}
@@ -359,7 +360,8 @@ func (h Handler) GetPublicNotesForViewObject(c echo.Context) error {
 		case "public":
 			isNoteVisible = true
 		case "workspace":
-			isNoteVisible = user != nil
+			// For workspace visibility, check if user is a member of that workspace
+			isNoteVisible = user != nil && h.isUserWorkspaceMember(user.ID, note.WorkspaceID)
 		case "private":
 			isNoteVisible = user != nil && note.CreatedBy == user.ID
 		}
