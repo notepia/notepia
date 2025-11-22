@@ -49,7 +49,7 @@ const ViewObjectDetailBase = ({
     }
 
     return (
-        <div className="w-full h-screen bg-neutral-100 dark:bg-neutral-900">
+        <div className="w-full min-h-screen bg-neutral-100 dark:bg-neutral-900">
             <div className="px-4 pt-4 z-10">
                 <Link
                     to="../"
