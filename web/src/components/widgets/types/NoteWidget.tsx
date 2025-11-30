@@ -1,14 +1,15 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, ExternalLink, User } from 'lucide-react';
-import { getNote } from '@/api/note';
+import { getNote, getNotes } from '@/api/note';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { NoteWidgetConfig } from '@/types/widget';
 import Widget from '@/components/widgets/Widget';
+import { registerWidget, WidgetProps, WidgetConfigFormProps } from '../widgetRegistry';
 
-interface NoteWidgetProps {
+interface NoteWidgetProps extends WidgetProps {
   config: NoteWidgetConfig;
 }
 
@@ -116,5 +117,98 @@ const NoteWidget: FC<NoteWidgetProps> = ({ config }) => {
     </Widget>
   );
 };
+
+// Configuration Form Component
+export const NoteWidgetConfigForm: FC<WidgetConfigFormProps<NoteWidgetConfig>> = ({
+  config,
+  onChange,
+}) => {
+  const { t } = useTranslation();
+  const workspaceId = useCurrentWorkspaceId();
+  const [noteSearchQuery, setNoteSearchQuery] = useState('');
+
+  const { data: notes = [] } = useQuery({
+    queryKey: ['notes', workspaceId, 'widget-config'],
+    queryFn: () => getNotes(workspaceId, 1, 100, ''),
+    enabled: !!workspaceId,
+  });
+
+  const filteredNotes = notes.filter((note: any) => {
+    if (!noteSearchQuery.trim()) return true;
+    const noteText = note.content ? note.content.replace(/<[^>]*>/g, '').toLowerCase() : '';
+    return noteText.includes(noteSearchQuery.toLowerCase());
+  });
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-2">{t('widgets.config.selectNote')}</label>
+        <input
+          type="text"
+          value={noteSearchQuery}
+          onChange={(e) => setNoteSearchQuery(e.target.value)}
+          placeholder={t('views.searchNotes')}
+          className="w-full px-3 py-2 mb-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+        />
+        <div className="border dark:border-neutral-600 rounded-lg max-h-60 overflow-y-auto">
+          {filteredNotes.length > 0 ? (
+            filteredNotes.map((note: any) => {
+              const noteText = note.content ? note.content.replace(/<[^>]*>/g, '').slice(0, 80) : t('notes.untitled');
+              const isSelected = config.noteId === note.id;
+
+              return (
+                <button
+                  key={note.id}
+                  type="button"
+                  onClick={() => onChange({ ...config, noteId: note.id })}
+                  className={`w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-neutral-700 border-b dark:border-neutral-700 last:border-b-0 transition-colors ${
+                    isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
+                  }`}
+                >
+                  <div className="text-sm truncate">{noteText}</div>
+                </button>
+              );
+            })
+          ) : (
+            <div className="px-3 py-4 text-center text-sm text-gray-500">
+              {noteSearchQuery.trim() ? t('views.noNotesFound') : t('widgets.config.selectNotePlaceholder')}
+            </div>
+          )}
+        </div>
+        {config.noteId && (
+          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            {t('widgets.config.selectedNote')}: {
+              notes.find((n: any) => n.id === config.noteId)?.content
+                ?.replace(/<[^>]*>/g, '')
+                .slice(0, 50) || t('notes.untitled')
+            }
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="showMetadata"
+          checked={config.showMetadata}
+          onChange={(e) => onChange({ ...config, showMetadata: e.target.checked })}
+        />
+        <label htmlFor="showMetadata" className="text-sm">{t('widgets.config.showMetadata')}</label>
+      </div>
+    </div>
+  );
+};
+
+// Register widget
+registerWidget({
+  type: 'note',
+  label: 'widgets.types.note',
+  description: 'widgets.types.noteDesc',
+  defaultConfig: {
+    noteId: '',
+    showMetadata: true,
+  },
+  Component: NoteWidget,
+  ConfigForm: NoteWidgetConfigForm,
+});
 
 export default NoteWidget;

@@ -6,8 +6,9 @@ import { getNotes } from '@/api/note';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { StatsWidgetConfig } from '@/types/widget';
 import Widget from '@/components/widgets/Widget';
+import { registerWidget, WidgetProps, WidgetConfigFormProps } from '../widgetRegistry';
 
-interface StatsWidgetProps {
+interface StatsWidgetProps extends WidgetProps {
   config: StatsWidgetConfig;
 }
 
@@ -100,5 +101,42 @@ const StatsWidget: FC<StatsWidgetProps> = ({ config }) => {
     <div className="h-full">{renderStatsByType()}</div>
   </Widget>
 };
+
+// Configuration Form Component
+export const StatsWidgetConfigForm: FC<WidgetConfigFormProps<StatsWidgetConfig>> = ({
+  config,
+  onChange,
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-2">{t('widgets.config.statType')}</label>
+        <select
+          value={config.statType}
+          onChange={(e) => onChange({ ...config, statType: e.target.value as any })}
+          className="w-full px-3 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+        >
+          <option value="note_count">{t('widgets.config.noteCount')}</option>
+          <option value="recent_notes">{t('widgets.config.recentNotes')}</option>
+          <option value="note_by_visibility">{t('widgets.config.noteByVisibility')}</option>
+        </select>
+      </div>
+    </div>
+  );
+};
+
+// Register widget
+registerWidget({
+  type: 'stats',
+  label: 'widgets.types.stats',
+  description: 'widgets.types.statsDesc',
+  defaultConfig: {
+    statType: 'note_count',
+  },
+  Component: StatsWidget,
+  ConfigForm: StatsWidgetConfigForm,
+});
 
 export default StatsWidget;

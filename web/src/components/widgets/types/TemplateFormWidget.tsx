@@ -2,13 +2,14 @@ import { FC, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Loader2 } from 'lucide-react';
-import { getGenTemplate, generateFromTemplate } from '@/api/gen-template';
+import { getGenTemplate, generateFromTemplate, getGenTemplates } from '@/api/gen-template';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { useToastStore } from '@/stores/toast';
 import { TemplateFormWidgetConfig } from '@/types/widget';
 import Widget from '@/components/widgets/Widget';
+import { registerWidget, WidgetProps, WidgetConfigFormProps } from '../widgetRegistry';
 
-interface TemplateFormWidgetProps {
+interface TemplateFormWidgetProps extends WidgetProps {
   config: TemplateFormWidgetConfig;
 }
 
@@ -127,5 +128,52 @@ const TemplateFormWidget: FC<TemplateFormWidgetProps> = ({ config }) => {
     </Widget>
   );
 };
+
+// Configuration Form Component
+export const TemplateFormWidgetConfigForm: FC<WidgetConfigFormProps<TemplateFormWidgetConfig>> = ({
+  config,
+  onChange,
+}) => {
+  const { t } = useTranslation();
+  const workspaceId = useCurrentWorkspaceId();
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ['gen-templates', workspaceId],
+    queryFn: () => getGenTemplates(workspaceId, 1, 100, ''),
+    enabled: !!workspaceId,
+  });
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-2">{t('widgets.config.selectTemplate')}</label>
+        <select
+          value={config.templateId}
+          onChange={(e) => onChange({ ...config, templateId: e.target.value })}
+          className="w-full px-3 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+        >
+          <option value="">{t('widgets.config.selectTemplatePlaceholder')}</option>
+          {templates.map((template: any) => (
+            <option key={template.id} value={template.id}>
+              {template.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+};
+
+// Register widget
+registerWidget({
+  type: 'template_form',
+  label: 'widgets.types.templateForm',
+  description: 'widgets.types.templateFormDesc',
+  defaultConfig: {
+    templateId: '',
+  },
+  Component: TemplateFormWidget,
+  ConfigForm: TemplateFormWidgetConfigForm,
+});
 
 export default TemplateFormWidget;

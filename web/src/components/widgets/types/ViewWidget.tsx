@@ -2,15 +2,16 @@ import { FC, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
-import { getView, getViewObjects } from '@/api/view';
+import { getView, getViewObjects, getViews } from '@/api/view';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { ViewWidgetConfig } from '@/types/widget';
 import { MapMarkerData, CalendarSlotData, ViewObject } from '@/types/view';
 import MiniMapView from '@/components/notedetailsidebar/MiniMapView';
 import MiniCalendarView from '@/components/notedetailsidebar/MiniCalendarView';
 import Widget from '@/components/widgets/Widget';
+import { registerWidget, WidgetProps, WidgetConfigFormProps } from '../widgetRegistry';
 
-interface ViewWidgetProps {
+interface ViewWidgetProps extends WidgetProps {
   config: ViewWidgetConfig;
 }
 
@@ -108,5 +109,62 @@ const ViewWidget: FC<ViewWidgetProps> = ({ config }) => {
     </Widget>
   );
 };
+
+// Configuration Form Component
+export const ViewWidgetConfigForm: FC<WidgetConfigFormProps<ViewWidgetConfig>> = ({
+  config,
+  onChange,
+}) => {
+  const { t } = useTranslation();
+  const workspaceId = useCurrentWorkspaceId();
+
+  const { data: views = [] } = useQuery({
+    queryKey: ['views', workspaceId],
+    queryFn: () => getViews(workspaceId),
+    enabled: !!workspaceId,
+  });
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-2">{t('widgets.config.selectView')}</label>
+        <select
+          value={config.viewId}
+          onChange={(e) => onChange({ ...config, viewId: e.target.value })}
+          className="w-full px-3 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+        >
+          <option value="">{t('widgets.config.selectViewPlaceholder')}</option>
+          {views.map((view: any) => (
+            <option key={view.id} value={view.id}>
+              {view.name} ({view.type})
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="showControls"
+          checked={config.showControls}
+          onChange={(e) => onChange({ ...config, showControls: e.target.checked })}
+        />
+        <label htmlFor="showControls" className="text-sm">{t('widgets.config.showControls')}</label>
+      </div>
+    </div>
+  );
+};
+
+// Register widget
+registerWidget({
+  type: 'view',
+  label: 'widgets.types.view',
+  description: 'widgets.types.viewDesc',
+  defaultConfig: {
+    viewId: '',
+    showControls: true,
+  },
+  Component: ViewWidget,
+  ConfigForm: ViewWidgetConfigForm,
+});
 
 export default ViewWidget;

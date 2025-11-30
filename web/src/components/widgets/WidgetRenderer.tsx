@@ -2,12 +2,7 @@ import { FC } from 'react';
 import { GripVertical, Edit2, Trash2 } from 'lucide-react';
 import { WidgetData } from '@/api/widget';
 import { WidgetType, parseWidgetConfig } from '@/types/widget';
-import NoteFormWidget from './types/NoteFormWidget';
-import StatsWidget from './types/StatsWidget';
-import TemplateFormWidget from './types/TemplateFormWidget';
-import ViewWidget from './types/ViewWidget';
-import NoteListWidget from './types/NoteListWidget';
-import NoteWidget from './types/NoteWidget';
+import { getWidget } from './widgetRegistry';
 
 interface WidgetRendererProps {
   widget: WidgetData;
@@ -28,26 +23,19 @@ const WidgetRenderer: FC<WidgetRendererProps> = ({
     const widgetType = widget.type as WidgetType;
     const config: any = parseWidgetConfig({ ...widget, config: widget.config || '{}' } as any);
 
-    switch (widgetType) {
-      case 'note_form':
-        return <NoteFormWidget config={config} />;
-      case 'stats':
-        return <StatsWidget config={config} />;
-      case 'template_form':
-        return <TemplateFormWidget config={config} />;
-      case 'view':
-        return <ViewWidget config={config} />;
-      case 'note_list':
-        return <NoteListWidget config={config} />;
-      case 'note':
-        return <NoteWidget config={config} />;
-      default:
-        return (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            Unknown widget type
-          </div>
-        );
+    // Get widget from registry
+    const widgetModule = getWidget(widgetType);
+
+    if (!widgetModule) {
+      return (
+        <div className="flex items-center justify-center h-full text-gray-500">
+          Unknown widget type: {widgetType}
+        </div>
+      );
     }
+
+    const WidgetComponent = widgetModule.Component;
+    return <WidgetComponent config={config} />;
   };
 
   return (

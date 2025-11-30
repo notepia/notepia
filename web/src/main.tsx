@@ -10,6 +10,8 @@ import { SidebarProvider } from './components/sidebar/SidebarProvider.tsx';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './providers/Theme.tsx';
+// Import all widget types to trigger registration
+import './components/widgets/types';
 
 const queryClient = new QueryClient({
   defaultOptions: {

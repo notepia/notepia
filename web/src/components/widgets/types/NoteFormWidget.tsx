@@ -7,8 +7,9 @@ import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { useToastStore } from '@/stores/toast';
 import { NoteFormWidgetConfig } from '@/types/widget';
 import Widget from '@/components/widgets/Widget';
+import { registerWidget, WidgetProps, WidgetConfigFormProps } from '../widgetRegistry';
 
-interface NoteFormWidgetProps {
+interface NoteFormWidgetProps extends WidgetProps {
   config: NoteFormWidgetConfig;
 }
 
@@ -74,5 +75,38 @@ const NoteFormWidget: FC<NoteFormWidgetProps> = ({ config }) => {
     </Widget>
   );
 };
+
+// Configuration Form Component
+export const NoteFormWidgetConfigForm: FC<WidgetConfigFormProps<NoteFormWidgetConfig>> = ({
+  config,
+  onChange,
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-2">{t('widgets.config.placeholder')}</label>
+        <input
+          type="text"
+          value={config.placeholder || ''}
+          onChange={(e) => onChange({ ...config, placeholder: e.target.value })}
+          className="w-full px-3 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+          placeholder={t('widgets.config.placeholderHint')}
+        />
+      </div>
+    </div>
+  );
+};
+
+// Register widget
+registerWidget({
+  type: 'note_form',
+  label: 'widgets.types.noteForm',
+  description: 'widgets.types.noteFormDesc',
+  defaultConfig: {},
+  Component: NoteFormWidget,
+  ConfigForm: NoteFormWidgetConfigForm,
+});
 
 export default NoteFormWidget;
