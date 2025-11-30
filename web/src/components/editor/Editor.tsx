@@ -24,7 +24,19 @@ interface Props {
 }
 
 const Editor: FC<Props> = ({ note, onChange }) => {
-  const doc = note?.content || ''
+  // Parse JSON content
+  const parseContent = (content: string) => {
+    if (!content) return ''
+
+    try {
+      return JSON.parse(content)
+    } catch (e) {
+      // If parsing fails, return empty content
+      return ''
+    }
+  }
+
+  const doc = parseContent(note?.content || '')
 
   const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation("editor")
@@ -210,8 +222,9 @@ const Editor: FC<Props> = ({ note, onChange }) => {
     content: doc,
     onUpdate({ editor }) {
       if (onChange) {
-        const html = editor.getHTML()
-        onChange({ content: html })
+        // Save as JSON string (recommended by TipTap)
+        const json = editor.getJSON()
+        onChange({ content: JSON.stringify(json) })
       }
     },
   })
