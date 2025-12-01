@@ -38,7 +38,7 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
         onSuccess: async () => {
             try {
                 await queryClient.invalidateQueries({ queryKey: ['notes', workspaceId] })
-                navigate(`/workspaces/${workspaceId}`)
+                navigate(`/workspaces/${workspaceId}/notes`)
                 addToast({ title: t('messages.noteDeleted') || 'Note deleted', type: 'success' })
             } catch (error) {
                 addToast({ title: t('messages.deleteNoteFailed') || 'Failed to delete note', type: 'error' })
