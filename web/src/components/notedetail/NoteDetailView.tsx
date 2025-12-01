@@ -71,11 +71,10 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({ note, menu, isEditable = fals
                         {menu && <div className="inline-flex flex-shrink-0">{menu}</div>}
                     </div>
                     <div className="flex">
-                        <div className="max-w-2xl w-full m-auto">
-                            <div className="lg:px-4 lg:py-4">
-
+                        <div className="max-w-7xl w-full m-auto">
+                            <div className="lg:p-4">
                                 <div className="flex flex-col gap-2">
-                                    <div className="hidden xl:block px-4">
+                                    <div className="hidden xl:block px-4 pb-4">
                                         <EditableDiv
                                             key={note.id}
                                             value={note.title}
