@@ -35,8 +35,15 @@ const NotesPage = () => {
     })
 
     const handleCreateNote = () => {
+        const emptyContent = JSON.stringify({
+            type: "doc",
+            content: [{
+                type: "paragraph",
+                content: [{ type: "text", text: "" }]
+            }]
+        })
         createNoteMutation.mutate({
-            content: "",
+            content: emptyContent,
             visibility: "private"
         })
     }

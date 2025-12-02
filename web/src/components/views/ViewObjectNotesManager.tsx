@@ -75,9 +75,15 @@ const ViewObjectNotesManager = ({
 
     const createAndLinkNoteMutation = useMutation({
         mutationFn: async () => {
+            // Create a valid empty TipTap document
+            const emptyContent = JSON.stringify({
+                type: "doc",
+                content: []
+            })
+
             // First create the note
             const newNote = await createNote(workspaceId, {
-                content: "",
+                content: emptyContent,
                 visibility: "private"
             })
             // Then link it to the view object

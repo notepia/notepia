@@ -5,7 +5,7 @@ import StarterKit from "@tiptap/starter-kit"
 import { Placeholder } from "@tiptap/extensions"
 import { BubbleMenu } from "@tiptap/react/menus"
 import { TableKit } from "@tiptap/extension-table"
-import { FC, useMemo } from "react"
+import { FC, useMemo, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { GripVertical, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, Image, List, ListTodo, Paperclip, Quote, Sparkles, Table, Type } from 'lucide-react'
 import { CommandItem, SlashCommand } from './extensions/slashcommand/SlashCommand'
@@ -24,20 +24,6 @@ interface Props {
 }
 
 const Editor: FC<Props> = ({ note, onChange }) => {
-  // Parse JSON content
-  const parseContent = (content: string) => {
-    if (!content) return ''
-
-    try {
-      return JSON.parse(content)
-    } catch (e) {
-      // If parsing fails, return empty content
-      return ''
-    }
-  }
-
-  const doc = parseContent(note?.content || '')
-
   const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation("editor")
   const editor = useEditor({
@@ -164,7 +150,7 @@ const Editor: FC<Props> = ({ note, onChange }) => {
               {
                 icon: <Sparkles size={16} />,
                 label: t("textGen.name"),
-                keywords: ["ai","text gen"],
+                keywords: ["ai", "text gen"],
                 command: ({ editor }: any) =>
                   editor.chain().focus().addTextGen().run(),
               },
@@ -223,7 +209,7 @@ const Editor: FC<Props> = ({ note, onChange }) => {
         class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl px-4 focus:outline-none',
       },
     },
-    content: doc,
+    content: JSON.parse(note.content),
     onUpdate({ editor }) {
       if (onChange) {
         // Save as JSON string (recommended by TipTap)
@@ -235,6 +221,10 @@ const Editor: FC<Props> = ({ note, onChange }) => {
 
   const providerValue = useMemo(() => ({ editor }), [editor])
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+
+  if (!editor) {
+    return null
+  }
 
   return (
     <EditorContext.Provider value={providerValue}>

@@ -11,16 +11,6 @@ interface RendererProps {
 }
 
 const Renderer: React.FC<RendererProps> = ({ content }) => {
-    // Parse JSON content
-    const parsedContent = useMemo(() => {
-        if (!content) return ''
-
-        try {
-            return JSON.parse(content)
-        } catch (e) {
-            return ''
-        }
-    }, [content])
 
     const editor = useEditor({
         extensions: [
@@ -46,7 +36,7 @@ const Renderer: React.FC<RendererProps> = ({ content }) => {
             ImageNode,
             TableKit,
         ],
-        content: parsedContent,
+        content: JSON.parse(content),
         editable: false,
         editorProps: {
             attributes: {

@@ -28,6 +28,13 @@ const EditableDiv: FC<EditableDivProps> = ({
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const text = e.currentTarget.innerText;
+    
+    if (text === "<br>" || text === "<br/>" || text.trim() === "") {
+      e.currentTarget.innerText = "";
+      onChange?.("");
+      return;
+    }
+
     onChange(text);
   };
 

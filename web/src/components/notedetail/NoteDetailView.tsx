@@ -56,7 +56,7 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({ note, menu, isEditable = fals
         <div className="w-full">
             {note && (
                 <div className="flex flex-col min-h-dvh">
-                    <div className="p-2 xl:p-4 flex items-center justify-between">
+                    <div className="p-2 xl:p-0 flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             <button onClick={() => navigate(-1)} aria-label="back" className="inline-flex xl:hidden p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
                                 <ArrowLeft size={20} />
@@ -71,10 +71,10 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({ note, menu, isEditable = fals
                         {menu && <div className="inline-flex flex-shrink-0">{menu}</div>}
                     </div>
                     <div className="flex">
-                        <div className="max-w-7xl w-full m-auto">
+                        <div className="w-full m-auto">
                             <div className="lg:p-4">
                                 <div className="flex flex-col gap-2">
-                                    <div className="hidden xl:block px-4 pb-4">
+                                    <div className="hidden xl:block p-4">
                                         <EditableDiv
                                             key={note.id}
                                             value={note.title}
@@ -83,7 +83,7 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({ note, menu, isEditable = fals
                                             onChange={handleTitleChange} />
                                     </div>
                                     {isEditable && onChange ?
-                                        <Editor note={note} onChange={onChange} />
+                                        <Editor key={note.id} note={note} onChange={onChange} />
                                         : <FullNote note={note} />}
                                 </div>
                             </div>

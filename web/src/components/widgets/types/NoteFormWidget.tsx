@@ -23,12 +23,28 @@ const NoteFormWidget: FC<NoteFormWidgetProps> = ({ config }) => {
   const [content, setContent] = useState('');
 
   const createMutation = useMutation({
-    mutationFn: () =>
-      createNote(workspaceId, {
+    mutationFn: () => {
+      const tiptapContent = JSON.stringify({
+        type: "doc",
+        content: content.trim() ? [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: content
+              }
+            ]
+          }
+        ] : []
+      });
+
+      return createNote(workspaceId, {
         title,
-        content,
+        content: tiptapContent,
         visibility: 'workspace',
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes', workspaceId] });
       setTitle(config.defaultTitle || '');
