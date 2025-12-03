@@ -4,13 +4,13 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, Edit, Sparkles, Trash2, Upload, X, History, ChevronRight } from "lucide-react"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { getGenTemplate, deleteGenTemplate, generateFromTemplate, getGenHistories } from "@/api/gen-template"
+import { getGenerator, deleteGenerator, generateFromGenerator, getGenHistories } from "@/api/generator"
 import { uploadFile } from "@/api/file"
 import { useToastStore } from "@/stores/toast"
 import { TwoColumn, TwoColumnMain, TwoColumnSidebar, useTwoColumn } from "@/components/twocolumn"
 import GenHistoryCard from "@/components/genhistorycard/GenHistoryCard"
 
-const GenTemplateDetailPage = () => {
+const GeneratorDetailPage = () => {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const { id } = useParams<{ id: string }>()
@@ -23,9 +23,9 @@ const GenTemplateDetailPage = () => {
     const [additionalImageUrls, setAdditionalImageUrls] = useState<string[]>([])
     const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
 
-    const { data: template, isLoading } = useQuery({
-        queryKey: ['gen-template', currentWorkspaceId, id],
-        queryFn: () => getGenTemplate(currentWorkspaceId, id!),
+    const { data: generator, isLoading } = useQuery({
+        queryKey: ['generator', currentWorkspaceId, id],
+        queryFn: () => getGenerator(currentWorkspaceId, id!),
         enabled: !!currentWorkspaceId && !!id,
     })
 
@@ -38,12 +38,12 @@ const GenTemplateDetailPage = () => {
     // Extract parameters from prompt using regex {{xxx}}
     // Support all Unicode letters, numbers, and underscores
     const parameters = useMemo(() => {
-        if (!template) return []
+        if (!generator) return []
         const regex = /\{\{([\p{L}\p{N}_]+)\}\}/gu
-        const matches = [...template.prompt.matchAll(regex)]
+        const matches = [...generator.prompt.matchAll(regex)]
         const uniqueParams = [...new Set(matches.map(match => match[1]))]
         return uniqueParams
-    }, [template])
+    }, [generator])
 
     // Initialize parameter values
     useEffect(() => {
@@ -58,21 +58,21 @@ const GenTemplateDetailPage = () => {
 
     // Assemble prompt with parameter values
     useEffect(() => {
-        if (template) {
-            let assembled = template.prompt
+        if (generator) {
+            let assembled = generator.prompt
             Object.entries(paramValues).forEach(([key, value]) => {
                 assembled = assembled.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value)
             })
             setAssembledPrompt(assembled)
         }
-    }, [template, paramValues])
+    }, [generator, paramValues])
 
     const deleteMutation = useMutation({
-        mutationFn: () => deleteGenTemplate(currentWorkspaceId, id!),
+        mutationFn: () => deleteGenerator(currentWorkspaceId, id!),
         onSuccess: () => {
             addToast({ title: t("genTemplates.deleteSuccess"), type: "success" })
-            queryClient.invalidateQueries({ queryKey: ['gen-templates', currentWorkspaceId] })
-            navigate(`/workspaces/${currentWorkspaceId}/gen-templates`)
+            queryClient.invalidateQueries({ queryKey: ['generators', currentWorkspaceId] })
+            navigate(`/workspaces/${currentWorkspaceId}/generators`)
         },
         onError: () => {
             addToast({ title: t("genTemplates.deleteError"), type: "error" })
@@ -86,8 +86,8 @@ const GenTemplateDetailPage = () => {
     }
 
     const generateMutation = useMutation({
-        mutationFn: () => generateFromTemplate(currentWorkspaceId, {
-            template_id: id!,
+        mutationFn: () => generateFromGenerator(currentWorkspaceId, {
+            generator_id: id!,
             prompt: assembledPrompt,
             image_urls: additionalImageUrls.filter(Boolean)
         }),
@@ -139,18 +139,18 @@ const GenTemplateDetailPage = () => {
         return `/api/v1/workspaces/${currentWorkspaceId}/files/${filenameOrUrl}`
     }
 
-    // Parse template images
-    const templateImages = useMemo(() => {
-        if (!template?.image_urls) return []
-        return template.image_urls.split(',').filter(Boolean)
-    }, [template?.image_urls])
+    // Parse generator images
+    const generatorImages = useMemo(() => {
+        if (!generator?.image_urls) return []
+        return generator.image_urls.split(',').filter(Boolean)
+    }, [generator?.image_urls])
 
     if (isLoading) {
         return <div className="flex justify-center items-center h-screen">Loading...</div>
     }
 
-    if (!template) {
-        return <div className="flex justify-center items-center h-screen">Template not found</div>
+    if (!generator) {
+        return <div className="flex justify-center items-center h-screen">Generator not found</div>
     }
 
     return (
@@ -158,13 +158,13 @@ const GenTemplateDetailPage = () => {
             <TwoColumnMain
                 className="bg-white dark:bg-neutral-800 "
             >
-                <GenTemplateContent
-                    template={template}
+                <GeneratorContent
+                    generator={generator}
                     parameters={parameters}
                     paramValues={paramValues}
                     setParamValues={setParamValues}
                     assembledPrompt={assembledPrompt}
-                    templateImages={templateImages}
+                    generatorImages={generatorImages}
                     additionalImageUrls={additionalImageUrls}
                     setAdditionalImageUrls={setAdditionalImageUrls}
                     uploadingIndex={uploadingIndex}
@@ -182,7 +182,7 @@ const GenTemplateDetailPage = () => {
             </TwoColumnMain>
 
             <TwoColumnSidebar className="bg-white">
-                <GenTemplateSidebar
+                <GeneratorSidebar
                     histories={histories}
                     refetchHistories={refetchHistories}
                     t={t}
@@ -194,7 +194,7 @@ const GenTemplateDetailPage = () => {
 }
 
 // Skeleton component for loading state
-const GenHistorySkeleton = () => {
+const HistorySkeleton = () => {
     return (
         <div className="bg-white dark:bg-neutral-800 rounded-lg border dark:border-neutral-700 overflow-hidden animate-pulse">
             <div className="px-4 py-3">
@@ -212,7 +212,7 @@ const GenHistorySkeleton = () => {
 }
 
 // Sidebar component
-const GenTemplateSidebar = ({ histories, refetchHistories, t, isGenerating }: any) => {
+const GeneratorSidebar = ({ histories, refetchHistories, t, isGenerating }: any) => {
     const { toggleSidebar } = useTwoColumn()
 
     return (
@@ -232,7 +232,7 @@ const GenTemplateSidebar = ({ histories, refetchHistories, t, isGenerating }: an
             </div>
 
             <div className="px-4 pb-4 space-y-4">
-                {isGenerating && <GenHistorySkeleton />}
+                {isGenerating && <HistorySkeleton />}
                 {histories && histories.length > 0 ? (
                     histories.map((history: any) => (
                         <GenHistoryCard
@@ -256,7 +256,7 @@ const GenTemplateSidebar = ({ histories, refetchHistories, t, isGenerating }: an
 }
 
 // Main content component
-const GenTemplateContent = ({ template, parameters, paramValues, setParamValues, assembledPrompt, templateImages, additionalImageUrls, setAdditionalImageUrls, uploadingIndex, handleFileUpload, getImageUrl, generateMutation, handleGenerate, handleDelete, deleteMutation, navigate, currentWorkspaceId, id, t }: any) => {
+const GeneratorContent = ({ generator, parameters, paramValues, setParamValues, assembledPrompt, generatorImages, additionalImageUrls, setAdditionalImageUrls, uploadingIndex, handleFileUpload, getImageUrl, generateMutation, handleGenerate, handleDelete, deleteMutation, navigate, currentWorkspaceId, id, t }: any) => {
     const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
 
     return (
@@ -264,16 +264,16 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => navigate(`/workspaces/${currentWorkspaceId}/gen-templates`)}
+                        onClick={() => navigate(`/workspaces/${currentWorkspaceId}/generators`)}
                         aria-label="back"
                         className="xl:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                     >
                         <ArrowLeft size={20} />
                     </button>
                     <div className="hidden lg:flex items-center gap-2">
-                        <span className="text-2xl font-semibold">{template.name}</span>
+                        <span className="text-2xl font-semibold">{generator.name}</span>
                         <span className="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                            {template.modality}
+                            {generator.modality}
                         </span>
                     </div>
                 </div>
@@ -286,14 +286,14 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                         <History size={18} />
                     </button>
                     <button
-                        aria-label="edit template"
-                        onClick={() => navigate(`/workspaces/${currentWorkspaceId}/gen-templates/${id}/edit`)}
+                        aria-label="edit generator"
+                        onClick={() => navigate(`/workspaces/${currentWorkspaceId}/generators/${id}/edit`)}
                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                     >
                         <Edit size={18} />
                     </button>
                     <button
-                        aria-label="delete template"
+                        aria-label="delete generator"
                         onClick={handleDelete}
                         disabled={deleteMutation.isPending}
                         className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 rounded-lg disabled:opacity-50"
@@ -305,16 +305,16 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
 
             <div className="flex flex-col gap-6 p-4 lg:p-6">
                 <div className="lg:hidden flex items-center gap-2">
-                    <span className="text-2xl font-semibold">{template.name}</span>
+                    <span className="text-2xl font-semibold">{generator.name}</span>
                     <span className="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                        {template.modality}
+                        {generator.modality}
                     </span>
                 </div>
                 <div>
                     <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                         {t("genTemplates.fields.model")}
                     </div>
-                    <p className="text-lg">{template.model}</p>
+                    <p className="text-lg">{generator.model}</p>
                 </div>
 
                 <div>
@@ -322,21 +322,21 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                         {t("genTemplates.fields.prompt")}
                     </div>
                     <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border dark:border-neutral-700">
-                        <pre className="whitespace-pre-wrap text-sm">{template.prompt}</pre>
+                        <pre className="whitespace-pre-wrap text-sm">{generator.prompt}</pre>
                     </div>
                 </div>
 
-                {(template.modality === 'textimage2text' || template.modality === 'textimage2image') && templateImages.length > 0 && (
+                {(generator.modality === 'textimage2text' || generator.modality === 'textimage2image') && generatorImages.length > 0 && (
                     <div>
                         <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                             {t("genTemplates.fields.imageUrls")}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {templateImages.map((img: string, index: number) => (
+                            {generatorImages.map((img: string, index: number) => (
                                 <div key={index} className="relative group">
                                     <img
                                         src={getImageUrl(img)}
-                                        alt={`Template image ${index + 1}`}
+                                        alt={`Generator image ${index + 1}`}
                                         className="w-full h-32 object-cover rounded-lg border dark:border-neutral-700"
                                         onError={(e) => {
                                             e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EError%3C/text%3E%3C/svg%3E'
@@ -384,7 +384,7 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
                     </div>
                 )}
 
-                {(template.modality === 'textimage2text' || template.modality === 'textimage2image') && (
+                {(generator.modality === 'textimage2text' || generator.modality === 'textimage2image') && (
                     <div>
                         <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                             {t("genTemplates.additionalImages") || "Additional Images"}
@@ -472,4 +472,4 @@ const GenTemplateContent = ({ template, parameters, paramValues, setParamValues,
     )
 }
 
-export default GenTemplateDetailPage
+export default GeneratorDetailPage

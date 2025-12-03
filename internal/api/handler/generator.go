@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type CreateGenTemplateRequest struct {
+type CreateGeneratorRequest struct {
 	Name      string `json:"name" validate:"required"`
 	Prompt    string `json:"prompt" validate:"required"`
 	Provider  string `json:"provider" validate:"required"`
@@ -20,7 +20,7 @@ type CreateGenTemplateRequest struct {
 	ImageURLs string `json:"image_urls"`
 }
 
-type UpdateGenTemplateRequest struct {
+type UpdateGeneratorRequest struct {
 	Name      string `json:"name" validate:"required"`
 	Prompt    string `json:"prompt" validate:"required"`
 	Provider  string `json:"provider" validate:"required"`
@@ -29,7 +29,7 @@ type UpdateGenTemplateRequest struct {
 	ImageURLs string `json:"image_urls"`
 }
 
-type GetGenTemplateResponse struct {
+type GetGeneratorResponse struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Prompt      string `json:"prompt"`
@@ -44,7 +44,7 @@ type GetGenTemplateResponse struct {
 	WorkspaceID string `json:"workspace_id"`
 }
 
-func (h Handler) GetGenTemplates(c echo.Context) error {
+func (h Handler) GetGenerators(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	pageSize := 20
 	pageNumber := 1
@@ -61,40 +61,40 @@ func (h Handler) GetGenTemplates(c echo.Context) error {
 
 	query := c.QueryParam("query")
 
-	filter := model.GenTemplateFilter{
+	filter := model.GeneratorFilter{
 		WorkspaceID: workspaceId,
 		PageSize:    pageSize,
 		PageNumber:  pageNumber,
 		Query:       query,
 	}
 
-	templates, err := h.db.FindGenTemplates(filter)
+	generators, err := h.db.FindGenerators(filter)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	res := make([]GetGenTemplateResponse, 0)
-	for _, t := range templates {
-		res = append(res, GetGenTemplateResponse{
-			ID:          t.ID,
-			Name:        t.Name,
-			Prompt:      t.Prompt,
-			Provider:    t.Provider,
-			Model:       t.Model,
-			Modality:    t.Modality,
-			ImageURLs:   t.ImageURLs,
-			CreatedAt:   t.CreatedAt,
-			CreatedBy:   t.CreatedBy,
-			UpdatedAt:   t.UpdatedAt,
-			UpdatedBy:   t.UpdatedBy,
-			WorkspaceID: t.WorkspaceID,
+	res := make([]GetGeneratorResponse, 0)
+	for _, g := range generators {
+		res = append(res, GetGeneratorResponse{
+			ID:          g.ID,
+			Name:        g.Name,
+			Prompt:      g.Prompt,
+			Provider:    g.Provider,
+			Model:       g.Model,
+			Modality:    g.Modality,
+			ImageURLs:   g.ImageURLs,
+			CreatedAt:   g.CreatedAt,
+			CreatedBy:   g.CreatedBy,
+			UpdatedAt:   g.UpdatedAt,
+			UpdatedBy:   g.UpdatedBy,
+			WorkspaceID: g.WorkspaceID,
 		})
 	}
 
 	return c.JSON(http.StatusOK, res)
 }
 
-func (h Handler) GetGenTemplate(c echo.Context) error {
+func (h Handler) GetGenerator(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	if workspaceId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Workspace id is required")
@@ -102,39 +102,39 @@ func (h Handler) GetGenTemplate(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "GenTemplate id is required")
+		return echo.NewHTTPError(http.StatusBadRequest, "Generator id is required")
 	}
 
-	t := model.GenTemplate{WorkspaceID: workspaceId, ID: id}
-	t, err := h.db.FindGenTemplate(t)
+	g := model.Generator{WorkspaceID: workspaceId, ID: id}
+	g, err := h.db.FindGenerator(g)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	res := GetGenTemplateResponse{
-		ID:          t.ID,
-		Name:        t.Name,
-		Prompt:      t.Prompt,
-		Provider:    t.Provider,
-		Model:       t.Model,
-		Modality:    t.Modality,
-		ImageURLs:   t.ImageURLs,
-		CreatedAt:   t.CreatedAt,
-		CreatedBy:   t.CreatedBy,
-		UpdatedAt:   t.UpdatedAt,
-		UpdatedBy:   t.UpdatedBy,
-		WorkspaceID: t.WorkspaceID,
+	res := GetGeneratorResponse{
+		ID:          g.ID,
+		Name:        g.Name,
+		Prompt:      g.Prompt,
+		Provider:    g.Provider,
+		Model:       g.Model,
+		Modality:    g.Modality,
+		ImageURLs:   g.ImageURLs,
+		CreatedAt:   g.CreatedAt,
+		CreatedBy:   g.CreatedBy,
+		UpdatedAt:   g.UpdatedAt,
+		UpdatedBy:   g.UpdatedBy,
+		WorkspaceID: g.WorkspaceID,
 	}
 
 	return c.JSON(http.StatusOK, res)
 }
 
-func (h Handler) CreateGenTemplate(c echo.Context) error {
+func (h Handler) CreateGenerator(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	if workspaceId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "workspace id is required")
 	}
-	var req CreateGenTemplateRequest
+	var req CreateGeneratorRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -145,40 +145,40 @@ func (h Handler) CreateGenTemplate(c echo.Context) error {
 		})
 	}
 
-	var t model.GenTemplate
+	var g model.Generator
 	user := c.Get("user").(model.User)
 
-	t.WorkspaceID = workspaceId
-	t.ID = util.NewId()
-	t.Name = req.Name
-	t.Prompt = req.Prompt
-	t.Provider = req.Provider
-	t.Model = req.Model
-	t.Modality = req.Modality
-	t.ImageURLs = req.ImageURLs
-	t.CreatedAt = time.Now().UTC().String()
-	t.CreatedBy = user.ID
-	t.UpdatedAt = time.Now().UTC().String()
-	t.UpdatedBy = user.ID
+	g.WorkspaceID = workspaceId
+	g.ID = util.NewId()
+	g.Name = req.Name
+	g.Prompt = req.Prompt
+	g.Provider = req.Provider
+	g.Model = req.Model
+	g.Modality = req.Modality
+	g.ImageURLs = req.ImageURLs
+	g.CreatedAt = time.Now().UTC().String()
+	g.CreatedBy = user.ID
+	g.UpdatedAt = time.Now().UTC().String()
+	g.UpdatedBy = user.ID
 
-	err := h.db.CreateGenTemplate(t)
+	err := h.db.CreateGenerator(g)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	return c.JSON(http.StatusCreated, t)
+	return c.JSON(http.StatusCreated, g)
 }
 
-func (h Handler) DeleteGenTemplate(c echo.Context) error {
+func (h Handler) DeleteGenerator(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	id := c.Param("id")
 	if id == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "GenTemplate id is required")
+		return echo.NewHTTPError(http.StatusBadRequest, "Generator id is required")
 	}
-	template := model.GenTemplate{WorkspaceID: workspaceId, ID: id}
+	generator := model.Generator{WorkspaceID: workspaceId, ID: id}
 
-	existingTemplate, err := h.db.FindGenTemplate(template)
+	existingGenerator, err := h.db.FindGenerator(generator)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -186,28 +186,28 @@ func (h Handler) DeleteGenTemplate(c echo.Context) error {
 
 	user := c.Get("user").(model.User)
 
-	if existingTemplate.CreatedBy != user.ID {
-		return echo.NewHTTPError(http.StatusForbidden, "you do not have permission to delete this GenTemplate")
+	if existingGenerator.CreatedBy != user.ID {
+		return echo.NewHTTPError(http.StatusForbidden, "you do not have permission to delete this Generator")
 	}
 
-	if err := h.db.DeleteGenTemplate(template); err != nil {
+	if err := h.db.DeleteGenerator(generator); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.NoContent(http.StatusNoContent)
 }
 
-func (h Handler) UpdateGenTemplate(c echo.Context) error {
+func (h Handler) UpdateGenerator(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	if workspaceId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "workspace id is required")
 	}
 	id := c.Param("id")
 	if id == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "GenTemplate id is required")
+		return echo.NewHTTPError(http.StatusBadRequest, "Generator id is required")
 	}
 
-	var req UpdateGenTemplateRequest
+	var req UpdateGeneratorRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -218,7 +218,7 @@ func (h Handler) UpdateGenTemplate(c echo.Context) error {
 		})
 	}
 
-	existingTemplate, err := h.db.FindGenTemplate(model.GenTemplate{ID: id})
+	existingGenerator, err := h.db.FindGenerator(model.Generator{ID: id})
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -226,32 +226,32 @@ func (h Handler) UpdateGenTemplate(c echo.Context) error {
 
 	user := c.Get("user").(model.User)
 
-	if existingTemplate.CreatedBy != user.ID {
+	if existingGenerator.CreatedBy != user.ID {
 		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
-	var t model.GenTemplate
+	var g model.Generator
 
-	t.WorkspaceID = workspaceId
-	t.ID = existingTemplate.ID
-	t.Name = req.Name
-	t.Prompt = req.Prompt
-	t.Provider = req.Provider
-	t.Model = req.Model
-	t.Modality = req.Modality
-	t.ImageURLs = req.ImageURLs
-	t.CreatedAt = existingTemplate.CreatedAt
-	t.CreatedBy = existingTemplate.CreatedBy
-	t.UpdatedAt = time.Now().UTC().String()
-	t.UpdatedBy = user.ID
+	g.WorkspaceID = workspaceId
+	g.ID = existingGenerator.ID
+	g.Name = req.Name
+	g.Prompt = req.Prompt
+	g.Provider = req.Provider
+	g.Model = req.Model
+	g.Modality = req.Modality
+	g.ImageURLs = req.ImageURLs
+	g.CreatedAt = existingGenerator.CreatedAt
+	g.CreatedBy = existingGenerator.CreatedBy
+	g.UpdatedAt = time.Now().UTC().String()
+	g.UpdatedBy = user.ID
 
-	err = h.db.UpdateGenTemplate(t)
+	err = h.db.UpdateGenerator(g)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	return c.JSON(http.StatusOK, t)
+	return c.JSON(http.StatusOK, g)
 }
 
 // ListGenModels lists all available AI models from all providers with their modalities

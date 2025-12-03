@@ -11,7 +11,7 @@ import (
 type GetGenHistoryResponse struct {
 	ID               string `json:"id"`
 	WorkspaceID      string `json:"workspace_id"`
-	TemplateID       string `json:"template_id"`
+	GeneratorID      string `json:"generator_id"`
 	RequestPrompt    string `json:"request_prompt"`
 	RequestModel     string `json:"request_model"`
 	RequestModality  string `json:"request_modality"`
@@ -24,7 +24,7 @@ type GetGenHistoryResponse struct {
 
 func (h Handler) GetGenHistories(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
-	templateId := c.QueryParam("templateId")
+	generatorId := c.QueryParam("generatorId")
 
 	pageSize := 20
 	pageNumber := 1
@@ -41,7 +41,7 @@ func (h Handler) GetGenHistories(c echo.Context) error {
 
 	filter := model.GenHistoryFilter{
 		WorkspaceID: workspaceId,
-		TemplateID:  templateId,
+		GeneratorID: generatorId,
 		PageSize:    pageSize,
 		PageNumber:  pageNumber,
 	}
@@ -56,7 +56,7 @@ func (h Handler) GetGenHistories(c echo.Context) error {
 		res = append(res, GetGenHistoryResponse{
 			ID:               h.ID,
 			WorkspaceID:      h.WorkspaceID,
-			TemplateID:       h.TemplateID,
+			GeneratorID:      h.GeneratorID,
 			RequestPrompt:    h.RequestPrompt,
 			RequestModel:     h.RequestModel,
 			RequestModality:  h.RequestModality,
@@ -91,7 +91,7 @@ func (h Handler) GetGenHistory(c echo.Context) error {
 	res := GetGenHistoryResponse{
 		ID:               history.ID,
 		WorkspaceID:      history.WorkspaceID,
-		TemplateID:       history.TemplateID,
+		GeneratorID:      history.GeneratorID,
 		RequestPrompt:    history.RequestPrompt,
 		RequestModel:     history.RequestModel,
 		RequestModality:  history.RequestModality,

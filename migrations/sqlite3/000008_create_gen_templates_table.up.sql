@@ -1,4 +1,4 @@
-CREATE TABLE `gen_templates` (
+CREATE TABLE `ai_generators` (
     `workspace_id` text,
     `id` text,
     `name` text,
@@ -7,10 +7,10 @@ CREATE TABLE `gen_templates` (
     `model` text,
     `modality` text,
     `image_urls` text,
-    `created_at` text,                                 
+    `created_at` text,
     `created_by` text,
     `updated_at` text,
     `updated_by` text,
     PRIMARY KEY (`id`),
-    CONSTRAINT `fk_gen_templates_workspace` FOREIGN KEY (`workspace_id`) REFERENCES `workspaces`(`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_ai_generators_workspace` FOREIGN KEY (`workspace_id`) REFERENCES `workspaces`(`id`) ON DELETE CASCADE
 );

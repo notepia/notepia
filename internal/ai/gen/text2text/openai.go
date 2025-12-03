@@ -38,7 +38,6 @@ func (p *OpenAIText2TextProvider) ListModels() ([]gen.Model, error) {
 		Provider:            "openai",
 		ProviderDisplayName: p.DisplayName(),
 		Modality:            "text2text",
-		Description:         "Most capable GPT-4o model for text generation",
 	})
 	models = append(models, gen.Model{
 		ID:                  "gpt-4o-mini",
@@ -46,7 +45,6 @@ func (p *OpenAIText2TextProvider) ListModels() ([]gen.Model, error) {
 		Provider:            "openai",
 		ProviderDisplayName: p.DisplayName(),
 		Modality:            "text2text",
-		Description:         "Faster and more affordable GPT-4o model",
 	})
 
 	return models, nil

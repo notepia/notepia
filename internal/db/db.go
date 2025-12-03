@@ -14,7 +14,7 @@ type DB interface {
 	FileRepository
 	WorkspaceRepository
 	WorkspaceUserRepository
-	GenTemplateRepository
+	GeneratorRepository
 	GenHistoryRepository
 	ViewRepository
 	ViewObjectRepository
@@ -64,12 +64,12 @@ type WorkspaceUserRepository interface {
 	UpdateWorkspaceUser(w model.WorkspaceUser) error
 	DeleteWorkspaceUser(w model.WorkspaceUser) error
 }
-type GenTemplateRepository interface {
-	CreateGenTemplate(g model.GenTemplate) error
-	UpdateGenTemplate(g model.GenTemplate) error
-	DeleteGenTemplate(g model.GenTemplate) error
-	FindGenTemplate(g model.GenTemplate) (model.GenTemplate, error)
-	FindGenTemplates(f model.GenTemplateFilter) ([]model.GenTemplate, error)
+type GeneratorRepository interface {
+	CreateGenerator(g model.Generator) error
+	UpdateGenerator(g model.Generator) error
+	DeleteGenerator(g model.Generator) error
+	FindGenerator(g model.Generator) (model.Generator, error)
+	FindGenerators(f model.GeneratorFilter) ([]model.Generator, error)
 }
 type GenHistoryRepository interface {
 	CreateGenHistory(h model.GenHistory) error

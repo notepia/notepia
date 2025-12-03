@@ -38,8 +38,8 @@ func (s SqliteDB) FindGenHistories(f model.GenHistoryFilter) ([]model.GenHistory
 		db = db.Where("workspace_id = ?", f.WorkspaceID)
 	}
 
-	if f.TemplateID != "" {
-		db = db.Where("template_id = ?", f.TemplateID)
+	if f.GeneratorID != "" {
+		db = db.Where("generator_id = ?", f.GeneratorID)
 	}
 
 	err := db.

@@ -13,25 +13,25 @@ import (
 	"github.com/unsealdev/unseal/internal/util"
 )
 
-type GenerateFromTemplateRequest struct {
-	TemplateID string   `json:"template_id" validate:"required"`
-	Prompt     string   `json:"prompt" validate:"required"`
-	ImageURLs  []string `json:"image_urls"`
+type GenerateFromGeneratorRequest struct {
+	GeneratorID string   `json:"generator_id" validate:"required"`
+	Prompt      string   `json:"prompt" validate:"required"`
+	ImageURLs   []string `json:"image_urls"`
 }
 
-type GenerateFromTemplateResponse struct {
+type GenerateFromGeneratorResponse struct {
 	HistoryID string `json:"history_id"`
 	Content   string `json:"content"`
 	Error     string `json:"error"`
 }
 
-func (h Handler) GenerateFromTemplate(c echo.Context) error {
+func (h Handler) GenerateFromGenerator(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	if workspaceId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "workspace id is required")
 	}
 
-	var req GenerateFromTemplateRequest
+	var req GenerateFromGeneratorRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -47,13 +47,13 @@ func (h Handler) GenerateFromTemplate(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, "")
 	}
 
-	// Find the template
-	template, err := h.db.FindGenTemplate(model.GenTemplate{
+	// Find the generator
+	generator, err := h.db.FindGenerator(model.Generator{
 		WorkspaceID: workspaceId,
-		ID:          req.TemplateID,
+		ID:          req.GeneratorID,
 	})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Template not found: "+err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Generator not found: "+err.Error())
 	}
 
 	// Get user settings for AI providers
@@ -62,10 +62,10 @@ func (h Handler) GenerateFromTemplate(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	// Use provider from template
-	provider := template.Provider
+	// Use provider from generator
+	provider := generator.Provider
 	if provider == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Template provider is not set"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Generator provider is not set"})
 	}
 
 	// Get and decrypt API key from user settings based on provider
@@ -103,14 +103,14 @@ func (h Handler) GenerateFromTemplate(c echo.Context) error {
 	// Prepare generation request (IMPORTANT: API key is passed here, NOT stored in provider)
 	genReq := gen.GenerateRequest{
 		Provider: provider,
-		Model:    template.Model,
-		Modality: template.Modality,
+		Model:    generator.Model,
+		Modality: generator.Modality,
 		Prompt:   req.Prompt,
 		APIKey:   apiKey, // API key from user settings
 	}
 
 	// Add images if modality supports them
-	if template.Modality == "textimage2text" || template.Modality == "textimage2image" {
+	if generator.Modality == "textimage2text" || generator.Modality == "textimage2image" {
 		genReq.Images = req.ImageURLs
 	}
 
@@ -129,10 +129,10 @@ func (h Handler) GenerateFromTemplate(c echo.Context) error {
 	history := model.GenHistory{
 		ID:               util.NewId(),
 		WorkspaceID:      workspaceId,
-		TemplateID:       req.TemplateID,
+		GeneratorID:      req.GeneratorID,
 		RequestPrompt:    req.Prompt,
-		RequestModel:     template.Model,
-		RequestModality:  template.Modality,
+		RequestModel:     generator.Model,
+		RequestModality:  generator.Modality,
 		RequestImageURLs: strings.Join(req.ImageURLs, ","),
 		ResponseContent:  responseContent,
 		ResponseError:    responseError,
@@ -144,7 +144,7 @@ func (h Handler) GenerateFromTemplate(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save history: "+err.Error())
 	}
 
-	return c.JSON(http.StatusOK, GenerateFromTemplateResponse{
+	return c.JSON(http.StatusOK, GenerateFromGeneratorResponse{
 		HistoryID: history.ID,
 		Content:   responseContent,
 		Error:     responseError,

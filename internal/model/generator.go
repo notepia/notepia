@@ -1,13 +1,13 @@
 package model
 
-type GenTemplateFilter struct {
+type GeneratorFilter struct {
 	WorkspaceID string
 	PageSize    int
 	PageNumber  int
 	Query       string
 }
 
-type GenTemplate struct {
+type Generator struct {
 	WorkspaceID string `json:"workspace_id"`
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -22,7 +22,7 @@ type GenTemplate struct {
 	UpdatedBy   string `json:"updated_by"`
 }
 
-// TableName specifies the table name for GenTemplate
-func (GenTemplate) TableName() string {
-	return "gen_templates"
+// TableName specifies the table name for Generator
+func (Generator) TableName() string {
+	return "ai_generators"
 }
