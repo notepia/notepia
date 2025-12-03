@@ -91,15 +91,15 @@ const AddWidgetDialog: FC<AddWidgetDialogProps> = ({ isOpen, onClose }) => {
         </div>
 
         {step === 'type' ? (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {allWidgets.map((widget) => (
               <button
                 key={widget.type}
                 onClick={() => handleTypeSelect(widget.type)}
-                className="w-full p-4 text-left border dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                className="p-4 text-left border dark:border-neutral-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex flex-col gap-1"
               >
                 <div className="font-medium">{t(widget.label)}</div>
-                <div className="text-sm text-gray-500 mt-1">{t(widget.description)}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">{t(widget.description)}</div>
               </button>
             ))}
           </div>
