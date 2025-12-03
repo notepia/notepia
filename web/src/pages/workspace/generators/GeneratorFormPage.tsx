@@ -4,11 +4,11 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, Save } from "lucide-react"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { createGenTemplate, updateGenTemplate, getGenTemplate, listGenModels } from "@/api/gen-template"
-import { Modality } from "@/types/gen-template"
+import { createGenerator, updateGenerator, getGenerator, listGenModels } from "@/api/generator"
+import { Modality } from "@/types/generator"
 import { useToastStore } from "@/stores/toast"
 
-const GenTemplateFormPage = () => {
+const GeneratorFormPage = () => {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const { id } = useParams<{ id: string }>()
@@ -59,22 +59,22 @@ const GenTemplateFormPage = () => {
         return allModels.filter(m => m.provider === provider && m.modality === modality)
     }, [allModels, provider, modality])
 
-    const { data: existingTemplate, isLoading } = useQuery({
-        queryKey: ['gen-template', currentWorkspaceId, id],
-        queryFn: () => getGenTemplate(currentWorkspaceId, id!),
+    const { data: existingGenerator, isLoading } = useQuery({
+        queryKey: ['generator', currentWorkspaceId, id],
+        queryFn: () => getGenerator(currentWorkspaceId, id!),
         enabled: !!isEdit && !!currentWorkspaceId && !!id,
     })
 
     useEffect(() => {
-        if (existingTemplate) {
-            setName(existingTemplate.name)
-            setPrompt(existingTemplate.prompt)
-            setModality(existingTemplate.modality)
-            setProvider(existingTemplate.provider || "")
-            setModel(existingTemplate.model)
-            setImageUrls(existingTemplate.image_urls ? existingTemplate.image_urls.split(',').filter(Boolean) : [])
+        if (existingGenerator) {
+            setName(existingGenerator.name)
+            setPrompt(existingGenerator.prompt)
+            setModality(existingGenerator.modality)
+            setProvider(existingGenerator.provider || "")
+            setModel(existingGenerator.model)
+            setImageUrls(existingGenerator.image_urls ? existingGenerator.image_urls.split(',').filter(Boolean) : [])
         }
-    }, [existingTemplate])
+    }, [existingGenerator])
 
     // Reset provider when modality changes
     useEffect(() => {
@@ -115,7 +115,7 @@ const GenTemplateFormPage = () => {
     }, [prompt])
 
     const createMutation = useMutation({
-        mutationFn: () => createGenTemplate(currentWorkspaceId, {
+        mutationFn: () => createGenerator(currentWorkspaceId, {
             name,
             prompt,
             provider,
@@ -125,8 +125,8 @@ const GenTemplateFormPage = () => {
         }),
         onSuccess: (data) => {
             addToast({ title: t("genTemplates.createSuccess"), type: "success" })
-            queryClient.invalidateQueries({ queryKey: ['gen-templates', currentWorkspaceId] })
-            navigate(`/workspaces/${currentWorkspaceId}/gen-templates/${data.id}`)
+            queryClient.invalidateQueries({ queryKey: ['generators', currentWorkspaceId] })
+            navigate(`/workspaces/${currentWorkspaceId}/generators/${data.id}`)
         },
         onError: () => {
             addToast({ title: t("genTemplates.createError"), type: "error" })
@@ -134,7 +134,7 @@ const GenTemplateFormPage = () => {
     })
 
     const updateMutation = useMutation({
-        mutationFn: () => updateGenTemplate(currentWorkspaceId, id!, {
+        mutationFn: () => updateGenerator(currentWorkspaceId, id!, {
             name,
             prompt,
             provider,
@@ -144,9 +144,9 @@ const GenTemplateFormPage = () => {
         }),
         onSuccess: () => {
             addToast({ title: t("genTemplates.updateSuccess"), type: "success" })
-            queryClient.invalidateQueries({ queryKey: ['gen-templates', currentWorkspaceId] })
-            queryClient.invalidateQueries({ queryKey: ['gen-template', currentWorkspaceId, id] })
-            navigate(`/workspaces/${currentWorkspaceId}/gen-templates/${id}`)
+            queryClient.invalidateQueries({ queryKey: ['generators', currentWorkspaceId] })
+            queryClient.invalidateQueries({ queryKey: ['generator', currentWorkspaceId, id] })
+            navigate(`/workspaces/${currentWorkspaceId}/generators/${id}`)
         },
         onError: () => {
             addToast({ title: t("genTemplates.updateError"), type: "error" })
@@ -191,7 +191,7 @@ const GenTemplateFormPage = () => {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            aria-label="template name"
+                            aria-label="generator name"
                             className="w-full px-4 py-2 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800"
                             required
                         />
@@ -301,7 +301,7 @@ const GenTemplateFormPage = () => {
                         </button>
                         <button
                             type="button"
-                            onClick={() => navigate(`/workspaces/${currentWorkspaceId}/gen-templates`)}
+                            onClick={() => navigate(`/workspaces/${currentWorkspaceId}/generators`)}
                             className="px-6 py-2 border dark:border-neutral-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                         >
                             {t("actions.cancel")}
@@ -313,4 +313,4 @@ const GenTemplateFormPage = () => {
     )
 }
 
-export default GenTemplateFormPage
+export default GeneratorFormPage

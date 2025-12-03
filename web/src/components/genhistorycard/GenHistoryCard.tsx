@@ -2,8 +2,8 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Trash2, ChevronDown, ChevronUp, Copy, Check } from "lucide-react"
-import { GenHistory } from "@/types/gen-template"
-import { deleteGenHistory } from "@/api/gen-template"
+import { GenHistory } from "@/types/generator"
+import { deleteGenHistory } from "@/api/generator"
 import { useToastStore } from "@/stores/toast"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 
@@ -24,7 +24,7 @@ const GenHistoryCard = ({ history, onDeleted }: GenHistoryCardProps) => {
         mutationFn: () => deleteGenHistory(currentWorkspaceId, history.id),
         onSuccess: () => {
             addToast({ title: t("genHistory.deleteSuccess") || "History deleted", type: "success" })
-            queryClient.invalidateQueries({ queryKey: ['gen-histories', currentWorkspaceId, history.template_id] })
+            queryClient.invalidateQueries({ queryKey: ['gen-histories', currentWorkspaceId, history.generator_id] })
             onDeleted?.()
         },
         onError: () => {

@@ -1,7 +1,7 @@
 CREATE TABLE `gen_history` (
     `id` text,
     `workspace_id` text,
-    `template_id` text,
+    `generator_id` text,
     `request_prompt` text,
     `request_model` text,
     `request_modality` text,
@@ -12,5 +12,5 @@ CREATE TABLE `gen_history` (
     `created_by` text,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_gen_history_workspace` FOREIGN KEY (`workspace_id`) REFERENCES `workspaces`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_gen_history_template` FOREIGN KEY (`template_id`) REFERENCES `gen_templates`(`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_gen_history_generator` FOREIGN KEY (`generator_id`) REFERENCES `ai_generators`(`id`) ON DELETE CASCADE
 );

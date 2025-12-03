@@ -1,6 +1,6 @@
 import { FC } from "react"
 
-const GenTemplateCardSkeleton: FC = () => {
+const GeneratorCardSkeleton: FC = () => {
     return (
         <div className="p-4 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800 animate-pulse">
             <div className="flex justify-between items-start mb-2">
@@ -16,4 +16,4 @@ const GenTemplateCardSkeleton: FC = () => {
     )
 }
 
-export default GenTemplateCardSkeleton
+export default GeneratorCardSkeleton

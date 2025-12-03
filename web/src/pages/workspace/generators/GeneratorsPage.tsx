@@ -1,18 +1,18 @@
 import { Plus, Search, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import SidebarButton from "@/components/sidebar/SidebarButton"
-import { getGenTemplates } from "@/api/gen-template"
+import { getGenerators } from "@/api/generator"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import { Link } from "react-router-dom"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useRef, useCallback, useState, useEffect } from "react"
 import { Tooltip } from "radix-ui"
 import OneColumn from "@/components/onecolumn/OneColumn"
-import GenTemplatesGridSkeleton from "@/components/skeletons/GenTemplatesGridSkeleton"
+import GeneratorsGridSkeleton from "@/components/skeletons/GeneratorsGridSkeleton"
 
 const PAGE_SIZE = 20;
 
-const GenTemplatesPage = () => {
+const GeneratorsPage = () => {
     const [query, setQuery] = useState("")
     const [debouncedQuery, setDebouncedQuery] = useState(query);
     const currentWorkspaceId = useCurrentWorkspaceId();
@@ -38,9 +38,9 @@ const GenTemplatesPage = () => {
         isFetchingNextPage,
         refetch
     } = useInfiniteQuery({
-        queryKey: ['gen-templates', currentWorkspaceId],
+        queryKey: ['generators', currentWorkspaceId],
         queryFn: ({ pageParam = 1 }: { pageParam?: unknown }) =>
-            getGenTemplates(currentWorkspaceId, Number(pageParam), PAGE_SIZE, debouncedQuery),
+            getGenerators(currentWorkspaceId, Number(pageParam), PAGE_SIZE, debouncedQuery),
         enabled: !!currentWorkspaceId,
         getNextPageParam: (lastPage, allPages) => {
             if (!lastPage || lastPage.length < PAGE_SIZE) return undefined;
@@ -69,7 +69,7 @@ const GenTemplatesPage = () => {
         }
     }, [hasNextPage, isLoading, fetchNextPage]);
 
-    const templates = data?.pages.flat().filter(t => t !== null) || [];
+    const generators = data?.pages.flat().filter(g => g !== null) || [];
 
     return <>
         <OneColumn>
@@ -145,25 +145,25 @@ const GenTemplatesPage = () => {
                 <div className="flex flex-col gap-2 sm:gap-5">
                     <div className="w-full">
                         {
-                            isLoading ? <GenTemplatesGridSkeleton /> :
+                            isLoading ? <GeneratorsGridSkeleton /> :
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {templates.map((template) => (
+                                    {generators.map((generator) => (
                                         <Link
-                                            key={template.id}
-                                            to={`${template.id}`}
+                                            key={generator.id}
+                                            to={`${generator.id}`}
                                             className="p-4 rounded-lg border dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:shadow-md transition-shadow"
                                         >
                                             <div className="flex justify-between items-start mb-2">
-                                                <div className="font-semibold text-lg">{template.name}</div>
+                                                <div className="font-semibold text-lg">{generator.name}</div>
                                                 <span className="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                                                    {template.modality}
+                                                    {generator.modality}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
-                                                {template.prompt}
+                                                {generator.prompt}
                                             </p>
                                             <div className="text-xs text-gray-500 dark:text-gray-500">
-                                                Model: {template.model}
+                                                Model: {generator.model}
                                             </div>
                                         </Link>
                                     ))}
@@ -171,11 +171,11 @@ const GenTemplatesPage = () => {
                         }
 
                         <div ref={loadMoreRef} className="h-8"></div>
-                        {isFetchingNextPage && <GenTemplatesGridSkeleton count={3} />}
-                        {!isLoading && !hasNextPage && templates.length > 0 && (
+                        {isFetchingNextPage && <GeneratorsGridSkeleton count={3} />}
+                        {!isLoading && !hasNextPage && generators.length > 0 && (
                             <div className="text-center py-4 text-gray-400">{t("messages.noMore")}</div>
                         )}
-                        {!isLoading && templates.length === 0 && (
+                        {!isLoading && generators.length === 0 && (
                             <div className="text-center py-8 text-gray-400">{t("genTemplates.empty")}</div>
                         )}
                     </div>
@@ -185,4 +185,4 @@ const GenTemplatesPage = () => {
     </>
 }
 
-export default GenTemplatesPage
+export default GeneratorsPage

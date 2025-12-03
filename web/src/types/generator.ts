@@ -1,6 +1,6 @@
 export type Modality = 'text2text';
 
-export interface GenTemplate {
+export interface Generator {
   id: string;
   workspace_id: string;
   name: string;
@@ -15,7 +15,7 @@ export interface GenTemplate {
   updated_by: string;
 }
 
-export interface CreateGenTemplateRequest {
+export interface CreateGeneratorRequest {
   name: string;
   prompt: string;
   provider: string;
@@ -24,7 +24,7 @@ export interface CreateGenTemplateRequest {
   image_urls?: string; // Comma-separated image URLs
 }
 
-export interface UpdateGenTemplateRequest {
+export interface UpdateGeneratorRequest {
   name: string;
   prompt: string;
   provider: string;
@@ -36,7 +36,7 @@ export interface UpdateGenTemplateRequest {
 export interface GenHistory {
   id: string;
   workspace_id: string;
-  template_id: string;
+  generator_id: string;
   request_prompt: string;
   request_model: string;
   request_modality: string;
@@ -47,13 +47,13 @@ export interface GenHistory {
   created_by: string;
 }
 
-export interface GenerateFromTemplateRequest {
-  template_id: string;
+export interface GenerateFromGeneratorRequest {
+  generator_id: string;
   prompt: string;
   image_urls?: string[];
 }
 
-export interface GenerateFromTemplateResponse {
+export interface GenerateFromGeneratorResponse {
   history_id: string;
   content: string;
   error: string;
@@ -65,5 +65,4 @@ export interface GenModel {
   provider: string;
   provider_display_name: string;
   modality: Modality;
-  description?: string;
 }

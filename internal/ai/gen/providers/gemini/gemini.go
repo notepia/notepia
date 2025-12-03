@@ -29,25 +29,22 @@ func (p *GeminiProvider) ListModels() ([]gen.Model, error) {
 	// Hardcoded list of available Gemini models
 	// TODO: Implement dynamic model listing when API supports it
 	models = append(models, gen.Model{
-		ID:          "gemini-2.5-pro",
-		Name:        "Gemini 2.5 Pro",
-		Provider:    p.Name(),
-		Modality:    "textimage2text",
-		Description: "Most capable Gemini model with multimodal support",
+		ID:       "gemini-2.5-pro",
+		Name:     "Gemini 2.5 Pro",
+		Provider: p.Name(),
+		Modality: "textimage2text",
 	})
 	models = append(models, gen.Model{
-		ID:          "gemini-2.5-flash",
-		Name:        "Gemini 2.5 Flash",
-		Provider:    p.Name(),
-		Modality:    "textimage2text",
-		Description: "Fast and efficient Gemini model with multimodal support",
+		ID:       "gemini-2.5-flash",
+		Name:     "Gemini 2.5 Flash",
+		Provider: p.Name(),
+		Modality: "textimage2text",
 	})
 	models = append(models, gen.Model{
-		ID:          "gemini-2.5-flash-lite",
-		Name:        "Gemini 2.5 Flash Lite",
-		Provider:    p.Name(),
-		Modality:    "textimage2text",
-		Description: "Lightweight Gemini model with multimodal support",
+		ID:       "gemini-2.5-flash-lite",
+		Name:     "Gemini 2.5 Flash Lite",
+		Provider: p.Name(),
+		Modality: "textimage2text",
 	})
 
 	return models, nil

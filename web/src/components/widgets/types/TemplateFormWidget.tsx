@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Loader2 } from 'lucide-react';
-import { getGenTemplate, generateFromTemplate, getGenTemplates } from '@/api/gen-template';
+import { getGenerator, generateFromGenerator, getGenerators } from '@/api/generator';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { useToastStore } from '@/stores/toast';
 import { TemplateFormWidgetConfig } from '@/types/widget';
@@ -21,16 +21,16 @@ const TemplateFormWidget: FC<TemplateFormWidgetProps> = ({ config }) => {
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [generatedContent, setGeneratedContent] = useState<string>('');
 
-  const { data: template, isLoading: isLoadingTemplate } = useQuery({
-    queryKey: ['gen-template', workspaceId, config.templateId],
-    queryFn: () => getGenTemplate(workspaceId, config.templateId),
+  const { data: generator, isLoading: isLoadingGenerator } = useQuery({
+    queryKey: ['generator', workspaceId, config.templateId],
+    queryFn: () => getGenerator(workspaceId, config.templateId),
     enabled: !!workspaceId && !!config.templateId,
   });
 
   const generateMutation = useMutation({
     mutationFn: (prompt: string) =>
-      generateFromTemplate(workspaceId, {
-        template_id: config.templateId,
+      generateFromGenerator(workspaceId, {
+        generator_id: config.templateId,
         prompt,
       }),
     onSuccess: (data) => {
@@ -50,7 +50,7 @@ const TemplateFormWidget: FC<TemplateFormWidgetProps> = ({ config }) => {
     );
   }
 
-  if (isLoadingTemplate) {
+  if (isLoadingGenerator) {
     return (
       <div className="h-full flex items-center justify-center">
         <Loader2 className="animate-spin text-gray-500" size={24} />
@@ -58,7 +58,7 @@ const TemplateFormWidget: FC<TemplateFormWidgetProps> = ({ config }) => {
     );
   }
 
-  if (!template) {
+  if (!generator) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500 text-sm">
         {t('widgets.templateNotFound')}
@@ -66,13 +66,13 @@ const TemplateFormWidget: FC<TemplateFormWidgetProps> = ({ config }) => {
     );
   }
 
-  // Extract variables from template prompt (e.g., {{variable}})
-  const extractedVars = template.prompt?.match(/\{\{([\p{L}\p{N}_]+)\}\}/gu)?.map((v: string) => v.slice(2, -2)) || [];
+  // Extract variables from generator prompt (e.g., {{variable}})
+  const extractedVars = generator.prompt?.match(/\{\{([\p{L}\p{N}_]+)\}\}/gu)?.map((v: string) => v.slice(2, -2)) || [];
   const uniqueVars = [...new Set(extractedVars)];
 
   const handleGenerate = () => {
     // Build the final prompt by replacing variables
-    let finalPrompt = template.prompt || '';
+    let finalPrompt = generator.prompt || '';
     Object.entries(variables).forEach(([key, value]) => {
       finalPrompt = finalPrompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
     });
@@ -84,7 +84,7 @@ const TemplateFormWidget: FC<TemplateFormWidgetProps> = ({ config }) => {
     <Widget>
       <div className="h-full flex flex-col gap-2 overflow-auto">
         <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-          {template.name}
+          {generator.name}
         </div>
 
         {uniqueVars.length > 0 && (
@@ -137,9 +137,9 @@ export const TemplateFormWidgetConfigForm: FC<WidgetConfigFormProps<TemplateForm
   const { t } = useTranslation();
   const workspaceId = useCurrentWorkspaceId();
 
-  const { data: templates = [] } = useQuery({
-    queryKey: ['gen-templates', workspaceId],
-    queryFn: () => getGenTemplates(workspaceId, 1, 100, ''),
+  const { data: generators = [] } = useQuery({
+    queryKey: ['generators', workspaceId],
+    queryFn: () => getGenerators(workspaceId, 1, 100, ''),
     enabled: !!workspaceId,
   });
 
@@ -153,9 +153,9 @@ export const TemplateFormWidgetConfigForm: FC<WidgetConfigFormProps<TemplateForm
           className="w-full px-3 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
         >
           <option value="">{t('widgets.config.selectTemplatePlaceholder')}</option>
-          {templates.map((template: any) => (
-            <option key={template.id} value={template.id}>
-              {template.name}
+          {generators.map((generator: any) => (
+            <option key={generator.id} value={generator.id}>
+              {generator.name}
             </option>
           ))}
         </select>

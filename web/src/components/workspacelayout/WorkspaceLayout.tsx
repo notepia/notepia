@@ -82,7 +82,7 @@ const WorkspaceLayout = () => {
                         side="right"
                         enabled={isCollapse}
                         >
-                        <Link to={`/workspaces/${currentWorkspaceId}/gen-templates`} className="flex items-center gap-3 w-full p-2.5 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-700">
+                        <Link to={`/workspaces/${currentWorkspaceId}/generators`} className="flex items-center gap-3 w-full p-2.5 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-700">
                             <Sparkles size={20} />
                             {!isCollapse && t("menu.genTemplates")}
                         </Link>

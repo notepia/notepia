@@ -7,7 +7,6 @@ type Model struct {
 	Provider            string `json:"provider"`
 	ProviderDisplayName string `json:"provider_display_name"`
 	Modality            string `json:"modality"`
-	Description         string `json:"description,omitempty"`
 }
 
 // GenerateRequest represents a generation request

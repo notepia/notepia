@@ -37,7 +37,6 @@ func (p *GeminiText2TextProvider) ListModels() ([]gen.Model, error) {
 		Provider:            "gemini",
 		ProviderDisplayName: p.DisplayName(),
 		Modality:            "text2text",
-		Description:         "Most capable Gemini model for text generation",
 	})
 	models = append(models, gen.Model{
 		ID:                  "gemini-2.5-flash",
@@ -45,7 +44,6 @@ func (p *GeminiText2TextProvider) ListModels() ([]gen.Model, error) {
 		Provider:            "gemini",
 		ProviderDisplayName: p.DisplayName(),
 		Modality:            "text2text",
-		Description:         "Fast and efficient Gemini model",
 	})
 	models = append(models, gen.Model{
 		ID:                  "gemini-2.5-flash-lite",
@@ -53,7 +51,6 @@ func (p *GeminiText2TextProvider) ListModels() ([]gen.Model, error) {
 		Provider:            "gemini",
 		ProviderDisplayName: p.DisplayName(),
 		Modality:            "text2text",
-		Description:         "Lightweight Gemini model",
 	})
 
 	return models, nil

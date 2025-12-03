@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS `gen_templates`;
+DROP TABLE IF EXISTS `ai_generators`;
