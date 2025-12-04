@@ -1,5 +1,5 @@
 // Widget types
-export type WidgetType = 'note_form' | 'stats' | 'template_form' | 'view' | 'note' | 'latest_note' | 'countdown' | 'file_upload' | 'carousel';
+export type WidgetType = 'note_form' | 'stats' | 'template_form' | 'view' | 'note' | 'latest_note' | 'countdown' | 'file_upload' | 'carousel' | 'heatmap';
 
 // Widget position on dashboard
 export interface WidgetPosition {
@@ -84,6 +84,12 @@ export interface CarouselWidgetConfig {
   interval?: number; // Auto play interval in seconds (default: 3)
 }
 
+// Heatmap widget - for displaying note creation heatmap
+export interface HeatmapWidgetConfig {
+  dayCount?: number; // Number of days to show (default: 365)
+  showLegend?: boolean; // Show color legend (default: true)
+}
+
 // Request/Response types
 export interface CreateWidgetRequest {
   type: WidgetType;
@@ -108,6 +114,7 @@ export type WidgetConfigMap = {
   countdown: CountdownWidgetConfig;
   file_upload: FileUploadWidgetConfig;
   carousel: CarouselWidgetConfig;
+  heatmap: HeatmapWidgetConfig;
 };
 
 // Parsed widget with typed config

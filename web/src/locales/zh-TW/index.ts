@@ -351,6 +351,9 @@ export default {
     deleteError: "小工具刪除失敗",
     totalNotes: "筆記總數",
     recentNotes: "近期筆記（7天內）",
+    noteCreationActivity: "筆記建立活動",
+    less: "較少",
+    more: "較多",
     objects: "個物件",
     openView: "開啟視圖",
     viewMore: "查看更多 {{count}} 個...",
@@ -432,7 +435,9 @@ export default {
       fileUpload: "檔案上傳",
       fileUploadDesc: "支援拖放的檔案上傳功能",
       carousel: "圖片輪播",
-      carouselDesc: "以輪播方式顯示圖片"
+      carouselDesc: "以輪播方式顯示圖片",
+      heatmap: "筆記熱力圖",
+      heatmapDesc: "視覺化顯示筆記建立活動"
     },
     config: {
       defaultVisibility: "預設可見性",
@@ -463,7 +468,10 @@ export default {
       selectNotePlaceholder: "選擇一個筆記...",
       showMetadata: "顯示元資料",
       showFullContent: "顯示完整內容",
-      selectedNote: "已選擇"
+      selectedNote: "已選擇",
+      dayCount: "天數",
+      dayCountHint: "顯示的天數（30-365）",
+      showLegend: "顯示顏色圖例"
     }
   },
   notes: {

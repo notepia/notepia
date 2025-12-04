@@ -74,4 +74,7 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 	g.GET("/:workspaceId/widgets/:id", h.GetWidget)
 	g.PUT("/:workspaceId/widgets/:id", h.UpdateWidget)
 	g.DELETE("/:workspaceId/widgets/:id", h.DeleteWidget)
+
+	// Stats
+	g.GET("/:workspaceId/stats/note-counts-by-date", h.GetNoteCountsByDate)
 }

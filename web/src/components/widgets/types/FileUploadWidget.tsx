@@ -1,7 +1,7 @@
 import { FC, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Upload, X, File, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { FileUploadWidgetConfig } from '@/types/widget';
 import { FileInfo } from '@/api/file';
@@ -56,8 +56,6 @@ const FileUploadWidget: FC<FileUploadWidgetProps> = ({ config }) => {
   };
 
   const uploadFile = async (file: File) => {
-    const fileId = Math.random().toString(36).substring(7);
-
     // Add to uploading files list
     const uploadingFile: UploadingFile = {
       file,

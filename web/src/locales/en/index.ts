@@ -358,6 +358,9 @@ export default {
     deleteError: "Failed to delete widget",
     totalNotes: "Total Notes",
     recentNotes: "Recent Notes (7 days)",
+    noteCreationActivity: "Note Creation Activity",
+    less: "Less",
+    more: "More",
     objects: "objects",
     openView: "Open View",
     viewMore: "View {{count}} more...",
@@ -439,7 +442,9 @@ export default {
       fileUpload: "File Upload",
       fileUploadDesc: "Upload files with drag and drop support",
       carousel: "Image Carousel",
-      carouselDesc: "Display images in a carousel slider"
+      carouselDesc: "Display images in a carousel slider",
+      heatmap: "Note Heatmap",
+      heatmapDesc: "Visualize note creation activity over time"
     },
     config: {
       defaultVisibility: "Default Visibility",
@@ -470,7 +475,10 @@ export default {
       selectNotePlaceholder: "Choose a note...",
       showMetadata: "Show Metadata",
       showFullContent: "Show Full Content",
-      selectedNote: "Selected"
+      selectedNote: "Selected",
+      dayCount: "Number of Days",
+      dayCountHint: "Number of days to display (30-365)",
+      showLegend: "Show Color Legend"
     }
   },
   notes: {

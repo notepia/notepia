@@ -43,6 +43,7 @@ type NoteRepository interface {
 	DeleteNote(n model.Note) error
 	FindNote(n model.Note) (model.Note, error)
 	FindNotes(f model.NoteFilter) ([]model.Note, error)
+	GetNoteCountsByDate(workspaceID string, startDate string, timezoneOffsetMinutes int) (map[string]int, error)
 }
 type FileRepository interface {
 	CreateFile(u model.File) error
