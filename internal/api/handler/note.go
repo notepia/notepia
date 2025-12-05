@@ -332,9 +332,9 @@ func (h Handler) CreateNote(c echo.Context) error {
 	n.Visibility = req.Visibility
 	n.Title = req.Title
 	n.Content = req.Content
-	n.CreatedAt = time.Now().UTC().String()
+	n.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 	n.CreatedBy = user.ID
-	n.UpdatedAt = time.Now().UTC().String()
+	n.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 	n.UpdatedBy = user.ID
 
 	err := h.db.CreateNote(n)
@@ -414,7 +414,7 @@ func (h Handler) UpdateNote(c echo.Context) error {
 	n.Visibility = existingNote.Visibility
 	n.CreatedAt = existingNote.CreatedAt
 	n.CreatedBy = existingNote.CreatedBy
-	n.UpdatedAt = time.Now().UTC().String()
+	n.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 	n.UpdatedBy = user.ID
 
 	err = h.db.UpdateNote(n)
@@ -466,7 +466,7 @@ func (h Handler) UpdateNoteVisibility(c echo.Context) error {
 	n.Content = existingNote.Content
 	n.CreatedAt = existingNote.CreatedAt
 	n.CreatedBy = existingNote.CreatedBy
-	n.UpdatedAt = time.Now().UTC().String()
+	n.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 	n.UpdatedBy = user.ID
 
 	err = h.db.UpdateNote(n)
