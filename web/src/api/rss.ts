@@ -6,6 +6,7 @@ export interface RSSItem {
   description?: string;
   pubDate?: string;
   guid?: string;
+  imageUrl?: string;
 }
 
 export interface RSSFeed {

@@ -493,6 +493,7 @@ export default {
         maxItems: "Maximum Items",
         showDescription: "Show descriptions",
         showDate: "Show publication date",
+        showImage: "Show images",
         autoRefresh: "Auto-refresh interval (minutes)",
         autoRefreshHint: "Set to 0 to disable auto-refresh (maximum: 1440 minutes / 24 hours)"
       }
