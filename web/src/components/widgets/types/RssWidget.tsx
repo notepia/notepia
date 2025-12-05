@@ -18,6 +18,7 @@ const RssWidget: FC<RssWidgetProps> = ({ config }) => {
   const maxItems = config.maxItems ?? 10;
   const showDescription = config.showDescription ?? true;
   const showDate = config.showDate ?? true;
+  const showImage = config.showImage ?? true;
   const autoRefresh = config.autoRefresh ?? 0;
 
   const { data: feed, isLoading, error } = useQuery({
@@ -90,7 +91,17 @@ const RssWidget: FC<RssWidgetProps> = ({ config }) => {
                 rel="noopener noreferrer"
                 className="block p-3 border dark:border-neutral-700 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors group"
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-3">
+                  {showImage && item.imageUrl && (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="w-20 h-20 object-cover rounded flex-shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm text-gray-900 dark:text-gray-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       {item.title}
@@ -185,6 +196,19 @@ export const RssWidgetConfigForm: FC<WidgetConfigFormProps<RssWidgetConfig>> = (
         </label>
       </div>
 
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="showImage"
+          checked={config.showImage ?? true}
+          onChange={(e) => onChange({ ...config, showImage: e.target.checked })}
+          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+        <label htmlFor="showImage" className="text-sm cursor-pointer">
+          {t('widgets.rss.config.showImage')}
+        </label>
+      </div>
+
       <div>
         <label className="block text-sm font-medium mb-2">
           {t('widgets.rss.config.autoRefresh')}
@@ -214,6 +238,7 @@ registerWidget({
     maxItems: 10,
     showDescription: true,
     showDate: true,
+    showImage: true,
     autoRefresh: 0,
   },
   Component: RssWidget,

@@ -96,6 +96,7 @@ export interface RssWidgetConfig {
   maxItems?: number; // Max items to display (default: 10)
   showDescription?: boolean; // Show item descriptions (default: true)
   showDate?: boolean; // Show publication date (default: true)
+  showImage?: boolean; // Show item images (default: true)
   autoRefresh?: number; // Auto-refresh interval in minutes (0 = disabled)
 }
 

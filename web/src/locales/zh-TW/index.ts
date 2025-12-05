@@ -486,6 +486,7 @@ export default {
         maxItems: "最多顯示項目數",
         showDescription: "顯示描述",
         showDate: "顯示發布日期",
+        showImage: "顯示圖片",
         autoRefresh: "自動更新間隔（分鐘）",
         autoRefreshHint: "設為 0 停用自動更新（最大值：1440 分鐘 / 24 小時）"
       }
