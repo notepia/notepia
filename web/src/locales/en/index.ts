@@ -461,7 +461,11 @@ export default {
       heatmap: "Note Heatmap",
       heatmapDesc: "Visualize note creation activity over time",
       rss: "RSS Feed",
-      rssDesc: "Display items from an RSS/Atom feed"
+      rssDesc: "Display items from an RSS/Atom feed",
+      music: "Music Player",
+      musicDesc: "Play audio files from your workspace",
+      video: "Video Player",
+      videoDesc: "Play video files from your workspace"
     },
     config: {
       defaultVisibility: "Default Visibility",
@@ -510,6 +514,33 @@ export default {
         showImage: "Show images",
         autoRefresh: "Auto-refresh interval (minutes)",
         autoRefreshHint: "Set to 0 to disable auto-refresh (maximum: 1440 minutes / 24 hours)"
+      }
+    },
+    music: {
+      noAudio: "No audio files added. Please configure audio files in widget settings.",
+      play: "Play",
+      pause: "Pause",
+      previous: "Previous",
+      next: "Next",
+      config: {
+        audioFiles: "Audio Files",
+        selectFromFiles: "Select from Files",
+        selectAudioFiles: "Select Audio Files",
+        noAudioFiles: "No audio files found",
+        trackNumber: "Track {{number}}"
+      }
+    },
+    video: {
+      noVideo: "No video files added. Please configure video files in widget settings.",
+      notSupported: "Your browser does not support the video tag.",
+      previous: "Previous",
+      next: "Next",
+      config: {
+        videoFiles: "Video Files",
+        selectFromFiles: "Select from Files",
+        selectVideoFiles: "Select Video Files",
+        noVideoFiles: "No video files found",
+        videoNumber: "Video {{number}}"
       }
     }
   },

@@ -1,4 +1,4 @@
-import { FC, useMemo, useRef, useEffect } from 'react';
+import { FC, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getNoteCountsByDate } from '@/api/stats';

@@ -1,5 +1,5 @@
 // Widget types
-export type WidgetType = 'note_form' | 'stats' | 'template_form' | 'view' | 'note' | 'latest_note' | 'countdown' | 'file_upload' | 'carousel' | 'heatmap' | 'rss';
+export type WidgetType = 'note_form' | 'stats' | 'template_form' | 'view' | 'note' | 'latest_note' | 'countdown' | 'file_upload' | 'carousel' | 'heatmap' | 'rss' | 'music' | 'video';
 
 // Widget position on dashboard
 export interface WidgetPosition {
@@ -100,6 +100,16 @@ export interface RssWidgetConfig {
   autoRefresh?: number; // Auto-refresh interval in minutes (0 = disabled)
 }
 
+// Music widget - for playing audio files
+export interface MusicWidgetConfig {
+  audioUrls?: string[]; // Array of audio file URLs
+}
+
+// Video widget - for playing video files
+export interface VideoWidgetConfig {
+  videoUrls?: string[]; // Array of video file URLs
+}
+
 // Request/Response types
 export interface CreateWidgetRequest {
   type: WidgetType;
@@ -126,6 +136,8 @@ export type WidgetConfigMap = {
   carousel: CarouselWidgetConfig;
   heatmap: HeatmapWidgetConfig;
   rss: RssWidgetConfig;
+  music: MusicWidgetConfig;
+  video: VideoWidgetConfig;
 };
 
 // Parsed widget with typed config

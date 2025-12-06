@@ -454,7 +454,11 @@ export default {
       heatmap: "筆記熱力圖",
       heatmapDesc: "視覺化顯示筆記建立活動",
       rss: "RSS 訂閱",
-      rssDesc: "顯示 RSS/Atom 訂閱內容"
+      rssDesc: "顯示 RSS/Atom 訂閱內容",
+      music: "音樂播放器",
+      musicDesc: "播放工作區中的音訊檔案",
+      video: "影片播放器",
+      videoDesc: "播放工作區中的影片檔案"
     },
     config: {
       defaultVisibility: "預設可見性",
@@ -503,6 +507,33 @@ export default {
         showImage: "顯示圖片",
         autoRefresh: "自動更新間隔（分鐘）",
         autoRefreshHint: "設為 0 停用自動更新（最大值：1440 分鐘 / 24 小時）"
+      }
+    },
+    music: {
+      noAudio: "尚未新增音訊檔案。請在小工具設定中設定音訊檔案。",
+      play: "播放",
+      pause: "暫停",
+      previous: "上一首",
+      next: "下一首",
+      config: {
+        audioFiles: "音訊檔案",
+        selectFromFiles: "從檔案選取",
+        selectAudioFiles: "選取音訊檔案",
+        noAudioFiles: "找不到音訊檔案",
+        trackNumber: "曲目 {{number}}"
+      }
+    },
+    video: {
+      noVideo: "尚未新增影片檔案。請在小工具設定中設定影片檔案。",
+      notSupported: "您的瀏覽器不支援影片標籤。",
+      previous: "上一部",
+      next: "下一部",
+      config: {
+        videoFiles: "影片檔案",
+        selectFromFiles: "從檔案選取",
+        selectVideoFiles: "選取影片檔案",
+        noVideoFiles: "找不到影片檔案",
+        videoNumber: "影片 {{number}}"
       }
     }
   },
