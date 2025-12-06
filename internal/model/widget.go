@@ -14,6 +14,8 @@ const (
 	WidgetTypeFileUpload   WidgetType = "file_upload"   // Widget for uploading files
 	WidgetTypeCarousel     WidgetType = "carousel"      // Widget for image carousel
 	WidgetTypeRSS          WidgetType = "rss"           // Widget for displaying RSS feeds
+	WidgetTypeMusic        WidgetType = "music"         // Widget for playing audio files
+	WidgetTypeVideo        WidgetType = "video"         // Widget for playing video files
 )
 
 type WidgetFilter struct {
