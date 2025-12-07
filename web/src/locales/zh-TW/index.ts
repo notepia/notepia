@@ -381,6 +381,8 @@ export default {
     noteNotFound: "找不到筆記",
     emptyNote: "此筆記為空",
     openNote: "開啟筆記",
+    saving: "儲存中...",
+    saved: "已儲存",
     countdown: {
       noTargetDate: "請設定倒數計時的目標日期",
       expired: "時間到！",

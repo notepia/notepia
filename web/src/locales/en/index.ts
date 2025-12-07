@@ -388,6 +388,8 @@ export default {
     noteNotFound: "Note not found",
     emptyNote: "This note is empty",
     openNote: "Open note",
+    saving: "Saving...",
+    saved: "Saved",
     countdown: {
       noTargetDate: "Please configure a target date for the countdown",
       expired: "Time's up!",

@@ -1,13 +1,13 @@
-import { FC, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { FC, useState, useCallback, useRef, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ExternalLink, User } from 'lucide-react';
-import { getNote, getNotes } from '@/api/note';
+import { Loader2, ExternalLink, User, Check, Loader } from 'lucide-react';
+import { getNote, getNotes, updateNote } from '@/api/note';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { NoteWidgetConfig } from '@/types/widget';
 import Widget from '@/components/widgets/Widget';
-import FullNote from '@/components/fullnote/FullNote';
+import Editor from '@/components/editor/Editor';
 import { extractTextFromTipTapJSON } from '@/utils/tiptap';
 import { registerWidget, WidgetProps, WidgetConfigFormProps } from '../widgetRegistry';
 
@@ -19,12 +19,55 @@ const NoteWidget: FC<NoteWidgetProps> = ({ config }) => {
   const { t } = useTranslation();
   const workspaceId = useCurrentWorkspaceId();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const { data: note, isLoading, error } = useQuery({
     queryKey: ['note', workspaceId, config.noteId],
     queryFn: () => getNote(workspaceId, config.noteId),
     enabled: !!workspaceId && !!config.noteId,
   });
+
+  const updateNoteMutation = useMutation({
+    mutationFn: (data: { content: string }) => {
+      return updateNote(workspaceId, {
+        id: config.noteId,
+        content: data.content,
+      });
+    },
+    onSuccess: () => {
+      setSaveStatus('saved');
+      queryClient.invalidateQueries({ queryKey: ['note', workspaceId, config.noteId] });
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    },
+    onError: () => {
+      setSaveStatus('idle');
+    },
+  });
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleNoteChange = useCallback((data: { content: string }) => {
+    // Clear existing timer
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    setSaveStatus('saving');
+
+    // Set new debounced save timer (1 second delay)
+    saveTimerRef.current = setTimeout(() => {
+      updateNoteMutation.mutate(data);
+    }, 1000);
+  }, [updateNoteMutation]);
 
   if (!config.noteId) {
     return (
@@ -78,8 +121,22 @@ const NoteWidget: FC<NoteWidgetProps> = ({ config }) => {
                 </div>
               )}
             </div>
-            
-            <div>
+
+            <div className="flex items-center gap-2">
+              {/* Save Status Indicator */}
+              {saveStatus === 'saving' && (
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <Loader className="animate-spin" size={12} />
+                  <span>{t('widgets.saving')}</span>
+                </div>
+              )}
+              {saveStatus === 'saved' && (
+                <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <Check size={12} />
+                  <span>{t('widgets.saved')}</span>
+                </div>
+              )}
+
               <button
                 onClick={handleOpenNote}
                 className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex-shrink-0"
@@ -90,7 +147,7 @@ const NoteWidget: FC<NoteWidgetProps> = ({ config }) => {
             </div>
           </div>
         )}
-        
+
         {/* Note Header */}
         <div className="px-4 flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -102,10 +159,10 @@ const NoteWidget: FC<NoteWidgetProps> = ({ config }) => {
           </div>
         </div>
 
-        {/* Note Content */}
+        {/* Note Content - Editable Editor */}
         {note.content && (
           <div className="flex-1 overflow-auto">
-            <FullNote note={note} />
+            <Editor note={note} onChange={handleNoteChange} />
           </div>
         )}
 
