@@ -540,7 +540,6 @@ export default {
     }
   },
   notes: {
-    titlePlaceholder: "筆記標題",
     contentPlaceholder: "開始撰寫...",
     quickCreate: "快速建立",
     createSuccess: "筆記建立成功",

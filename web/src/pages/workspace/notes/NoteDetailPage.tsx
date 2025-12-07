@@ -12,6 +12,7 @@ import { EllipsisIcon } from "lucide-react"
 
 const NoteDetailPage = () => {
     const [note, setNote] = useState<NoteData | null>(null)
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
     const currentWorkspaceId = useCurrentWorkspaceId()
     const { noteId } = useParams()
     const { t } = useTranslation()
@@ -27,10 +28,13 @@ const NoteDetailPage = () => {
     const updateNoteMutation = useMutation({
         mutationFn: (data: NoteData) => updateNote(currentWorkspaceId, data),
         onSuccess: () => {
+            setSaveStatus('saved')
             queryClient.invalidateQueries({ queryKey: ['note', currentWorkspaceId, noteId] })
             queryClient.invalidateQueries({ queryKey: ['notes', currentWorkspaceId] })
+            setTimeout(() => setSaveStatus('idle'), 2000)
         },
         onError: (error) => {
+            setSaveStatus('idle')
             toast.error(t("messages.saveNoteFailed"))
             console.error("Failed to save note:", error)
         }
@@ -50,6 +54,8 @@ const NoteDetailPage = () => {
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current)
         }
+
+        setSaveStatus('saving')
 
         // Set new timeout for auto-save (debounced by 1 second)
         saveTimeoutRef.current = setTimeout(() => {
@@ -81,6 +87,7 @@ const NoteDetailPage = () => {
                 note={note}
                 t={t}
                 handleNoteChange={handleNoteChange}
+                saveStatus={saveStatus}
             />
         </TwoColumn>
     )
@@ -90,9 +97,10 @@ interface NoteDetailContentProps {
     note: NoteData | null
     t: any
     handleNoteChange: (data: any) => void
+    saveStatus: 'idle' | 'saving' | 'saved'
 }
 
-const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChange }) => {
+const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChange, saveStatus }) => {
     const { toggleSidebar,isSidebarCollapsed } = useTwoColumn()
 
     return (
@@ -115,6 +123,7 @@ const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChan
                     }
                     isEditable={true}
                     onChange={handleNoteChange}
+                    saveStatus={saveStatus}
                 />
             </TwoColumnMain>
             <TwoColumnSidebar>

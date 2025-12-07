@@ -547,7 +547,6 @@ export default {
     }
   },
   notes: {
-    titlePlaceholder: "Note title",
     contentPlaceholder: "Start writing...",
     quickCreate: "Quick Create",
     createSuccess: "Note created successfully",
