@@ -104,10 +104,10 @@ const NoteWidget: FC<NoteWidgetProps> = ({ config }) => {
 
   return (
     <Widget withPadding={false}>
-      <div className="h-full flex flex-col overflow-auto py-4">
+      <div className="h-full flex flex-col overflow-auto p-4">
         {/* Metadata */}
         {config.showMetadata && (
-          <div className='flex justify-between px-4'>
+          <div className='flex justify-between'>
             <div className="flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400">
               {note.created_at && (
                 <div className="flex items-center gap-1">
@@ -149,7 +149,7 @@ const NoteWidget: FC<NoteWidgetProps> = ({ config }) => {
         )}
 
         {/* Note Header */}
-        <div className="px-4 flex items-start justify-between gap-2">
+        <div className=" flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             {note.title && (
               <div className="text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">

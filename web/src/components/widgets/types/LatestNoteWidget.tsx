@@ -116,10 +116,10 @@ const LatestNoteWidget: FC<LatestNoteWidgetProps> = ({ config }) => {
 
   return (
     <Widget withPadding={false}>
-      <div className="h-full flex flex-col overflow-auto py-4">
+      <div className="h-full flex flex-col overflow-auto p-4">
         {/* Metadata */}
         {showMetadata && (
-          <div className='flex justify-between px-4 mb-2'>
+          <div className='flex justify-between'>
             <div className="flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400">
               {latestNote.created_at && (
                 <div className="flex items-center gap-1">

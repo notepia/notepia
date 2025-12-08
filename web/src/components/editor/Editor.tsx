@@ -20,10 +20,11 @@ import { toast } from '@/stores/toast'
 
 interface Props {
   note: NoteData
+  canDrag?: boolean
   onChange?: (data: any) => void
 }
 
-const Editor: FC<Props> = ({ note, onChange }) => {
+const Editor: FC<Props> = ({ note, onChange, canDrag = true }) => {
   const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation("editor")
   const editor = useEditor({
@@ -206,7 +207,7 @@ const Editor: FC<Props> = ({ note, onChange }) => {
     ],
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl px-4 focus:outline-none',
+        class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl focus:outline-none',
       },
     },
     content: JSON.parse(note.content),
@@ -228,7 +229,7 @@ const Editor: FC<Props> = ({ note, onChange }) => {
 
   return (
     <EditorContext.Provider value={providerValue}>
-      {!isTouchDevice && <DragHandle editor={editor} className='border rounded shadow-sm p-1'>
+      {!isTouchDevice && canDrag && <DragHandle editor={editor} className='border rounded shadow-sm p-1'>
         <GripVertical size={12} />
       </DragHandle>}
 

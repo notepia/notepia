@@ -110,9 +110,11 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({ note, menu, isEditable = fals
                                             )}
                                         </div>
                                     </div>
-                                    {isEditable && onChange ?
-                                        <Editor key={note.id} note={note} onChange={onChange} />
-                                        : <FullNote note={note} />}
+                                    <div className="px-4">
+                                        {isEditable && onChange ?
+                                            <Editor key={note.id} note={note} onChange={onChange} />
+                                            : <FullNote note={note} />}
+                                    </div>
                                 </div>
                             </div>
                         </div>

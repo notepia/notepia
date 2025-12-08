@@ -92,11 +92,11 @@ svg.lucide-icon{
   @apply text-gray-400 dark:text-gray-600;
 }
 
-p[data-placeholder]:empty:before {
+p.is-empty:before {
   content: attr(data-placeholder);
   pointer-events: none;
 }
-p[data-placeholder]:empty:before {
+p.is-empty:before {
   @apply text-gray-400 dark:text-gray-600;
 }
 

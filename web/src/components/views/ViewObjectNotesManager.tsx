@@ -114,9 +114,9 @@ const ViewObjectNotesManager = ({
                         <Link
                             to={`/workspaces/${workspaceId}/notes/${note.id}`}
                             key={note.id}
-                            className="flex flex-col rounded shadow-sm group bg-white dark:bg-neutral-800 relative"
+                            className="flex flex-col gap-2 p-3 rounded shadow-sm group bg-white dark:bg-neutral-800 relative"
                         >
-                            <div className="flex justify-between p-4">
+                            <div className="flex justify-between">
                                 <div className="">
                                     <NoteTime time={note.created_at} />
                                 </div>
