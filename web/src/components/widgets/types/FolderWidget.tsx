@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Folder, FolderOpen, ChevronRight } from 'lucide-react';
+import { Folder } from 'lucide-react';
 import { FolderWidgetConfig } from '@/types/widget';
 import { WidgetProps, WidgetModule, WidgetConfigFormProps } from '../widgetRegistry';
 import { registerWidget } from '../widgetRegistry';
@@ -9,18 +9,11 @@ const FolderWidget: FC<WidgetProps> = ({ config }) => {
   const folderConfig = config as FolderWidgetConfig;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-4 cursor-pointer hover:shadow-lg transition-shadow">
-      <div className="flex flex-col items-center gap-3">
-        <div className="relative flex gap-2 items-center">
-          <Folder size={20}/>
-          <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            {folderConfig.name || 'Untitled Folder'}
-          </div>
-          {folderConfig.description && (
-            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {folderConfig.description}
-            </div>
-          )}
+    <div className="flex h-full p-4 cursor-pointer hover:shadow-lg transition-shadow">
+      <div className="relative flex gap-2 items-center text-left text-gray-600 dark:text-gray-400 ">
+        <Folder size={20} />
+        <div className="truncate">
+          {folderConfig.name || 'Untitled Folder'}
         </div>
       </div>
     </div>
@@ -46,16 +39,6 @@ const FolderWidgetConfigForm: FC<WidgetConfigFormProps<FolderWidgetConfig>> = ({
           placeholder="Enter folder name"
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium mb-2">Description (Optional)</label>
-        <textarea
-          value={config.description || ''}
-          onChange={(e) => onChange({ ...config, description: e.target.value })}
-          className="w-full px-3 py-2 border rounded-lg dark:bg-neutral-800 dark:border-neutral-700"
-          placeholder="Enter folder description"
-          rows={3}
-        />
-      </div>
     </div>
   );
 };
@@ -70,6 +53,8 @@ const folderWidgetModule: WidgetModule<FolderWidgetConfig> = {
   },
   Component: FolderWidget,
   ConfigForm: FolderWidgetConfigForm,
+  minWidth: 1,
+  minHeight: 1,
 };
 
 registerWidget(folderWidgetModule);

@@ -3,16 +3,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Responsive, WidthProvider, Layout, Layouts } from 'react-grid-layout';
-import { PlusCircle, Settings2, ChevronDown, Home } from 'lucide-react';
+import { PlusCircle, Settings2 } from 'lucide-react';
 import OneColumn from '@/components/onecolumn/OneColumn';
 import SidebarButton from '@/components/sidebar/SidebarButton';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
-import { getWidgets, updateWidget, deleteWidget, WidgetData, getWidget, getWidgetPath } from '@/api/widget';
+import { getWidgets, updateWidget, deleteWidget, WidgetData, getWidgetPath } from '@/api/widget';
 import { useToastStore } from '@/stores/toast';
 import WidgetRenderer from '@/components/widgets/WidgetRenderer';
 import AddWidgetDialog from '@/components/widgets/AddWidgetDialog';
 import EditWidgetDialog from '@/components/widgets/EditWidgetDialog';
 import { parseWidgetPosition, stringifyWidgetPosition, WidgetPosition, parseWidgetConfig, FolderWidgetConfig } from '@/types/widget';
+import { getWidget } from '@/components/widgets/widgetRegistry';
 
 import 'react-grid-layout/css/styles.css';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -84,14 +85,18 @@ const WorkspaceHomePage = () => {
   const layouts = useMemo((): Layouts => {
     const baseLayout: Layout[] = widgets.map((widget, index) => {
       const position = parseWidgetPosition(widget as any);
+      const widgetModule = getWidget(widget.type);
+
       return {
         i: widget.id!,
         x: position.x ?? (index % 3) * 4,
         y: position.y ?? Math.floor(index / 3) * 4,
         w: position.width ?? 4,
         h: position.height ?? 4,
-        minW: 2,
-        minH: 2,
+        minW: widgetModule?.minWidth ?? 2,
+        minH: widgetModule?.minHeight ?? 1,
+        maxW: position.maxWidth ?? widgetModule?.maxWidth,
+        maxH: position.maxHeight ?? widgetModule?.maxHeight,
       };
     });
 
@@ -374,7 +379,7 @@ const WorkspaceHomePage = () => {
               <ResponsiveGridLayout
                 className="layout"
                 layouts={layouts}
-                breakpoints={{ xl: 1400, lg: 1183, md: 983, sm: 640, xs: 480, xxs: 300 }}
+                breakpoints={{ xl: 1400, lg: 1183, md: 983, sm: 640, xs: 320, xxs: 200 }}
                 cols={{ xl: 10, lg: 8, md: 6, sm: 4, xs: 2, xxs: 1 }}
                 rowHeight={60}
                 containerPadding={[0, 0]}

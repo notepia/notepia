@@ -7,6 +7,8 @@ export interface WidgetPosition {
   y: number;
   width: number;
   height: number;
+  maxWidth?: number;
+  maxHeight?: number;
 }
 
 // Base widget interface
@@ -125,7 +127,6 @@ export interface IframeWidgetConfig {
 export interface FolderWidgetConfig {
   name: string; // Folder name
   icon?: string; // Optional icon name (lucide-react icon)
-  description?: string; // Optional description
 }
 
 // Request/Response types

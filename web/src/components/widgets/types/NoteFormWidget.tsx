@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Send } from 'lucide-react';
@@ -14,7 +14,7 @@ interface NoteFormWidgetProps extends WidgetProps {
   config: NoteFormWidgetConfig;
 }
 
-const NoteFormWidget: FC<NoteFormWidgetProps> = ({ config }) => {
+const NoteFormWidget: FC<NoteFormWidgetProps> = () => {
   const { t } = useTranslation();
   const workspaceId = useCurrentWorkspaceId();
   const queryClient = useQueryClient();

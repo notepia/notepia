@@ -37,6 +37,18 @@ export interface WidgetModule<T = any> {
 
   /** Configuration form component (optional) */
   ConfigForm?: FC<WidgetConfigFormProps<T>>;
+
+  /** Minimum width in grid units (default: 2) */
+  minWidth?: number;
+
+  /** Minimum height in grid units (default: 1) */
+  minHeight?: number;
+
+  /** Maximum width in grid units (optional) */
+  maxWidth?: number;
+
+  /** Maximum height in grid units (optional) */
+  maxHeight?: number;
 }
 
 /**
