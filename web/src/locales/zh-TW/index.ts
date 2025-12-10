@@ -24,11 +24,11 @@ export default {
     comfirmPassword: "再次輸入密碼",
   },
   pages: {
-    signin:{
-      "noAccount":"沒有帳號? 註冊"
+    signin: {
+      "noAccount": "沒有帳號? 註冊"
     },
-    signup:{
-      "alreadyHaveAccount":"已有帳號? 登入"
+    signup: {
+      "alreadyHaveAccount": "已有帳號? 登入"
     },
     settings: {
       workspaceSettings: "工作區設定",
@@ -137,7 +137,25 @@ export default {
     relatedViews: "相關視圖",
     all: "全部",
     views: "視圖",
-    noResults: "找不到結果"
+    noResults: "找不到結果",
+    bold: "粗體",
+    italic: "斜體",
+    underline: "底線",
+    strikethrough: "刪除線",
+    code: "行內程式碼",
+    heading: "標題",
+    bulletList: "項目符號清單",
+    orderedList: "編號清單",
+    blockquote: "引用",
+    codeBlock: "程式碼區塊",
+    link: "連結",
+    image: "圖片",
+    table: "表格",
+    deleteColumn: "刪除欄",
+    addColumn: "新增欄",
+    deleteRow: "刪除列",
+    addRow: "新增列",
+    deleteTable: "刪除表格"
   },
   visibility: {
     selectVisibility: "選擇可見性",
@@ -470,6 +488,7 @@ export default {
       defaultVisibility: "預設可見性",
       placeholder: "提示文字",
       placeholderHint: "表單為空時顯示的文字",
+      toolbar: "工具列選項",
       statType: "統計類型",
       noteCount: "筆記總數",
       recentNotes: "近期筆記",

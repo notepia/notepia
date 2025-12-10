@@ -31,6 +31,21 @@ export interface Widget {
 export interface NoteFormWidgetConfig {
   defaultTitle?: string;
   placeholder?: string;
+  toolbar?: {
+    showBold?: boolean;
+    showItalic?: boolean;
+    showUnderline?: boolean;
+    showStrike?: boolean;
+    showCode?: boolean;
+    showHeading?: boolean;
+    showBulletList?: boolean;
+    showOrderedList?: boolean;
+    showBlockquote?: boolean;
+    showCodeBlock?: boolean;
+    showLink?: boolean;
+    showImage?: boolean;
+    showTable?: boolean;
+  };
 }
 
 // Stats widget - for displaying statistics
