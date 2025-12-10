@@ -1,6 +1,6 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
 import { Loader2, FolderOpen, Upload, Trash2, Edit3 } from "lucide-react"
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { twMerge } from "tailwind-merge"
 import FilePickerDialog from "./FilePickerDialog"
 import { FileInfo } from "@/api/file"
@@ -11,8 +11,21 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttrib
     const [isPickerOpen, setIsPickerOpen] = useState(false)
     const [showActions, setShowActions] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
+    const wasEditableRef = useRef<boolean>(true)
     const { src, name } = node.attrs
     const isEditable = editor.isEditable
+
+    // When image is selected, disable editor to prevent keyboard from showing
+    useEffect(() => {
+        if (selected) {
+            wasEditableRef.current = editor.isEditable
+            editor.setEditable(false)
+        } else {
+            if (wasEditableRef.current) {
+                editor.setEditable(true)
+            }
+        }
+    }, [selected, editor])
 
     const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -115,6 +128,7 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttrib
                             "image-node select-none rounded box-border w-auto max-w-full"
                         )}
                         alt={name}
+                        draggable={false}
                     />
                 </PhotoView>
                 {isEditable && (showActions || selected) && (
