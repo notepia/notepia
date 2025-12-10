@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, AlertTriangle } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { IframeWidgetConfig } from '@/types/widget';
 import Widget from '@/components/widgets/Widget';
 import { registerWidget, WidgetProps, WidgetConfigFormProps } from '../widgetRegistry';

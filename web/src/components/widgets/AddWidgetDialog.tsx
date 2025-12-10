@@ -29,10 +29,15 @@ const AddWidgetDialog: FC<AddWidgetDialogProps> = ({ isOpen, onClose, parentId }
 
   const createMutation = useMutation({
     mutationFn: () => {
+      const widgetModule = getWidget(selectedType!);
+      const defaultWidth = widgetModule?.minWidth ?? 4;
+      const defaultHeight = widgetModule?.minHeight ?? 4;
+      const defaultSize = { x: 0, y: 0, width: defaultWidth, height: defaultHeight };
+
       return createWidget(workspaceId, {
         type: selectedType!,
         config: stringifyWidgetConfig(config),
-        position: stringifyWidgetPosition({ x: 0, y: 0, width: 4, height: 4 }),
+        position: stringifyWidgetPosition(defaultSize),
         parent_id: parentId || undefined,
       });
     },
