@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Send, Bold, Italic, Underline, Strikethrough, Code, Heading, List, ListOrdered, Quote, FileCode, Link, Image, Table, Trash2 } from 'lucide-react';
+import { Send, Bold, Italic, Underline, Strikethrough, Code, Heading, List, ListOrdered, Quote, FileCode, Table, Trash2 } from 'lucide-react';
 import { createNote, NoteData } from '@/api/note';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { useToastStore } from '@/stores/toast';

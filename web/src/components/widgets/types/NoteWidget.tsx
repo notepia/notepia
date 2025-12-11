@@ -2,14 +2,15 @@ import { FC, useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ExternalLink, User, Check, Loader } from 'lucide-react';
-import { getNote, getNotes, updateNote } from '@/api/note';
+import { Loader2, ExternalLink, User, Check, Loader, FileText } from 'lucide-react';
+import { getNote, getNotes, updateNote, createNote } from '@/api/note';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { NoteWidgetConfig } from '@/types/widget';
 import Widget from '@/components/widgets/Widget';
 import Editor from '@/components/editor/Editor';
-import { extractTextFromTipTapJSON } from '@/utils/tiptap';
 import { registerWidget, WidgetProps, WidgetConfigFormProps } from '../widgetRegistry';
+import { useToastStore } from '@/stores/toast';
+import NotePickerDialog from '../NotePickerDialog';
 
 interface NoteWidgetProps extends WidgetProps {
   config: NoteWidgetConfig;
@@ -183,7 +184,9 @@ export const NoteWidgetConfigForm: FC<WidgetConfigFormProps<NoteWidgetConfig>> =
 }) => {
   const { t } = useTranslation();
   const workspaceId = useCurrentWorkspaceId();
-  const [noteSearchQuery, setNoteSearchQuery] = useState('');
+  const queryClient = useQueryClient();
+  const { addToast } = useToastStore();
+  const [showNotePickerDialog, setShowNotePickerDialog] = useState(false);
 
   const { data: notes = [] } = useQuery({
     queryKey: ['notes', workspaceId, 'widget-config'],
@@ -191,57 +194,64 @@ export const NoteWidgetConfigForm: FC<WidgetConfigFormProps<NoteWidgetConfig>> =
     enabled: !!workspaceId,
   });
 
-  const filteredNotes = notes.filter((note: any) => {
-    if (!noteSearchQuery.trim()) return true;
-    const noteText = extractTextFromTipTapJSON(note.content || '').toLowerCase();
-    return noteText.includes(noteSearchQuery.toLowerCase());
+  const createNoteMutation = useMutation({
+    mutationFn: () => {
+      // Create an empty note with minimal content
+      const emptyContent = JSON.stringify({
+        type: 'doc',
+        content: [{ type: 'paragraph' }]
+      });
+      return createNote(workspaceId, {
+        content: emptyContent,
+        visibility: 'workspace',
+      });
+    },
+    onSuccess: (newNote) => {
+      queryClient.invalidateQueries({ queryKey: ['notes', workspaceId, 'widget-config'] });
+      addToast({ type: 'success', title: t('notes.createSuccess') });
+      // Automatically select the newly created note
+      onChange({ ...config, noteId: newNote.id });
+    },
+    onError: () => {
+      addToast({ type: 'error', title: t('notes.createError') });
+    },
   });
+
+  const handleCreateNote = () => {
+    createNoteMutation.mutate();
+  };
+
+  const handleNoteSelect = (noteId: string) => {
+    onChange({ ...config, noteId });
+  };
 
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-2">{t('widgets.config.selectNote')}</label>
-        <input
-          type="text"
-          value={noteSearchQuery}
-          onChange={(e) => setNoteSearchQuery(e.target.value)}
-          placeholder={t('views.searchNotes')}
-          className="w-full px-3 py-2 mb-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
-        />
-        <div className="border dark:border-neutral-600 rounded-lg max-h-60 overflow-y-auto">
-          {filteredNotes.length > 0 ? (
-            filteredNotes.map((note: any) => {
-              const noteText = note.content ? extractTextFromTipTapJSON(note.content).slice(0, 80) : t('notes.untitled');
-              const isSelected = config.noteId === note.id;
+        <div className="space-y-2">
+          {/* Single Action Button */}
+          <button
+            type="button"
+            onClick={() => setShowNotePickerDialog(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 border rounded-lg"
+          >
+            <FileText size={18} />
+            <span className="text-sm font-medium">
+              {config.noteId ? t('widgets.config.changeNote') : t('widgets.config.selectNote')}
+            </span>
+          </button>
 
-              return (
-                <button
-                  key={note.id}
-                  type="button"
-                  onClick={() => onChange({ ...config, noteId: note.id })}
-                  className={`w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-neutral-700 border-b dark:border-neutral-700 last:border-b-0 transition-colors ${
-                    isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
-                  }`}
-                >
-                  <div className="text-sm truncate">{noteText}</div>
-                </button>
-              );
-            })
-          ) : (
-            <div className="px-3 py-4 text-center text-sm text-gray-500">
-              {noteSearchQuery.trim() ? t('views.noNotesFound') : t('widgets.config.selectNotePlaceholder')}
-            </div>
-          )}
+          {/* Note Picker Dialog */}
+          <NotePickerDialog
+            open={showNotePickerDialog}
+            onOpenChange={setShowNotePickerDialog}
+            notes={notes}
+            selectedNoteId={config.noteId}
+            onSelect={handleNoteSelect}
+            onCreateNote={handleCreateNote}
+            isCreatingNote={createNoteMutation.isPending}
+          />
         </div>
-        {config.noteId && (
-          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            {t('widgets.config.selectedNote')}: {
-              extractTextFromTipTapJSON(
-                notes.find((n: any) => n.id === config.noteId)?.content || ''
-              ).slice(0, 50) || t('notes.untitled')
-            }
-          </div>
-        )}
       </div>
       <div className="flex items-center gap-2">
         <input

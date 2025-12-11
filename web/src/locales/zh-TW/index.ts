@@ -511,7 +511,10 @@ export default {
       filterVisibility: "按可見性篩選",
       all: "全部",
       selectNote: "選擇筆記",
+      changeNote: "更改筆記",
       selectNotePlaceholder: "選擇一個筆記...",
+      clickToSelectNote: "點擊選擇筆記",
+      clickToChange: "點擊更改",
       showMetadata: "顯示元資料",
       showFullContent: "顯示完整內容",
       selectedNote: "已選擇",
@@ -622,6 +625,8 @@ export default {
   notes: {
     contentPlaceholder: "開始撰寫...",
     quickCreate: "快速建立",
+    createNew: "新增筆記",
+    create: "建立筆記",
     createSuccess: "筆記建立成功",
     createError: "筆記建立失敗",
     untitled: "無標題"

@@ -518,7 +518,10 @@ export default {
       filterVisibility: "Filter by Visibility",
       all: "All",
       selectNote: "Select Note",
+      changeNote: "Change Note",
       selectNotePlaceholder: "Choose a note...",
+      clickToSelectNote: "Click to select a note",
+      clickToChange: "Click to change",
       showMetadata: "Show Metadata",
       showFullContent: "Show Full Content",
       selectedNote: "Selected",
@@ -629,6 +632,8 @@ export default {
   notes: {
     contentPlaceholder: "Start writing...",
     quickCreate: "Quick Create",
+    createNew: "Create New",
+    create: "Create Note",
     createSuccess: "Note created successfully",
     createError: "Failed to create note",
     untitled: "Untitled"
