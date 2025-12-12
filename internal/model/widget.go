@@ -5,7 +5,6 @@ type WidgetType string
 
 const (
 	WidgetTypeNoteForm     WidgetType = "note_form"     // Widget for creating/editing notes
-	WidgetTypeStats        WidgetType = "stats"         // Widget for displaying statistics
 	WidgetTypeTemplateForm WidgetType = "template_form" // Widget for generating content from templates
 	WidgetTypeView         WidgetType = "view"          // Widget for displaying a view
 	WidgetTypeNoteList     WidgetType = "note_list"     // Widget for displaying notes with conditions
@@ -18,6 +17,7 @@ const (
 	WidgetTypeVideo        WidgetType = "video"         // Widget for playing video files
 	WidgetTypeIframe       WidgetType = "iframe"        // Widget for embedding external web pages
 	WidgetTypeFolder       WidgetType = "folder"        // Widget for organizing widgets in a folder
+	WidgetTypeLink         WidgetType = "link"          // Widget for displaying a clickable link
 )
 
 type WidgetFilter struct {
