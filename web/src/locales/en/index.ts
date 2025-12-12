@@ -461,8 +461,6 @@ export default {
     types: {
       noteForm: "Quick Note",
       noteFormDesc: "Quickly create notes from your dashboard",
-      stats: "Statistics",
-      statsDesc: "Display workspace statistics",
       templateForm: "AI Generator",
       templateFormDesc: "Generate content with AI",
       view: "View",
@@ -490,7 +488,9 @@ export default {
       iframe: "Web Page",
       iframeDesc: "Embed external web pages or services",
       folder: "Folder",
-      folderDesc: "Organize widgets in a hierarchical folder structure"
+      folderDesc: "Organize widgets in a hierarchical folder structure",
+      link: "Link",
+      linkDesc: "Display a clickable link"
     },
     config: {
       defaultVisibility: "Default Visibility",
@@ -528,7 +528,11 @@ export default {
       selectedNote: "Selected",
       dayCount: "Number of Days",
       dayCountHint: "Number of days to display (30-365)",
-      showLegend: "Show Color Legend"
+      showLegend: "Show Color Legend",
+      url: "URL",
+      linkName: "Link Name",
+      linkNamePlaceholder: "Optional display name",
+      noUrlProvided: "No URL provided. Please configure a URL in widget settings."
     },
     rss: {
       noFeedUrl: "Please configure an RSS feed URL",

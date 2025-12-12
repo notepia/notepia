@@ -7,7 +7,6 @@
 
 // Import all widgets to trigger their registration
 import './NoteFormWidget';
-import './StatsWidget';
 import './TemplateFormWidget';
 import './ViewWidget';
 import './NoteWidget';
@@ -21,10 +20,10 @@ import './MusicWidget';
 import './VideoWidget';
 import './IframeWidget';
 import './FolderWidget';
+import './LinkWidget';
 
 // Re-export for convenience
 export { default as NoteFormWidget } from './NoteFormWidget';
-export { default as StatsWidget } from './StatsWidget';
 export { default as TemplateFormWidget } from './TemplateFormWidget';
 export { default as ViewWidget } from './ViewWidget';
 export { default as NoteWidget } from './NoteWidget';
@@ -38,3 +37,4 @@ export { default as MusicWidget } from './MusicWidget';
 export { default as VideoWidget } from './VideoWidget';
 export { default as IframeWidget } from './IframeWidget';
 export { default as FolderWidget } from './FolderWidget';
+export { default as LinkWidget } from './LinkWidget';

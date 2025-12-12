@@ -1,5 +1,5 @@
 // Widget types
-export type WidgetType = 'note_form' | 'stats' | 'template_form' | 'view' | 'note' | 'latest_note' | 'countdown' | 'file_upload' | 'carousel' | 'heatmap' | 'rss' | 'music' | 'video' | 'iframe' | 'folder';
+export type WidgetType = 'note_form' | 'template_form' | 'view' | 'note' | 'latest_note' | 'countdown' | 'file_upload' | 'carousel' | 'heatmap' | 'rss' | 'music' | 'video' | 'iframe' | 'folder' | 'link';
 
 // Widget position on dashboard
 export interface WidgetPosition {
@@ -46,13 +46,6 @@ export interface NoteFormWidgetConfig {
     showImage?: boolean;
     showTable?: boolean;
   };
-}
-
-// Stats widget - for displaying statistics
-export interface StatsWidgetConfig {
-  statType: 'note_count' | 'recent_notes' | 'note_by_visibility' | 'custom';
-  dateRange?: 'day' | 'week' | 'month' | 'year' | 'all';
-  customQuery?: string;
 }
 
 // Template form widget - for generating content from templates
@@ -144,6 +137,12 @@ export interface FolderWidgetConfig {
   icon?: string; // Optional icon name (lucide-react icon)
 }
 
+// Link widget - for displaying a clickable link
+export interface LinkWidgetConfig {
+  url: string; // URL to link to
+  name?: string; // Optional display name for the link
+}
+
 // Request/Response types
 export interface CreateWidgetRequest {
   type: WidgetType;
@@ -162,7 +161,6 @@ export interface UpdateWidgetRequest {
 // Helper type to get the config type for a given widget type
 export type WidgetConfigMap = {
   note_form: NoteFormWidgetConfig;
-  stats: StatsWidgetConfig;
   template_form: TemplateFormWidgetConfig;
   view: ViewWidgetConfig;
   note: NoteWidgetConfig;
@@ -176,6 +174,7 @@ export type WidgetConfigMap = {
   video: VideoWidgetConfig;
   iframe: IframeWidgetConfig;
   folder: FolderWidgetConfig;
+  link: LinkWidgetConfig;
 };
 
 // Parsed widget with typed config

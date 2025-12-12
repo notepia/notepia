@@ -454,8 +454,6 @@ export default {
     types: {
       noteForm: "快速筆記",
       noteFormDesc: "從儀表板快速建立筆記",
-      stats: "統計資料",
-      statsDesc: "顯示工作區統計資料",
       templateForm: "AI 生成器",
       templateFormDesc: "使用 AI 生成內容",
       view: "視圖",
@@ -483,7 +481,9 @@ export default {
       iframe: "網頁嵌入",
       iframeDesc: "嵌入外部網頁或服務",
       folder: "資料夾",
-      folderDesc: "用資料夾階層結構組織小工具"
+      folderDesc: "用資料夾階層結構組織小工具",
+      link: "連結",
+      linkDesc: "顯示可點擊的連結"
     },
     config: {
       defaultVisibility: "預設可見性",
@@ -521,7 +521,11 @@ export default {
       selectedNote: "已選擇",
       dayCount: "天數",
       dayCountHint: "顯示的天數（30-365）",
-      showLegend: "顯示顏色圖例"
+      showLegend: "顯示顏色圖例",
+      url: "網址",
+      linkName: "連結名稱",
+      linkNamePlaceholder: "選填顯示名稱",
+      noUrlProvided: "未提供網址。請在小工具設定中配置網址。"
     },
     rss: {
       noFeedUrl: "請設定 RSS 訂閱網址",
