@@ -90,6 +90,13 @@ func (h *Handler) SignIn(c echo.Context) error {
 		})
 	}
 
+	// Check if user account is disabled
+	if existingUser.Disabled {
+		return c.JSON(http.StatusForbidden, map[string]string{
+			"error": "Account has been disabled",
+		})
+	}
+
 	cookie, err := auth.CreateUserCookie(existingUser)
 
 	if err != nil {

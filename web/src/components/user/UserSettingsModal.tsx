@@ -6,9 +6,10 @@ import { toast } from "@/stores/toast"
 import { useState, useEffect } from "react"
 import { updatePreferences } from "@/api/user"
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, CreateAPIKeyRequest } from "@/api/apikey"
+import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import Card from "@/components/card/Card"
 import Select from "@/components/select/Select"
-import { Trash2, Plus, Copy, AlertTriangle } from "lucide-react"
+import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck } from "lucide-react"
 
 interface UserSettingsModalProps {
     open: boolean
@@ -21,7 +22,8 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const { theme, setTheme } = useTheme()!
 
     // Tab state
-    const [activeTab, setActiveTab] = useState<'preferences' | 'apiKeys'>('preferences')
+    const [activeTab, setActiveTab] = useState<'preferences' | 'apiKeys' | 'users'>('preferences')
+    const isOwner = user?.role === 'owner'
 
     // Preferences state
     const themes: Theme[] = ["light", "dark"]
@@ -34,6 +36,24 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const [newKeyName, setNewKeyName] = useState("")
     const [newKeyExpiresAt, setNewKeyExpiresAt] = useState("")
     const [createdKey, setCreatedKey] = useState<string | null>(null)
+
+    // User Management state
+    const [users, setUsers] = useState<AdminUser[]>([])
+    const [usersLoading, setUsersLoading] = useState(false)
+    const [showUserDialog, setShowUserDialog] = useState(false)
+    const [userFormData, setUserFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        role: "user"
+    })
+    const [showPasswordDialog, setShowPasswordDialog] = useState(false)
+    const [passwordFormData, setPasswordFormData] = useState({
+        userId: "",
+        newPassword: "",
+        confirmPassword: ""
+    })
 
     // Preferences handlers
     const handleSelectedLangChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -132,6 +152,126 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
         return new Date(expiresAt) < new Date()
     }
 
+    // User Management handlers
+    const loadUsers = async () => {
+        if (!isOwner) return
+
+        setUsersLoading(true)
+        try {
+            const usersList = await listUsers()
+            setUsers(usersList)
+        } catch (err) {
+            toast.error(t("messages.userLoadFailed"))
+        } finally {
+            setUsersLoading(false)
+        }
+    }
+
+    const handleCreateUser = async () => {
+        if (!userFormData.name.trim()) {
+            toast.error(t("messages.userNameRequired"))
+            return
+        }
+        if (!userFormData.email.trim()) {
+            toast.error(t("messages.userEmailRequired"))
+            return
+        }
+        if (!userFormData.password) {
+            toast.error(t("messages.userPasswordRequired"))
+            return
+        }
+        if (userFormData.password !== userFormData.confirmPassword) {
+            toast.error(t("messages.passwordMismatch"))
+            return
+        }
+
+        try {
+            const request: CreateUserRequest = {
+                name: userFormData.name.trim(),
+                email: userFormData.email.trim(),
+                password: userFormData.password,
+                role: userFormData.role
+            }
+            await createUser(request)
+            setUserFormData({ name: "", email: "", password: "", confirmPassword: "", role: "user" })
+            setShowUserDialog(false)
+            await loadUsers()
+            toast.success(t("messages.userCreated"))
+        } catch (err) {
+            toast.error(t("messages.userCreateFailed"))
+        }
+    }
+
+    const handleDeleteUser = async (userId: string) => {
+        if (!confirm(t("pages.preferences.deleteUserConfirm"))) {
+            return
+        }
+
+        try {
+            await deleteUser(userId)
+            await loadUsers()
+            toast.success(t("messages.userDeleted"))
+        } catch (err) {
+            toast.error(t("messages.userDeleteFailed"))
+        }
+    }
+
+    const handleDisableUser = async (userId: string) => {
+        if (!confirm(t("pages.preferences.disableUserConfirm"))) {
+            return
+        }
+
+        try {
+            await disableUser(userId)
+            await loadUsers()
+            toast.success(t("messages.userDisabled"))
+        } catch (err) {
+            toast.error(t("messages.userUpdateFailed"))
+        }
+    }
+
+    const handleEnableUser = async (userId: string) => {
+        if (!confirm(t("pages.preferences.enableUserConfirm"))) {
+            return
+        }
+
+        try {
+            await enableUser(userId)
+            await loadUsers()
+            toast.success(t("messages.userEnabled"))
+        } catch (err) {
+            toast.error(t("messages.userUpdateFailed"))
+        }
+    }
+
+    const handleChangePassword = async () => {
+        if (!passwordFormData.newPassword) {
+            toast.error(t("messages.userPasswordRequired"))
+            return
+        }
+        if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
+            toast.error(t("messages.passwordMismatch"))
+            return
+        }
+
+        try {
+            const request: UpdateUserPasswordRequest = {
+                password: passwordFormData.newPassword
+            }
+            await updateUserPassword(passwordFormData.userId, request)
+            setPasswordFormData({ userId: "", newPassword: "", confirmPassword: "" })
+            setShowPasswordDialog(false)
+            toast.success(t("messages.userUpdated"))
+        } catch (err) {
+            toast.error(t("messages.userUpdateFailed"))
+        }
+    }
+
+    const openPasswordDialog = (userId: string) => {
+        setPasswordFormData({ userId, newPassword: "", confirmPassword: "" })
+        setShowPasswordDialog(true)
+    }
+
     useEffect(() => {
         if (!user || !open) return
         savePreferences()
@@ -141,7 +281,10 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
         if (open && activeTab === 'apiKeys') {
             loadAPIKeys()
         }
-    }, [open, activeTab])
+        if (open && activeTab === 'users' && isOwner) {
+            loadUsers()
+        }
+    }, [open, activeTab, isOwner])
 
     return (
         <>
@@ -175,6 +318,18 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             >
                                 {t("pages.preferences.apiKeys")}
                             </button>
+                            {isOwner && (
+                                <button
+                                    onClick={() => setActiveTab('users')}
+                                    className={`px-4 py-2 font-medium transition-colors ${
+                                        activeTab === 'users'
+                                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    {t("pages.preferences.userManagement")}
+                                </button>
+                            )}
                         </div>
 
                         <div className="space-y-4 overflow-y-auto flex-1">
@@ -281,6 +436,103 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     )}
                                 </div>
                             )}
+
+                            {/* Users Tab */}
+                            {activeTab === 'users' && isOwner && (
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {t("pages.preferences.userList")}
+                                        </p>
+                                        <button
+                                            onClick={() => setShowUserDialog(true)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                        >
+                                            <Plus size={16} />
+                                            {t("pages.preferences.createUser")}
+                                        </button>
+                                    </div>
+
+                                    {usersLoading ? (
+                                        <div className="text-center py-8">{t("common.loading")}</div>
+                                    ) : users.length === 0 ? (
+                                        <Card className="p-8 text-center text-gray-500">
+                                            {t("pages.preferences.noUsers")}
+                                        </Card>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {users.map((u) => (
+                                                <Card key={u.id} className="p-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <h3 className="font-semibold">{u.name}</h3>
+                                                                <span className={`text-xs px-2 py-1 rounded ${
+                                                                    u.role === 'owner'
+                                                                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+                                                                        : u.role === 'admin'
+                                                                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                                                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                                                                }`}>
+                                                                    {u.role === 'owner' && t("pages.preferences.roleOwner")}
+                                                                    {u.role === 'admin' && t("pages.preferences.roleAdmin")}
+                                                                    {u.role === 'user' && t("pages.preferences.roleUser")}
+                                                                </span>
+                                                                {u.disabled && (
+                                                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                                                                        {t("pages.preferences.disabled")}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                                {u.email}
+                                                            </p>
+                                                            <div className="text-xs text-gray-500 mt-1">
+                                                                <span>{t("pages.preferences.created")}: {formatDate(u.created_at)}</span>
+                                                            </div>
+                                                        </div>
+                                                        {u.role !== 'owner' && (
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => openPasswordDialog(u.id)}
+                                                                    className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                                                                    title={t("pages.preferences.changePassword")}
+                                                                >
+                                                                    <Edit size={18} />
+                                                                </button>
+                                                                {u.disabled ? (
+                                                                    <button
+                                                                        onClick={() => handleEnableUser(u.id)}
+                                                                        className="p-2 text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+                                                                        title={t("pages.preferences.enableUser")}
+                                                                    >
+                                                                        <UserCheck size={18} />
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => handleDisableUser(u.id)}
+                                                                        className="p-2 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded transition-colors"
+                                                                        title={t("pages.preferences.disableUser")}
+                                                                    >
+                                                                        <UserX size={18} />
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleDeleteUser(u.id)}
+                                                                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                                                    title={t("actions.delete")}
+                                                                >
+                                                                    <Trash2 size={18} />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </Dialog.Content>
                 </Dialog.Portal>
@@ -376,6 +628,147 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                 </div>
                             </div>
                         )}
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+
+            {/* Create User Dialog */}
+            <Dialog.Root open={showUserDialog} onOpenChange={setShowUserDialog}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[1002]" />
+                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[500px] z-[1003]">
+                        <Dialog.Title className="text-xl font-semibold mb-4">
+                            {t("pages.preferences.createUser")}
+                        </Dialog.Title>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">{t("pages.preferences.userName")}</label>
+                                <input
+                                    type="text"
+                                    value={userFormData.name}
+                                    onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
+                                    placeholder={t("form.username")}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">{t("pages.preferences.userEmail")}</label>
+                                <input
+                                    type="email"
+                                    value={userFormData.email}
+                                    onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
+                                    placeholder={t("form.email")}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">{t("form.password")}</label>
+                                <input
+                                    type="password"
+                                    value={userFormData.password}
+                                    onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
+                                    placeholder={t("form.password")}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">{t("form.comfirmPassword")}</label>
+                                <input
+                                    type="password"
+                                    value={userFormData.confirmPassword}
+                                    onChange={(e) => setUserFormData({ ...userFormData, confirmPassword: e.target.value })}
+                                    placeholder={t("form.comfirmPassword")}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">{t("pages.preferences.userRole")}</label>
+                                <Select
+                                    value={userFormData.role}
+                                    onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
+                                >
+                                    <option value="user">{t("pages.preferences.roleUser")}</option>
+                                    <option value="admin">{t("pages.preferences.roleAdmin")}</option>
+                                </Select>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleCreateUser}
+                                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                >
+                                    {t("actions.create")}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowUserDialog(false)
+                                        setUserFormData({ name: "", email: "", password: "", confirmPassword: "", role: "user" })
+                                    }}
+                                    className="px-4 py-2 bg-gray-200 dark:bg-neutral-700 rounded-md hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors"
+                                >
+                                    {t("actions.cancel")}
+                                </button>
+                            </div>
+                        </div>
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+
+            {/* Change Password Dialog */}
+            <Dialog.Root open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[1002]" />
+                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[500px] z-[1003]">
+                        <Dialog.Title className="text-xl font-semibold mb-4">
+                            {t("pages.preferences.changePassword")}
+                        </Dialog.Title>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">{t("pages.preferences.newPassword")}</label>
+                                <input
+                                    type="password"
+                                    value={passwordFormData.newPassword}
+                                    onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
+                                    placeholder={t("pages.preferences.newPassword")}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">{t("pages.preferences.confirmNewPassword")}</label>
+                                <input
+                                    type="password"
+                                    value={passwordFormData.confirmPassword}
+                                    onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                                    placeholder={t("pages.preferences.confirmNewPassword")}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                />
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleChangePassword}
+                                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                >
+                                    {t("actions.save")}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowPasswordDialog(false)
+                                        setPasswordFormData({ userId: "", newPassword: "", confirmPassword: "" })
+                                    }}
+                                    className="px-4 py-2 bg-gray-200 dark:bg-neutral-700 rounded-md hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors"
+                                >
+                                    {t("actions.cancel")}
+                                </button>
+                            </div>
+                        </div>
                     </Dialog.Content>
                 </Dialog.Portal>
             </Dialog.Root>

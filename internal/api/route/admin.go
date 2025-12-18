@@ -9,6 +9,7 @@ import (
 
 func RegisterAdmin(api *echo.Group, h handler.Handler, authMiddleware middlewares.AuthMiddleware) {
 	g := api.Group("/admin")
+	g.Use(authMiddleware.ParseJWT())
 	g.Use(authMiddleware.RequireOwnerOrAdmin())
 	g.GET("/users", h.ListUsers)
 	g.POST("/users", h.CreateUser)
@@ -16,5 +17,6 @@ func RegisterAdmin(api *echo.Group, h handler.Handler, authMiddleware middleware
 	g.PUT("/users/:id/role", h.UpdateUserRole)
 	g.PUT("/users/:id/disable", h.DisableUser)
 	g.PUT("/users/:id/enable", h.EnableUser)
+	g.DELETE("/users/:id", h.DeleteUser)
 
 }

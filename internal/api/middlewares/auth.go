@@ -7,6 +7,7 @@ import (
 
 	"github.com/notepia/notepia/internal/api/auth"
 	"github.com/notepia/notepia/internal/db"
+	"github.com/notepia/notepia/internal/model"
 	"github.com/notepia/notepia/internal/util"
 
 	"github.com/labstack/echo/v4"
@@ -92,7 +93,18 @@ func (a AuthMiddleware) ParseJWT() echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
 			}
 
-			c.Set("user", *user)
+			// Load full user information from database including role
+			fullUser, err := a.db.FindUserByID(user.ID)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusUnauthorized, "user not found")
+			}
+
+			// Check if user is disabled
+			if fullUser.Disabled {
+				return echo.NewHTTPError(http.StatusUnauthorized, "user account disabled")
+			}
+
+			c.Set("user", fullUser)
 
 			return next(c)
 		}
@@ -114,13 +126,18 @@ func (a AuthMiddleware) CheckJWT() echo.MiddlewareFunc {
 func (a AuthMiddleware) RequireOwnerOrAdmin() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) (returnErr error) {
-			role := c.Get("role").(string)
-
-			if role == "" {
-				return c.JSON(http.StatusUnauthorized, "please login")
+			userInterface := c.Get("user")
+			if userInterface == nil {
+				return echo.NewHTTPError(http.StatusUnauthorized, "please login")
 			}
-			if role != "owner" && role != "admin" {
-				return c.JSON(http.StatusForbidden, "insufficient permissions")
+
+			user, ok := userInterface.(model.User)
+			if !ok {
+				return echo.NewHTTPError(http.StatusUnauthorized, "invalid user context")
+			}
+
+			if user.Role != "owner" && user.Role != "admin" {
+				return echo.NewHTTPError(http.StatusForbidden, "insufficient permissions")
 			}
 
 			return next(c)

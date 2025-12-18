@@ -29,6 +29,7 @@ type UserRepository interface {
 	FindUsers(f model.UserFilter) ([]model.User, error)
 	FindUserByID(id string) (model.User, error)
 	UpdateUser(u model.User) error
+	UpdateUserWithDisabled(u model.User) error
 	DeleteUser(id string) error
 }
 type NoteRepository interface {

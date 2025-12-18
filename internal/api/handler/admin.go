@@ -47,7 +47,7 @@ func (h Handler) CreateUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if model.IsValidRole(req.Role) || req.Role == model.RoleOwner {
+	if !model.IsValidRole(req.Role) || req.Role == model.RoleOwner {
 		return echo.NewHTTPError(http.StatusBadRequest, "role is invalid")
 	}
 
@@ -84,7 +84,7 @@ func (h Handler) UpdateUserRole(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if model.IsValidRole(req.Role) || req.Role == model.RoleOwner {
+	if !model.IsValidRole(req.Role) || req.Role == model.RoleOwner {
 		return echo.NewHTTPError(http.StatusBadRequest, "role is invalid")
 	}
 
@@ -93,7 +93,7 @@ func (h Handler) UpdateUserRole(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "failed to get user by id")
 	}
 
-	if user.ID == model.RoleOwner {
+	if user.Role == model.RoleOwner {
 		return c.JSON(http.StatusForbidden, "Cannot update owner.")
 	}
 
@@ -128,7 +128,7 @@ func (h Handler) UpdateUserPassword(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "failed to get user by id")
 	}
 
-	if user.ID == model.RoleOwner {
+	if user.Role == model.RoleOwner {
 		return c.JSON(http.StatusForbidden, "Cannot update owner.")
 	}
 
@@ -164,7 +164,7 @@ func (h Handler) DisableUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "failed to get user by id")
 	}
 
-	if user.ID == model.RoleOwner {
+	if user.Role == model.RoleOwner {
 		return c.JSON(http.StatusForbidden, "Cannot update owner.")
 	}
 
@@ -175,8 +175,10 @@ func (h Handler) DisableUser(c echo.Context) error {
 	}
 
 	user.Disabled = true
+	user.UpdatedBy = u.ID
+	user.UpdatedAt = time.Now().UTC().String()
 
-	if err := h.db.UpdateUser(user); err != nil {
+	if err := h.db.UpdateUserWithDisabled(user); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -194,7 +196,7 @@ func (h Handler) EnableUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "failed to get user by id")
 	}
 
-	if user.ID == model.RoleOwner {
+	if user.Role == model.RoleOwner {
 		return c.JSON(http.StatusForbidden, "Cannot update owner.")
 	}
 
@@ -205,8 +207,10 @@ func (h Handler) EnableUser(c echo.Context) error {
 	}
 
 	user.Disabled = false
+	user.UpdatedBy = u.ID
+	user.UpdatedAt = time.Now().UTC().String()
 
-	if err := h.db.UpdateUser(user); err != nil {
+	if err := h.db.UpdateUserWithDisabled(user); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -223,7 +227,7 @@ func (h Handler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "failed to get user by id")
 	}
 
-	if user.ID == model.RoleOwner {
+	if user.Role == model.RoleOwner {
 		return c.JSON(http.StatusForbidden, "Cannot remove owner.")
 	}
 

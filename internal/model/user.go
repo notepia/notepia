@@ -10,7 +10,7 @@ type User struct {
 	ID           string `json:"id"`
 	Email        string `json:"email"`
 	Name         string `json:"name"`
-	PasswordHash string `json:"password_hash"`
+	PasswordHash string `json:"-"`
 	Role         string `json:"role"`
 	AvatarUrl    string `json:"avatar_url"`
 	Disabled     bool   `json:"disabled"`
