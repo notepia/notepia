@@ -21,9 +21,14 @@ const SignIn: React.FC = () => {
             console.log('Sign in successful:', data);
             navigate('/')
         },
-        onError: (error) => {
+        onError: (error: any) => {
             console.log(error)
-            toast.error(t("messages.signInFailed"));
+            const errorMessage = error?.response?.data?.error || '';
+            if (errorMessage.toLowerCase().includes('disabled')) {
+                toast.error(t("messages.accountDisabled"));
+            } else {
+                toast.error(t("messages.signInFailed"));
+            }
         },
     });
 

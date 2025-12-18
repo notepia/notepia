@@ -4,6 +4,7 @@ import './index.css'
 import 'react-photo-view/dist/react-photo-view.css';
 import 'leaflet/dist/leaflet.css';
 import './i18n'
+import './lib/axios'
 import { Toast, Tooltip } from "radix-ui";
 import App from './App.tsx'
 import { SidebarProvider } from './components/sidebar/SidebarProvider.tsx';

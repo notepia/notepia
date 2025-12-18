@@ -66,4 +66,10 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 
 	// Stats
 	g.GET("/:workspaceId/stats/note-counts-by-date", h.GetNoteCountsByDate)
+
+	// Workspace Members
+	g.GET("/:workspaceId/members", h.GetWorkspaceMembers)
+	g.POST("/:workspaceId/members", h.InviteMember)
+	g.PATCH("/:workspaceId/members/:userId/role", h.UpdateMemberRole)
+	g.DELETE("/:workspaceId/members/:userId", h.RemoveMember)
 }
