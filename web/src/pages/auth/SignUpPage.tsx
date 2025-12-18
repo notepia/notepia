@@ -103,7 +103,7 @@ const SignUp: React.FC = () => {
             </SubmitButton>
             <Link
               to="/signin"
-              className="inline-block align-baseline font-bold text-sm text-yellow-600 hover:text-yellow-800"
+              className="inline-block align-baseline font-bold text-sm text-primary"
             >
               {t("pages.signup.alreadyHaveAccount")}
             </Link>

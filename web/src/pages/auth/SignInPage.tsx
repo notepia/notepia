@@ -77,13 +77,13 @@ const SignIn: React.FC = () => {
                         </SubmitButton>
                         <Link
                             to="/signup"
-                            className="inline-block align-baseline text-right font-bold text-sm text-yellow-600 hover:text-yellow-800"
+                            className="inline-block align-baseline text-right font-bold text-sm text-primary"
                         >
                             {t("pages.signin.noAccount")}
                         </Link>
                         <Link
                             to="/explore/notes"
-                            className="flex gap-2 items-center text-right font-bold text-sm text-yellow-600 hover:text-yellow-800"
+                            className="flex gap-2 items-center text-right font-bold text-sm text-primary"
                         >
                             <Telescope size={20} />
                             {t("menu.explore")}
