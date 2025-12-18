@@ -11,6 +11,15 @@ export default {
         satoshi: ['Satoshi', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
       },
+      colors: {
+        primary: {
+          DEFAULT: 'var(--primary)',
+          hover: 'var(--primary-hover)',
+          active: 'var(--primary-active)',
+          light: 'var(--primary-light)',
+          lighter: 'var(--primary-lighter)',
+        }
+      },
       screens: {
         '2xl': '1536px',
         '3xl': '1920px',

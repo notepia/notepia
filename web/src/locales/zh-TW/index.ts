@@ -55,6 +55,8 @@ export default {
     preferences: {
       language: "語言",
       theme: "主題",
+      primaryColor: "主要顏色",
+      customColor: "自訂",
       apiKeys: "API 金鑰",
       apiKeyManagement: "API 金鑰管理",
       apiKeyDescription: "管理用於程式化存取帳號的 API 金鑰",

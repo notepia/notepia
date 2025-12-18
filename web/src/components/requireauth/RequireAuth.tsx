@@ -9,7 +9,7 @@ const RequireAuth = () => {
   const [isChecking, setIsChecking] = useState(true)
   const { fetchUser } = useCurrentUserStore();
   const navigate = useNavigate()
-  const { theme, setTheme } = useTheme()!
+  const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme()!
 
   useEffect(() => {
     (async () => {
@@ -27,6 +27,10 @@ const RequireAuth = () => {
         }
         if (theme != currentUser.preferences.theme) {
           setTheme(currentUser.preferences.theme)
+        }
+        if (currentUser.preferences.primaryColor &&
+            primaryColor !== currentUser.preferences.primaryColor) {
+          setPrimaryColor(currentUser.preferences.primaryColor)
         }
       }
       

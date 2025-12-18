@@ -146,7 +146,7 @@ const AddWidgetMenu: FC<AddWidgetMenuProps> = ({ parentId }) => {
         <button
           onClick={handleCreate}
           disabled={createMutation.isPending}
-          className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+          className="flex-1 px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50"
         >
           {createMutation.isPending ? t('common.creating') : t('actions.create')}
         </button>
@@ -216,7 +216,7 @@ const AddWidgetMenu: FC<AddWidgetMenuProps> = ({ parentId }) => {
                   <button
                     onClick={handleCreate}
                     disabled={createMutation.isPending}
-                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-50"
                   >
                     {createMutation.isPending ? t('common.creating') : t('actions.create')}
                   </button>

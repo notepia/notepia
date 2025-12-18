@@ -9,7 +9,7 @@ import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, CreateAPIKeyRequest } 
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import Card from "@/components/card/Card"
 import Select from "@/components/select/Select"
-import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck } from "lucide-react"
+import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check } from "lucide-react"
 
 interface UserSettingsModalProps {
     open: boolean
@@ -19,7 +19,7 @@ interface UserSettingsModalProps {
 const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const { user } = useCurrentUserStore()
     const { t, i18n } = useTranslation()
-    const { theme, setTheme } = useTheme()!
+    const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme()!
 
     // Tab state
     const [activeTab, setActiveTab] = useState<'preferences' | 'apiKeys' | 'users'>('preferences')
@@ -28,6 +28,16 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     // Preferences state
     const themes: Theme[] = ["light", "dark"]
     const supportedLanguages = i18n.options.supportedLngs && i18n.options.supportedLngs?.filter(l => l !== "cimode") || []
+    const PRESET_COLORS = [
+        { name: 'Orange', value: '#f97316' },
+        { name: 'Blue', value: '#3b82f6' },
+        { name: 'Green', value: '#22c55e' },
+        { name: 'Purple', value: '#a855f7' },
+        { name: 'Pink', value: '#ec4899' },
+        { name: 'Red', value: '#ef4444' },
+        { name: 'Indigo', value: '#6366f1' },
+        { name: 'Teal', value: '#14b8a6' },
+    ]
 
     // API Keys state
     const [apiKeys, setApiKeys] = useState<APIKey[]>([])
@@ -70,7 +80,11 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
 
         const updatedUser = {
             ...user,
-            preferences: { lang: i18n.language, theme: theme }
+            preferences: {
+                lang: i18n.language,
+                theme: theme,
+                primaryColor: primaryColor
+            }
         }
 
         try {
@@ -275,7 +289,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     useEffect(() => {
         if (!user || !open) return
         savePreferences()
-    }, [theme, i18n.language])
+    }, [theme, i18n.language, primaryColor])
 
     useEffect(() => {
         if (open && activeTab === 'apiKeys') {
@@ -302,7 +316,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                 onClick={() => setActiveTab('preferences')}
                                 className={`px-4 py-2 font-medium transition-colors ${
                                     activeTab === 'preferences'
-                                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                                        ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                             >
@@ -312,7 +326,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                 onClick={() => setActiveTab('apiKeys')}
                                 className={`px-4 py-2 font-medium transition-colors ${
                                     activeTab === 'apiKeys'
-                                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                                        ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                             >
@@ -323,7 +337,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     onClick={() => setActiveTab('users')}
                                     className={`px-4 py-2 font-medium transition-colors ${
                                         activeTab === 'users'
-                                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                                            ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
                                             : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                     }`}
                                 >
@@ -365,6 +379,47 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                 </Select>
                                             </div>
                                         </div>
+                                        <div className="flex flex-col">
+                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                                {t("pages.preferences.primaryColor")}
+                                            </div>
+
+                                            {/* Preset colors grid */}
+                                            <div className="flex gap-2 mb-3">
+                                                {PRESET_COLORS.map((color) => (
+                                                    <button
+                                                        key={color.value}
+                                                        onClick={() => setPrimaryColor(color.value)}
+                                                        className="relative w-8 h-8 rounded-full border-2 transition-all hover:scale-110"
+                                                        style={{
+                                                            backgroundColor: color.value,
+                                                            borderColor: primaryColor === color.value ? '#000' : 'transparent'
+                                                        }}
+                                                        title={color.name}
+                                                    >
+                                                        {primaryColor === color.value && (
+                                                            <Check className="absolute inset-0 m-auto text-white" size={16} />
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {/* Custom color picker */}
+                                            <div className="flex items-center gap-3">
+                                                <label className="text-sm text-gray-600 dark:text-gray-400">
+                                                    {t("pages.preferences.customColor")}
+                                                </label>
+                                                <input
+                                                    type="color"
+                                                    value={primaryColor}
+                                                    onChange={(e) => setPrimaryColor(e.target.value)}
+                                                    className="w-12 h-8 rounded border cursor-pointer"
+                                                />
+                                                <span className="text-sm font-mono text-gray-500">
+                                                    {primaryColor.toUpperCase()}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </Card>
                             )}
@@ -378,7 +433,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                         </p>
                                         <button
                                             onClick={() => setShowCreationDialog(true)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
                                         >
                                             <Plus size={16} />
                                             {t("pages.preferences.generateNewKey")}
@@ -446,7 +501,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                         </p>
                                         <button
                                             onClick={() => setShowUserDialog(true)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
                                         >
                                             <Plus size={16} />
                                             {t("pages.preferences.createUser")}
@@ -569,7 +624,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                         />
                                         <button
                                             onClick={() => copyToClipboard(createdKey)}
-                                            className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                            className="px-3 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
                                             title={t("actions.copy")}
                                         >
                                             <Copy size={16} />
@@ -615,7 +670,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={handleCreateAPIKey}
-                                        className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                        className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
                                     >
                                         {t("pages.preferences.createKey")}
                                     </button>
@@ -700,7 +755,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleCreateUser}
-                                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
                                 >
                                     {t("actions.create")}
                                 </button>
@@ -754,7 +809,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleChangePassword}
-                                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
                                 >
                                     {t("actions.save")}
                                 </button>

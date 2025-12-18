@@ -312,7 +312,7 @@ const NoteFormWidget: FC<NoteFormWidgetProps> = ({ config }) => {
         <button
           disabled={createMutation.isPending}
           onClick={handleSave}
-          className="flex items-center justify-center gap-2 p-3 bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center justify-center gap-2 p-3 bg-primary text-white  disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Send size={16} />
           {createMutation.isPending ? t('common.saving') : t('notes.quickCreate')}

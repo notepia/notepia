@@ -56,6 +56,8 @@ export default {
     preferences: {
       language: "Langueage",
       theme: "Theme",
+      primaryColor: "Primary Color",
+      customColor: "Custom",
       apiKeys: "API Keys",
       apiKeyManagement: "API Key Management",
       apiKeyDescription: "Manage API keys for programmatic access to your account",
