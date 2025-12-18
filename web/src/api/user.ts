@@ -1,11 +1,17 @@
 import axios from "axios";
 
+export interface UserPreferences {
+    lang?: string;
+    theme?: 'light' | 'dark';
+    primaryColor?: string;
+}
+
 export interface User {
     id: string;
     name: string;
     email: string;
     role: string;
-    preferences: any;
+    preferences: UserPreferences;
 }
 
 export const updatePreferences = async (user: User) => {

@@ -265,7 +265,7 @@ export const NoteWidgetConfigForm: FC<WidgetConfigFormProps<NoteWidgetConfig>> =
           type="button"
           onClick={handleCreateNote}
           disabled={createNoteMutation.isPending}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {createNoteMutation.isPending ? (
             <>

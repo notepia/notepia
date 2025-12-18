@@ -376,7 +376,7 @@ export const FileUploadWidgetConfigForm: FC<WidgetConfigFormProps<FileUploadWidg
           <button
             type="button"
             onClick={handleAddExtension}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="px-4 py-2 bg-primary text-white rounded-lg"
           >
             {t('actions.add')}
           </button>

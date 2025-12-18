@@ -139,7 +139,7 @@ export const CarouselWidgetConfigForm: FC<WidgetConfigFormProps<CarouselWidgetCo
           <button
             type="button"
             onClick={() => setFilePickerOpen(true)}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2"
+            className="w-full px-4 py-2 bg-primary text-white rounded-lg flex items-center justify-center gap-2"
           >
             <FolderOpen size={18} />
             {t('widgets.carousel.config.selectFromFiles')}
