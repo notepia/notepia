@@ -35,7 +35,9 @@ func (s SqliteDB) CreateWorkspaceUser(w model.WorkspaceUser) error {
 	return gorm.G[model.WorkspaceUser](s.getDB()).Create(context.Background(), &w)
 }
 func (s SqliteDB) UpdateWorkspaceUser(w model.WorkspaceUser) error {
-	_, err := gorm.G[model.WorkspaceUser](s.getDB()).Updates(context.Background(), w)
+	_, err := gorm.G[model.WorkspaceUser](s.getDB()).
+		Where("workspace_id = ? AND user_id = ?", w.WorkspaceID, w.UserID).
+		Updates(context.Background(), w)
 	return err
 }
 func (s SqliteDB) DeleteWorkspaceUser(w model.WorkspaceUser) error {
