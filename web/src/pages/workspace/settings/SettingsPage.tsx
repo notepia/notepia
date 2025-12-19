@@ -46,6 +46,7 @@ const Settings = () => {
     })
 
     const currentMember = members.find(m => m.user_id === currentUser?.id)
+    const isOwner = currentMember?.role === 'owner'
     const isOwnerOrAdmin = currentMember?.role === 'owner' || currentMember?.role === 'admin'
 
     const renameWorkspaceNameMutation = useMutation({
@@ -158,24 +159,34 @@ const Settings = () => {
                         <div className="w-full">
                             <div className="bg-white dark:bg-neutral-800 rounded shadow-sm w-full p-5 max-w-3xl">
                                 <div className="flex flex-col gap-6">
-                                    <div className="flex flex-col gap-2 ">
-                                        <div className="text-lg font-semibold">
-                                            {t("pages.settings.workspaceName")}
+                                    {isOwner && (
+                                        <div className="flex flex-col gap-2 ">
+                                            <div className="text-lg font-semibold">
+                                                {t("pages.settings.workspaceName")}
+                                            </div>
+                                            <div className="flex gap-3 flex-wrap">
+                                                <input
+                                                    className="flex-1 px-3 py-2 border dark:border-none rounded-lg dark:bg-neutral-700"
+                                                    value={workspaceName}
+                                                    onChange={e => setWorkspaceName(e.target.value)}
+                                                    title="rename workspace"
+                                                />
+                                                <button
+                                                    onClick={handleRenameClick}
+                                                    className="px-3 py-2 flex gap-2 items-center text-neutral-600 dark:text-neutral-300"
+                                                >
+
+                                                    {isRenaming
+                                                    ? <Loader size={16} className="animate-spin" />
+                                                    : <>
+                                                        <RotateCcw size={16} />
+                                                        {t("actions.rename")}
+                                                    </>
+                                                    }
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="flex gap-3 flex-wrap">
-                                            <input className="flex-1 px-3 py-2 border dark:border-none rounded-lg dark:bg-neutral-700" value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} title="rename workspace" />
-                                            <button onClick={handleRenameClick} className=" px-3 py-2  flex gap-2 items-center text-neutral-600 dark:text-neutral-300">
-                                                
-                                                {isRenaming 
-                                                ? <Loader size={16} className="animate-spin" /> 
-                                                : <>
-                                                    <RotateCcw size={16} />
-                                                    {t("actions.rename")}
-                                                </>
-                                                }
-                                            </button>
-                                        </div>
-                                    </div>
+                                    )}
 
                                     {/* Members Section */}
                                     <div className="flex flex-col gap-4">
@@ -281,19 +292,25 @@ const Settings = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex gap-2 items-center justify-between">
-                                        <div className="flex flex-col">
-                                            <div className=" text-lg font-semibold">
-                                                {t("pages.settings.deleteThisWorkspace")}
+                                    {isOwner && (
+                                        <div className="flex gap-2 items-center justify-between">
+                                            <div className="flex flex-col">
+                                                <div className=" text-lg font-semibold">
+                                                    {t("pages.settings.deleteThisWorkspace")}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <button
+                                                    onClick={handleDeleteClick}
+                                                    className="p-3 text-red-500 flex items-center gap-2"
+                                                    aria-label="delete"
+                                                >
+                                                    <Trash2 size={16} />
+                                                    {t("actions.delete")}
+                                                </button>
                                             </div>
                                         </div>
-                                        <div>
-                                            <button onClick={handleDeleteClick} className="p-3 text-red-500 flex items-center gap-2" aria-label="delete">
-                                                <Trash2 size={16} />
-                                                {t("actions.delete")}
-                                            </button>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -218,8 +218,8 @@ func (h Handler) UpdateWorkspace(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "workspace member not found")
 	}
 
-	if member.Role != model.WorkspaceUserRoleOwner && member.Role != model.WorkspaceUserRoleAdmin {
-		return echo.NewHTTPError(http.StatusForbidden, "Only the workspace owner or admin can delete the workspace.")
+	if member.Role != model.WorkspaceUserRoleOwner {
+		return echo.NewHTTPError(http.StatusForbidden, "Only the workspace owner can update the workspace.")
 	}
 
 	workspace := model.Workspace{
