@@ -32,7 +32,6 @@ function App() {
   return (
     <>
       <Routes location={location}>
-        <Route path='/workspace-setup' element={<Setup />} />
         <Route path='/explore' element={<PublicLayout />}>
           <Route path='notes' element={<ExploreNotesPage />} />
           <Route path='notes/:noteId' element={<ExploreNoteDetailPage />} />
@@ -46,6 +45,7 @@ function App() {
         <Route path='signup' element={<SignUp />}></Route>
         <Route path='/' element={<RequireAuth />}>
           <Route index element={<Navigate to="/workspaces" replace />} />
+          <Route path='/workspace-setup' element={<Setup />} />
           <Route path='workspaces' element={<WorkspaceLoader />} />
           <Route path='workspaces/:workspaceId' element={<WorkspaceLayout />}>
             <Route path='notes/:noteId' element={<NoteDetailPage />} ></Route>
