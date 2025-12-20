@@ -1,12 +1,12 @@
----
+![](https://raw.githubusercontent.com/notepia/notepia/refs/heads/main/web/src/assets/app.png)
 
-# 🧠 Notepia
+#  Notepia
 
 **Notepia** is an open-source, self-hosted pinboard service designed to help you organize links, notes, and resources in a flexible and visual way.
 
 Build your own workspace with widgets, keep everything in one place, and stay in full control of your data.
 
----
+
 
 ## ✨ Features
 
