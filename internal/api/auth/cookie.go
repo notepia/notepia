@@ -9,7 +9,7 @@ import (
 	"github.com/notepia/notepia/internal/config"
 	"github.com/notepia/notepia/internal/model"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func CreateUserCookie(u model.User) (*http.Cookie, error) {
