@@ -9,7 +9,7 @@ Build your own workspace with widgets, keep everything in one place, and stay in
 ## ✨ Features
 
 * 🧩 **10+ Built-in Widgets**
-  Choose from more than 10 different widgets, including bookmarks, notes, text blocks, images, to-do lists, and more.
+  Choose from more than 10 different widgets, including link, note, carousel, rss reader, map, calendar, folder, and more.
 
 * 🗂️ **Unlimited Workspaces**
   Create unlimited workspaces to organize content by projects, topics, or personal needs.
