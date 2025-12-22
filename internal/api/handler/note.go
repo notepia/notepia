@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/notepia/notepia/internal/model"
@@ -327,11 +328,22 @@ func (h Handler) CreateNote(c echo.Context) error {
 	var n model.Note
 	user := c.Get("user").(model.User)
 
+	// Check if content is markdown and convert to TipTap JSON
+	content := req.Content
+	contentFormat := c.Request().Header.Get("X-Content-Format")
+	if strings.ToLower(contentFormat) == "markdown" {
+		tiptapJSON, err := util.MarkdownToTipTap(req.Content)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to convert markdown: "+err.Error())
+		}
+		content = tiptapJSON
+	}
+
 	n.WorkspaceID = workspaceId
 	n.ID = util.NewId()
 	n.Visibility = req.Visibility
 	n.Title = req.Title
-	n.Content = req.Content
+	n.Content = content
 	n.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 	n.CreatedBy = user.ID
 	n.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
@@ -405,12 +417,24 @@ func (h Handler) UpdateNote(c echo.Context) error {
 	if existingNote.CreatedBy != user.ID {
 		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
+
+	// Check if content is markdown and convert to TipTap JSON
+	content := req.Content
+	contentFormat := c.Request().Header.Get("X-Content-Format")
+	if strings.ToLower(contentFormat) == "markdown" {
+		tiptapJSON, err := util.MarkdownToTipTap(req.Content)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to convert markdown: "+err.Error())
+		}
+		content = tiptapJSON
+	}
+
 	var n model.Note
 
 	n.WorkspaceID = workspaceId
 	n.ID = existingNote.ID
 	n.Title = req.Title
-	n.Content = req.Content
+	n.Content = content
 	n.Visibility = existingNote.Visibility
 	n.CreatedAt = existingNote.CreatedAt
 	n.CreatedBy = existingNote.CreatedBy
