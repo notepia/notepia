@@ -5,6 +5,7 @@ import (
 
 	"github.com/notepia/notepia/internal/config"
 	"github.com/notepia/notepia/internal/db"
+	"github.com/notepia/notepia/internal/db/postgresdb"
 	"github.com/notepia/notepia/internal/db/sqlitedb"
 )
 
@@ -13,6 +14,8 @@ func NewDB() (db.DB, error) {
 	switch driver {
 	case "sqlite3":
 		return sqlitedb.NewSqliteDB()
+	case "postgres":
+		return postgresdb.NewPostgresDB()
 	}
 
 	return nil, fmt.Errorf("unsupported database driver: %s", driver)

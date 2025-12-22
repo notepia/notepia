@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: notepia-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: notepia
+      POSTGRES_USER: notepia
+      POSTGRES_PASSWORD: notepia_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notepia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Notepia Application (optional - uncomment to run app with postgres)
+  # notepia:
+  #   build:
+  #     context: ..
+  #     dockerfile: Dockerfile
+  #   container_name: notepia-app
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     DB_DRIVER: postgres
+  #     DB_DSN: "host=postgres port=5432 user=notepia password=notepia_password dbname=notepia sslmode=disable TimeZone=UTC"
+  #     DB_MIGRATIONS_PATH: "file://migrations/postgres"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./bin/uploads:/app/bin/uploads
+
+volumes:
+  postgres_data:
+    driver: local
