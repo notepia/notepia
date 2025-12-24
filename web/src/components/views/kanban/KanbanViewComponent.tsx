@@ -245,9 +245,9 @@ interface KanbanColumnProps {
     onDeleteColumn?: (columnId: string) => void
 }
 
-const KanbanColumn = ({ column, isFocused, isPublic, workspaceId, viewId, onNoteClick, onMoveNote, onEditColumn, onDeleteColumn }: KanbanColumnProps) => {
+const KanbanColumn = ({ column, isPublic, workspaceId, viewId, onNoteClick, onMoveNote, onEditColumn, onDeleteColumn }: KanbanColumnProps) => {
     const [isAddingNote, setIsAddingNote] = useState(false)
-    const [isDragOver, setIsDragOver] = useState(false)
+    const [_, setIsDragOver] = useState(false)
     const { t } = useTranslation()
 
     let columnData: KanbanColumnData = {}
