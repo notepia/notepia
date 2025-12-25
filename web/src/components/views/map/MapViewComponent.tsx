@@ -18,7 +18,7 @@ interface MapMarkerData {
 
 const MapViewComponent = ({ viewObjects = [], view, focusedObjectId, isPublic = false }: MapViewComponentProps) => {
     const navigate = useNavigate()
-    const { workspaceId, viewId } = useParams<{ workspaceId?: string; viewId: string }>()
+    const { workspaceId, mapId } = useParams<{ workspaceId?: string; mapId: string }>()
 
     // Parse view data to get default settings
     const viewSettings = useMemo(() => {
@@ -150,8 +150,8 @@ const MapViewComponent = ({ viewObjects = [], view, focusedObjectId, isPublic = 
                                             e.preventDefault()
                                             e.stopPropagation()
                                             const path = isPublic
-                                                ? `/explore/map/${viewId}/marker/${marker.id}`
-                                                : `/workspaces/${workspaceId}/map/${viewId}/marker/${marker.id}`
+                                                ? `/explore/map/${mapId}/marker/${marker.id}`
+                                                : `/workspaces/${workspaceId}/map/${mapId}/marker/${marker.id}`
                                             console.log('Navigating to:', path)
                                             navigate(path)
                                         }}

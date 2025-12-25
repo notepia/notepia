@@ -10,7 +10,7 @@ interface CalendarViewComponentProps {
 
 const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = false }: CalendarViewComponentProps) => {
     const navigate = useNavigate()
-    const { workspaceId, viewId } = useParams<{ workspaceId?: string; viewId: string }>()
+    const { workspaceId, calendarId } = useParams<{ workspaceId?: string; calendarId: string }>()
 
     // Find the focused object's date
     const focusedDate = useMemo(() => {
@@ -221,8 +221,8 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         const path = isPublic
-                                                            ? `/explore/calendar/${viewId}/slot/${slot.id}`
-                                                            : `/workspaces/${workspaceId}/calendar/${viewId}/slot/${slot.id}`
+                                                            ? `/explore/calendar/${calendarId}/slot/${slot.id}`
+                                                            : `/workspaces/${workspaceId}/calendar/${calendarId}/slot/${slot.id}`
                                                         navigate(path)
                                                     }}
                                                     className="text-xs px-1.5 py-0.5 bg-blue-500 text-white rounded truncate max-w-full hover:bg-blue-600 transition-colors"
