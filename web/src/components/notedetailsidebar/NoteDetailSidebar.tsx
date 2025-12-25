@@ -3,13 +3,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { deleteNote, NoteData, updateNoteVisibility } from "@/api/note"
 import { getViewObjectsForNote, getPublicViewObjectsForNote, getViews, getViewObjects, addNoteToViewObject, createViewObject } from "@/api/view"
 import { useTranslation } from "react-i18next"
-import { ChevronRight, Calendar, MapPin, Pin, Search, Plus, Trash2, Globe, Building, Lock, Calendar1Icon, LayoutGrid } from "lucide-react"
+import { ChevronRight, Calendar, MapPin, Pin, Search, Plus, Trash2, Calendar1Icon, LayoutGrid } from "lucide-react"
 import { ViewObjectType } from "@/types/view"
 import { Link, useParams, useNavigate } from "react-router-dom"
 import * as Dialog from "@radix-ui/react-dialog"
 import { useToastStore } from "@/stores/toast"
 import CreateViewObjectModal from "@/components/views/CreateViewObjectModal"
 import { Visibility } from "@/types/visibility"
+import VisibilitySelect from "@/components/visibilityselect/VisibilitySelect"
 
 interface NoteDetailSidebarProps {
     note: NoteData
@@ -22,7 +23,6 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
     const queryClient = useQueryClient()
     const navigate = useNavigate()
     const [isPinning, setIsPinning] = useState(false)
-    const [isVisibilitySelecting, setIsVisibilitySelecting] = useState(false)
     const [selectedViewId, setSelectedViewId] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
     const [isCreatingObject, setIsCreatingObject] = useState(false)
@@ -62,18 +62,6 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
         },
     })
 
-    // Get icon for visibility
-    const getVisibilityIcon = (visibility?: Visibility) => {
-        switch (visibility) {
-            case 'private':
-                return <Lock size={16} />
-            case 'workspace':
-                return <Building size={16} />
-            case 'public':
-                return <Globe size={16} />
-        }
-    }
-
     const handleDelete = () => {
         if (confirm(t('messages.confirmDelete') || 'Are you sure you want to delete this note?')) {
             deleteNoteMutation.mutate()
@@ -83,12 +71,10 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
     const handleUpdateVisibility = (visibility: Visibility) => {
         // Don't update if it's the same visibility
         if (visibility === note.visibility) {
-            setIsVisibilitySelecting(false)
             return
         }
 
         updateVisibilityMutation.mutate(visibility)
-        setIsVisibilitySelecting(false)
     }
 
     // Use public endpoint when viewing from explore page (no workspaceId in URL)
@@ -239,16 +225,10 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
                 {
                     workspaceId &&
                     <div className="flex flex-col gap-2 flex-wrap p-4 pb-0">
-                        <button
-                            onClick={() => setIsVisibilitySelecting(true)}
-                            disabled={!workspaceId}
-                            className="px-2 py-1 inline-flex items-center justify-center gap-2 rounded-lg "
-                        >
-                            {getVisibilityIcon(note.visibility)}
-                            <div className="flex-1 text-left px-4">
-                                {t(`common.${note.visibility}`) || note.visibility}
-                            </div>
-                        </button>
+                        <VisibilitySelect
+                            value={note.visibility}
+                            onChange={handleUpdateVisibility}
+                        />
                         <button
                             onClick={() => setIsPinning(true)}
                             disabled={!workspaceId}
@@ -270,7 +250,7 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
 
                 <div className="flex flex-col p-4">
                     {
-                        groupedByView.length > 0 && 
+                        groupedByView.length > 0 &&
                         <div className="font-bold text-gray-400 p-2">
                             {t("common.pinned")}
                         </div>
@@ -311,79 +291,26 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
                                             key={vo.id}
                                             to={getObjectUrl()}
                                         >
-                                        <div className="flex items-center gap-2 text-gray-600 px-2 py-1">
-                                            <div >
-                                                {vo.type === "map_marker" ? (
-                                                    <MapPin size={16} />
-                                                ) : vo.type === "kanban_column" ? (
-                                                    <LayoutGrid size={16} />
-                                                ) : (
-                                                    <Calendar1Icon size={16} />
-                                                )}
+                                            <div className="flex items-center gap-2 text-gray-600 px-2 py-1">
+                                                <div >
+                                                    {vo.type === "map_marker" ? (
+                                                        <MapPin size={16} />
+                                                    ) : vo.type === "kanban_column" ? (
+                                                        <LayoutGrid size={16} />
+                                                    ) : (
+                                                        <Calendar1Icon size={16} />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 px-2">
+                                                    {vo.name}
+                                                </div>
                                             </div>
-                                            <div className="flex-1 px-2">
-                                                {vo.name}
-                                            </div>
-                                        </div>
-                                    </Link>
+                                        </Link>
                                     )
                                 })}
                             </div>))}
                 </div>
             </div>
-            {/* Visibility Selection Dialog */}
-            <Dialog.Root open={isVisibilitySelecting} onOpenChange={setIsVisibilitySelecting}>
-                <Dialog.Portal>
-                    <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[500px] z-50">
-                        <Dialog.Title className="text-xl font-semibold mb-4">
-                            {t('visibility.selectVisibility') || 'Select Visibility'}
-                        </Dialog.Title>
-
-                        {/* Visibility Options */}
-                        <div className="space-y-3">
-                            {(['private', 'workspace', 'public'] as const).map((visibility) => (
-                                <button
-                                    key={visibility}
-                                    onClick={() => handleUpdateVisibility(visibility)}
-                                    disabled={updateVisibilityMutation.isPending}
-                                    className={`w-full text-left p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 disabled:opacity-50 transition-colors ${note.visibility === visibility
-                                        ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                                        : 'dark:border-neutral-600'
-                                        }`}
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="mt-0.5">
-                                            {getVisibilityIcon(visibility)}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-medium flex items-center gap-2">
-                                                {t(`common.${visibility}`) || visibility}
-                                                {note.visibility === visibility && (
-                                                    <span className="text-xs text-blue-600 dark:text-blue-400">
-                                                        {t('visibility.current') || '(Current)'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                {t(`visibility.${visibility}`) || ''}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="mt-6 flex justify-end">
-                            <Dialog.Close asChild>
-                                <button className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                                    {t('common.close') || 'Close'}
-                                </button>
-                            </Dialog.Close>
-                        </div>
-                    </Dialog.Content>
-                </Dialog.Portal>
-            </Dialog.Root>
 
             {/* Pin to View Object Dialog */}
             <Dialog.Root open={isPinning} onOpenChange={setIsPinning}>
@@ -457,8 +384,8 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
                                     {selectedView?.type === 'calendar'
                                         ? (t('views.newSlot') || 'New Slot')
                                         : selectedView?.type === 'kanban'
-                                        ? (t('views.newColumn') || 'New Column')
-                                        : (t('views.newMarker') || 'New Marker')}
+                                            ? (t('views.newColumn') || 'New Column')
+                                            : (t('views.newMarker') || 'New Marker')}
                                 </button>
 
                                 {availableViewObjects.length > 0 ? (

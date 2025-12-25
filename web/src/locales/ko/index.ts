@@ -246,9 +246,9 @@ export default {
   visibility: {
     selectVisibility: "공개 범위 선택",
     current: "(현재)",
-    private: "비공개 - 본인만 볼 수 있습니다",
-    workspace: "워크스페이스 - 워크스페이스 멤버가 볼 수 있습니다",
-    public: "공개 - 모든 사람이 볼 수 있습니다"
+    private: "비공개",
+    workspace: "워크스페이스",
+    public: "공개"
   },
   time: {
     just_now: "방금 전",
