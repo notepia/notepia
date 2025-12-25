@@ -5,6 +5,7 @@ import { View } from "@/types/view"
 import { updateViewVisibility } from "@/api/view"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useToastStore } from "@/stores/toast"
+import VisibilitySelect from "@/components/visibilityselect/VisibilitySelect"
 
 interface CalendarViewSettingsModalProps {
     open: boolean
@@ -69,38 +70,10 @@ const CalendarViewSettingsModal = ({
                             <label className="block text-sm font-medium mb-2">
                                 {t('common.visibility')}
                             </label>
-                            <div className="flex flex-col gap-2">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="visibility"
-                                        value="private"
-                                        checked={visibility === "private"}
-                                        onChange={(e) => setVisibility(e.target.value)}
-                                    />
-                                    <span className="text-sm">{t('visibility.private')}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="visibility"
-                                        value="workspace"
-                                        checked={visibility === "workspace"}
-                                        onChange={(e) => setVisibility(e.target.value)}
-                                    />
-                                    <span className="text-sm">{t('visibility.workspace')}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="visibility"
-                                        value="public"
-                                        checked={visibility === "public"}
-                                        onChange={(e) => setVisibility(e.target.value)}
-                                    />
-                                    <span className="text-sm">{t('visibility.public')}</span>
-                                </label>
-                            </div>
+                            <VisibilitySelect
+                                value={visibility}
+                                onChange={setVisibility}
+                            />
                         </div>
 
                         <div className="flex gap-3 justify-end mt-6">

@@ -246,9 +246,9 @@ export default {
   visibility: {
     selectVisibility: "اختر الرؤية",
     current: "(الحالي)",
-    private: "خاص - مرئي لك فقط",
-    workspace: "مساحة العمل - مرئي لأعضاء مساحة العمل",
-    public: "عام - مرئي للجميع"
+    private: "خاص",
+    workspace: "مساحة العمل",
+    public: "عام"
   },
   time: {
     just_now: "للتو",

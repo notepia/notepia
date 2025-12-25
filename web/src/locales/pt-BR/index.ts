@@ -246,9 +246,9 @@ export default {
   visibility: {
     selectVisibility: "Selecionar Visibilidade",
     current: "(Atual)",
-    private: "Privado - Visível apenas para você",
-    workspace: "Workspace - Visível para membros do workspace",
-    public: "Público - Visível para todos"
+    private: "Privado",
+    workspace: "Workspace",
+    public: "Público"
   },
   time: {
     just_now: "agora mesmo",

@@ -250,9 +250,9 @@ export default {
   visibility: {
     selectVisibility: "選擇可見性",
     current: "（目前）",
-    private: "私人 - 僅自己可見",
-    workspace: "工作區 - 工作區成員可見",
-    public: "公開 - 所有人可見"
+    private: "私人",
+    workspace: "工作區",
+    public: "公開"
   },
   time: {
     just_now: "剛剛",

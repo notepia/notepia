@@ -246,9 +246,9 @@ export default {
   visibility: {
     selectVisibility: "表示設定を選択",
     current: "（現在）",
-    private: "非公開 - あなたのみに表示",
-    workspace: "ワークスペース - ワークスペースメンバーに表示",
-    public: "公開 - すべてのユーザーに表示"
+    private: "非公開",
+    workspace: "ワークスペース",
+    public: "公開"
   },
   time: {
     just_now: "たった今",

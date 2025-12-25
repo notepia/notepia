@@ -12,6 +12,7 @@ import { useToastStore } from "@/stores/toast"
 import ViewsGridSkeleton from "@/components/skeletons/ViewsGridSkeleton"
 import { DropdownMenu } from "radix-ui"
 import { twMerge } from "tailwind-merge"
+import VisibilitySelect from "@/components/visibilityselect/VisibilitySelect"
 
 const ViewsPage = () => {
     const { t } = useTranslation()
@@ -200,38 +201,10 @@ const ViewsPage = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium mb-2">{t('common.visibility')}</label>
-                                        <div className="flex flex-col gap-2">
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="visibility"
-                                                    value="private"
-                                                    checked={newViewVisibility === "private"}
-                                                    onChange={(e) => setNewViewVisibility(e.target.value)}
-                                                />
-                                                <span>{t('visibility.private')}</span>
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="visibility"
-                                                    value="workspace"
-                                                    checked={newViewVisibility === "workspace"}
-                                                    onChange={(e) => setNewViewVisibility(e.target.value)}
-                                                />
-                                                <span>{t('visibility.workspace')}</span>
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="visibility"
-                                                    value="public"
-                                                    checked={newViewVisibility === "public"}
-                                                    onChange={(e) => setNewViewVisibility(e.target.value)}
-                                                />
-                                                <span>{t('visibility.public')}</span>
-                                            </label>
-                                        </div>
+                                        <VisibilitySelect
+                                            value={newViewVisibility}
+                                            onChange={setNewViewVisibility}
+                                        />
                                     </div>
                                     <div className="flex gap-2 pt-2">
                                         <button
