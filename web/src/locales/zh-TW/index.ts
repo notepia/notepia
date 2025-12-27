@@ -227,6 +227,8 @@ export default {
     all: "全部",
     views: "視圖",
     noResults: "找不到結果",
+    edit: "編輯",
+    view: "檢視",
     bold: "粗體",
     italic: "斜體",
     underline: "底線",
