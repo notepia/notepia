@@ -85,7 +85,7 @@ const MapPage = () => {
     }
 
     return (
-        <TwoColumn>
+        <TwoColumn defaultBottomSheetOpen={!!markerId}>
             <TwoColumnMain>
                 <MapViewContent
                     view={view}
@@ -104,7 +104,7 @@ const MapPage = () => {
                 />
             </TwoColumnMain>
 
-            <TwoColumnSidebar className="bg-white">
+            <TwoColumnSidebar>
                 {markerId ? (
                     <Outlet context={{
                         view,

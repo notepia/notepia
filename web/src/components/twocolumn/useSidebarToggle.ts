@@ -4,16 +4,24 @@ import { useState, useEffect } from "react"
  * Hook to manage sidebar state with responsive behavior
  *
  * @param breakpoint - Width in pixels below which sidebar is collapsed (default: 1024)
+ * @param defaultBottomSheetOpen - Whether the bottom sheet should be open by default on mobile (default: false)
  * @returns Object with sidebar state and control functions
  *
  * @example
  * ```tsx
- * const { isSidebarCollapsed, toggleSidebar, setIsSidebarCollapsed } = useSidebarToggle(1024)
+ * const { isSidebarCollapsed, toggleSidebar, setIsSidebarCollapsed } = useSidebarToggle(1024, true)
  * ```
  */
-export const useSidebarToggle = (breakpoint = 1024) => {
+export const useSidebarToggle = (breakpoint = 1024, defaultBottomSheetOpen = false) => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-        return typeof window !== 'undefined' ? window.innerWidth < breakpoint : true
+        if (typeof window === 'undefined') return true
+
+        const isMobile = window.innerWidth < breakpoint
+        // If mobile and defaultBottomSheetOpen is true, start with sidebar open (not collapsed)
+        if (isMobile && defaultBottomSheetOpen) {
+            return false
+        }
+        return isMobile
     })
 
     useEffect(() => {

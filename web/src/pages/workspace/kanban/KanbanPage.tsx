@@ -6,6 +6,7 @@ import { getView, getViewObjects, createViewObject } from "@/api/view"
 import { useToastStore } from "@/stores/toast"
 import KanbanViewContent from "@/components/views/kanban/KanbanViewContent"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
+import OneColumn from "@/components/onecolumn/OneColumn"
 
 const KanbanPage = () => {
     const { t } = useTranslation()
@@ -66,21 +67,23 @@ const KanbanPage = () => {
     }
 
     return (
-        <KanbanViewContent
-            view={view}
-            viewObjects={viewObjects || []}
-            currentWorkspaceId={currentWorkspaceId}
-            isCreating={isCreating}
-            setIsCreating={setIsCreating}
-            handleCloseModal={handleCloseModal}
-            newObjectName={newObjectName}
-            setNewObjectName={setNewObjectName}
-            newObjectData={newObjectData}
-            setNewObjectData={setNewObjectData}
-            handleCreate={handleCreate}
-            createMutation={createMutation}
-            focusedObjectId={undefined}
-        />
+        <OneColumn>
+            <KanbanViewContent
+                view={view}
+                viewObjects={viewObjects || []}
+                currentWorkspaceId={currentWorkspaceId}
+                isCreating={isCreating}
+                setIsCreating={setIsCreating}
+                handleCloseModal={handleCloseModal}
+                newObjectName={newObjectName}
+                setNewObjectName={setNewObjectName}
+                newObjectData={newObjectData}
+                setNewObjectData={setNewObjectData}
+                handleCreate={handleCreate}
+                createMutation={createMutation}
+                focusedObjectId={undefined}
+            />
+        </OneColumn>
     )
 }
 
