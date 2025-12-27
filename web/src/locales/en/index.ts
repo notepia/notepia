@@ -230,6 +230,8 @@ export default {
     noResults: "No results found",
     optional: "Optional",
     clear: "Clear",
+    edit: "Edit",
+    view: "View",
     bold: "Bold",
     italic: "Italic",
     underline: "Underline",

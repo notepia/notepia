@@ -26,7 +26,7 @@ const NotesPage = () => {
     const createNoteMutation = useMutation({
         mutationFn: (data: NoteData) => createNote(currentWorkspaceId, data),
         onSuccess: (data) => {
-            navigate(`./${data.id}`)
+            navigate(`./${data.id}?mode=edit`)
         },
         onError: (error) => {
             toast.error(t("messages.createNoteFailed"))

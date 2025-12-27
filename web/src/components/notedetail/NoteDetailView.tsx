@@ -65,7 +65,8 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({ note, menu, isEditable = fals
                             <EditableDiv
                                 key={note.id}
                                 value={note.title}
-                                placeholder={t("notes.untitled")}
+                                editable={isEditable}
+                                placeholder={isEditable ? t("notes.untitled") : ""}
                                 className="flex-1 text-lg font-semibold border-none outline-none bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600 min-w-0"
                                 onChange={handleTitleChange} />
                             {/* Save Status Indicator */}
@@ -92,6 +93,7 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({ note, menu, isEditable = fals
                                         <EditableDiv
                                             key={note.id}
                                             value={note.title}
+                                            editable={isEditable}
                                             placeholder={t("notes.untitled")}
                                             className="flex-1 text-4xl font-semibold border-none outline-none bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600 min-w-0"
                                             onChange={handleTitleChange} />
@@ -111,9 +113,15 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({ note, menu, isEditable = fals
                                         </div>
                                     </div>
                                     <div className="px-4">
-                                        {isEditable && onChange ?
-                                            <Editor key={note.id} note={note} onChange={onChange} />
-                                            : <Renderer content={note?.content || ''} />}
+                                        {isEditable && onChange ? (
+                                            <div key={`editor-${note.id}`}>
+                                                <Editor note={note} onChange={onChange} />
+                                            </div>
+                                        ) : (
+                                            <div key={`renderer-${note.id}`}>
+                                                <Renderer content={note?.content || ''} />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

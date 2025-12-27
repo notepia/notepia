@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useParams } from "react-router-dom"
+import { useParams, useSearchParams } from "react-router-dom"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import { useEffect, useState, useRef, useCallback, FC } from "react"
 import { getNote, NoteData, updateNote } from "@/api/note"
@@ -11,8 +11,11 @@ import { toast } from "@/stores/toast"
 import { EllipsisIcon } from "lucide-react"
 
 const NoteDetailPage = () => {
+    const [searchParams] = useSearchParams()
+    const initialMode = searchParams.get('mode') === 'edit' ? 'edit' : 'view'
     const [note, setNote] = useState<NoteData | null>(null)
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+    const [mode, setMode] = useState<'view' | 'edit'>(initialMode)
     const currentWorkspaceId = useCurrentWorkspaceId()
     const { noteId } = useParams()
     const { t } = useTranslation()
@@ -72,6 +75,16 @@ const NoteDetailPage = () => {
         }
     }, [fetchedNote])
 
+    // Update mode when URL search params change
+    useEffect(() => {
+        const modeParam = searchParams.get('mode')
+        if (modeParam === 'edit') {
+            setMode('edit')
+        } else if (modeParam === null) {
+            setMode('view')
+        }
+    }, [searchParams])
+
     // Cleanup timeout on unmount
     useEffect(() => {
         return () => {
@@ -88,6 +101,8 @@ const NoteDetailPage = () => {
                 t={t}
                 handleNoteChange={handleNoteChange}
                 saveStatus={saveStatus}
+                mode={mode}
+                onModeChange={setMode}
             />
         </TwoColumn>
     )
@@ -98,9 +113,11 @@ interface NoteDetailContentProps {
     t: any
     handleNoteChange: (data: any) => void
     saveStatus: 'idle' | 'saving' | 'saved'
+    mode: 'view' | 'edit'
+    onModeChange: (mode: 'view' | 'edit') => void
 }
 
-const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChange, saveStatus }) => {
+const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChange, saveStatus, mode, onModeChange }) => {
     const { toggleSidebar,isSidebarCollapsed } = useTwoColumn()
 
     return (
@@ -121,13 +138,13 @@ const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChan
                             </button>
                         ) : undefined
                     }
-                    isEditable={true}
+                    isEditable={mode === 'edit'}
                     onChange={handleNoteChange}
                     saveStatus={saveStatus}
                 />
             </TwoColumnMain>
             <TwoColumnSidebar>
-                {note && <NoteDetailSidebar note={note} />}
+                {note && <NoteDetailSidebar note={note} mode={mode} onModeChange={onModeChange} />}
             </TwoColumnSidebar>
         </>
     )

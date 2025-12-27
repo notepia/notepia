@@ -228,6 +228,8 @@ export default {
     all: "全部",
     views: "视图",
     noResults: "未找到结果",
+    edit: "编辑",
+    view: "查看",
     bold: "加粗",
     italic: "斜体",
     underline: "下划线",

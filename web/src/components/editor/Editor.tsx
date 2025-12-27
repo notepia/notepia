@@ -202,6 +202,15 @@ const Editor: FC<Props> = ({ note, onChange, canDrag = true }) => {
     lastContentRef.current = note.content
   }, [note.content])
 
+  // Cleanup editor on unmount
+  useEffect(() => {
+    return () => {
+      if (editor) {
+        editor.destroy()
+      }
+    }
+  }, [editor])
+
   const providerValue = useMemo(() => ({ editor }), [editor])
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
 

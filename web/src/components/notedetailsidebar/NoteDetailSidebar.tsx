@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { deleteNote, NoteData, updateNoteVisibility } from "@/api/note"
 import { getViewObjectsForNote, getPublicViewObjectsForNote, getViews, getViewObjects, addNoteToViewObject, createViewObject } from "@/api/view"
 import { useTranslation } from "react-i18next"
-import { ChevronRight, Calendar, MapPin, Pin, Search, Plus, Trash2, Calendar1Icon, LayoutGrid } from "lucide-react"
+import { ChevronRight, Calendar, MapPin, Pin, Search, Plus, Trash2, Calendar1Icon, LayoutGrid, Eye, Pencil } from "lucide-react"
 import { ViewObjectType } from "@/types/view"
 import { Link, useParams, useNavigate } from "react-router-dom"
 import * as Dialog from "@radix-ui/react-dialog"
@@ -14,9 +14,11 @@ import VisibilitySelect from "@/components/visibilityselect/VisibilitySelect"
 
 interface NoteDetailSidebarProps {
     note: NoteData
+    mode: 'view' | 'edit'
+    onModeChange: (mode: 'view' | 'edit') => void
 }
 
-const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
+const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChange }) => {
     const { t } = useTranslation()
     const { workspaceId } = useParams<{ workspaceId?: string }>()
     const { addToast } = useToastStore()
@@ -229,6 +231,18 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
                             value={note.visibility}
                             onChange={handleUpdateVisibility}
                         />
+                        {/* Mode Toggle Button */}
+                        <button
+                            onClick={() => onModeChange(mode === 'view' ? 'edit' : 'view')}
+                            className="px-2 py-1 inline-flex items-center justify-center gap-2 rounded-lg"
+                        >
+                            {mode === 'view' ? <Pencil size={16} /> : <Eye size={16} />}
+                            <div className="flex-1 text-left px-4">
+                                {mode === 'view'
+                                    ? (t('common.edit') || 'Edit')
+                                    : (t('common.view') || 'View')}
+                            </div>
+                        </button>
                         <button
                             onClick={() => setIsPinning(true)}
                             disabled={!workspaceId}
