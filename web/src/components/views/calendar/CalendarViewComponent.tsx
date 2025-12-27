@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTwoColumn } from '@/components/twocolumn/TwoColumn'
 
 interface CalendarViewComponentProps {
     viewObjects?: any[]
@@ -11,6 +12,7 @@ interface CalendarViewComponentProps {
 const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = false }: CalendarViewComponentProps) => {
     const navigate = useNavigate()
     const { workspaceId, calendarId } = useParams<{ workspaceId?: string; calendarId: string }>()
+    const { openBottomSheet } = useTwoColumn()
 
     // Find the focused object's date
     const focusedDate = useMemo(() => {
@@ -220,6 +222,7 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
                                                     key={i}
                                                     onClick={(e) => {
                                                         e.stopPropagation()
+                                                        openBottomSheet()
                                                         const path = isPublic
                                                             ? `/explore/calendar/${calendarId}/slot/${slot.id}`
                                                             : `/workspaces/${workspaceId}/calendar/${calendarId}/slot/${slot.id}`

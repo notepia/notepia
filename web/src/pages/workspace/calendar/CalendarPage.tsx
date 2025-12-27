@@ -85,7 +85,7 @@ const CalendarPage = () => {
     }
 
     return (
-        <TwoColumn>
+        <TwoColumn defaultBottomSheetOpen={!!slotId}>
             <TwoColumnMain>
                 <CalendarViewContent
                     view={view}
@@ -104,7 +104,7 @@ const CalendarPage = () => {
                 />
             </TwoColumnMain>
 
-            <TwoColumnSidebar className="bg-white">
+            <TwoColumnSidebar>
                 {slotId ? (
                     <Outlet context={{
                         view,

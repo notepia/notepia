@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet'
 import { Icon } from 'leaflet'
 import { ViewObject, View, MapViewData } from '@/types/view'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTwoColumn } from '@/components/twocolumn/TwoColumn'
 
 interface MapViewComponentProps {
     viewObjects?: ViewObject[]
@@ -19,6 +20,7 @@ interface MapMarkerData {
 const MapViewComponent = ({ viewObjects = [], view, focusedObjectId, isPublic = false }: MapViewComponentProps) => {
     const navigate = useNavigate()
     const { workspaceId, mapId } = useParams<{ workspaceId?: string; mapId: string }>()
+    const { openBottomSheet } = useTwoColumn()
 
     // Parse view data to get default settings
     const viewSettings = useMemo(() => {
@@ -129,6 +131,17 @@ const MapViewComponent = ({ viewObjects = [], view, focusedObjectId, isPublic = 
                             key={marker.id}
                             position={[marker.lat, marker.lng]}
                             icon={markerIcon}
+                            eventHandlers={{
+                                click: () => {
+                                    openBottomSheet()
+                                    const path = isPublic
+                                        ? `/explore/map/${mapId}/marker/${marker.id}`
+                                        : `/workspaces/${workspaceId}/map/${mapId}/marker/${marker.id}`
+                                    console.log('Navigating to:', path)
+                                    navigate(path)
+                                }
+                            }}
+
                         >
                             <Tooltip
                                 permanent
@@ -138,30 +151,6 @@ const MapViewComponent = ({ viewObjects = [], view, focusedObjectId, isPublic = 
                             >
                                 <div className="text-sm font-medium">{marker.name}</div>
                             </Tooltip>
-                            <Popup>
-                                <div className="p-2">
-                                    <div className="font-semibold mb-1">{marker.name}</div>
-                                    <p className="text-xs text-gray-600 mb-2">
-                                        Lat: {marker.lat.toFixed(4)}<br />
-                                        Lng: {marker.lng.toFixed(4)}
-                                    </p>
-                                    <button
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            const path = isPublic
-                                                ? `/explore/map/${mapId}/marker/${marker.id}`
-                                                : `/workspaces/${workspaceId}/map/${mapId}/marker/${marker.id}`
-                                            console.log('Navigating to:', path)
-                                            navigate(path)
-                                        }}
-                                        type="button"
-                                        className="text-xs px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 w-full cursor-pointer"
-                                    >
-                                        View Details
-                                    </button>
-                                </div>
-                            </Popup>
                         </Marker>
                     ))}
                 </MapContainer>

@@ -14,8 +14,8 @@ import VisibilitySelect from "@/components/visibilityselect/VisibilitySelect"
 
 interface NoteDetailSidebarProps {
     note: NoteData
-    mode: 'view' | 'edit'
-    onModeChange: (mode: 'view' | 'edit') => void
+    mode?: 'view' | 'edit'
+    onModeChange?: (mode: 'view' | 'edit') => void
 }
 
 const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChange }) => {
@@ -232,17 +232,19 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
                             onChange={handleUpdateVisibility}
                         />
                         {/* Mode Toggle Button */}
-                        <button
-                            onClick={() => onModeChange(mode === 'view' ? 'edit' : 'view')}
-                            className="px-2 py-1 inline-flex items-center justify-center gap-2 rounded-lg"
-                        >
-                            {mode === 'view' ? <Pencil size={16} /> : <Eye size={16} />}
-                            <div className="flex-1 text-left px-4">
-                                {mode === 'view'
-                                    ? (t('common.edit') || 'Edit')
-                                    : (t('common.view') || 'View')}
-                            </div>
-                        </button>
+                        {mode !== undefined && onModeChange && (
+                            <button
+                                onClick={() => onModeChange(mode === 'view' ? 'edit' : 'view')}
+                                className="px-2 py-1 inline-flex items-center justify-center gap-2 rounded-lg"
+                            >
+                                {mode === 'view' ? <Pencil size={16} /> : <Eye size={16} />}
+                                <div className="flex-1 text-left px-4">
+                                    {mode === 'view'
+                                        ? (t('common.edit') || 'Edit')
+                                        : (t('common.view') || 'View')}
+                                </div>
+                            </button>
+                        )}
                         <button
                             onClick={() => setIsPinning(true)}
                             disabled={!workspaceId}
