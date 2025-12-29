@@ -69,7 +69,7 @@ const ExploreMapMarkerDetail = () => {
 
                 <div className="flex items-start justify-between">
                     <div className="flex-1">
-                        <h2 className="text-xl font-semibold">{marker.name}</h2>
+                        <div className="text-xl font-semibold">{marker.name}</div>
                         <div className="text-sm text-gray-500 mt-1">
                             {t('views.mapMarker')}
                         </div>

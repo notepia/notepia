@@ -59,7 +59,7 @@ const CalendarSlotsList = ({
         <div className="overflow-y-auto bg-neutral-100 dark:bg-neutral-900">
             <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold">{t('views.calendarSlots')}</h2>
+                    <div className="text-lg font-semibold">{t('views.calendarSlots')}</div>
                     {onCreateClick && (
                         <button
                             onClick={onCreateClick}
