@@ -56,8 +56,28 @@ const WorkspaceHomePage = () => {
   // Ensure widgets is always an array (API might return null)
   const widgets = widgetsData ?? [];
 
+  // Sort widgets by position (top to bottom, left to right)
+  const sortedWidgets = useMemo(() => {
+    return [...widgets].sort((a, b) => {
+      const posA = parseWidgetPosition(a as any);
+      const posB = parseWidgetPosition(b as any);
+
+      // Sort by y (top to bottom) first
+      const yA = posA.y ?? 0;
+      const yB = posB.y ?? 0;
+      if (yA !== yB) {
+        return yA - yB;
+      }
+
+      // Then sort by x (left to right)
+      const xA = posA.x ?? 0;
+      const xB = posB.x ?? 0;
+      return xA - xB;
+    });
+  }, [widgets]);
+
   // Keep widgets ref in sync for use in callbacks
-  widgetsRef.current = widgets;
+  widgetsRef.current = sortedWidgets;
 
   const updateMutation = useMutation({
     mutationFn: ({ id, position }: { id: string; position: string }) =>
@@ -80,7 +100,7 @@ const WorkspaceHomePage = () => {
 
   // Generate responsive layouts from widget positions
   const layouts = useMemo((): Layouts => {
-    const baseLayout: Layout[] = widgets.map((widget, index) => {
+    const baseLayout: Layout[] = sortedWidgets.map((widget, index) => {
       const position = parseWidgetPosition(widget as any);
       const widgetModule = getWidget(widget.type);
 
@@ -152,7 +172,7 @@ const WorkspaceHomePage = () => {
       xs: reflowLayout(baseLayout, 2),
       xxs: reflowLayout(baseLayout, 1),
     };
-  }, [widgets]);
+  }, [sortedWidgets]);
 
   // Save layout with debounce
   const saveLayout = useCallback(
@@ -346,7 +366,7 @@ const WorkspaceHomePage = () => {
                   />
                 ))}
               </div>
-            ) : widgets.length === 0 ? (
+            ) : sortedWidgets.length === 0 ? (
               <div className="text-center py-16">
                 <div className="text-gray-500 dark:text-gray-400 mb-4">
                   {t('widgets.noWidgets')}
@@ -368,10 +388,10 @@ const WorkspaceHomePage = () => {
                 compactType={null}
                 preventCollision={true}
               >
-                {widgets.map((widget) => (
+                {sortedWidgets.map((widget) => (
                   <div
                     key={widget.id}
-                    className="bg-white dark:bg-neutral-900 border dark:border-neutral-700 rounded-lg overflow-hidden"
+                    className="bg-white dark:bg-neutral-900 border dark:border-neutral-700 rounded-lg"
                   >
                     <WidgetRenderer
                       widget={widget}

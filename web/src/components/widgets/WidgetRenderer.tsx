@@ -57,10 +57,10 @@ const WidgetRenderer: FC<WidgetRendererProps> = ({
 
       {isEditMode && (
         <div className='absolute w-full h-full'>
-          <div className=' absolute top-0 right-0 w-full h-full widget-drag-handle'>
+          <div className=' absolute top-0 right-0 z-10 w-full h-full widget-drag-handle'>
             
           </div>
-          <div className='absolute z-10 top-0 right-0 p-1 bg-neutral-200 dark:bg-neutral-800 rounded-lg border border-neutral-500 space-x-0.5'>
+          <div className='absolute z-[9999] bottom-full right-0 p-1 bg-neutral-200 dark:bg-neutral-800 shadow-lg border border-neutral-500 space-x-0.5'>
             <button
               onClick={onEdit}
               className="p-1.5 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
