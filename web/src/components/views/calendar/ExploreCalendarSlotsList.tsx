@@ -49,7 +49,7 @@ const ExploreCalendarSlotsList = ({
     return (
         <div className="h-full overflow-y-auto bg-neutral-100 dark:bg-neutral-900">
             <div className="p-4">
-                <h2 className="text-lg font-semibold mb-4">{t('views.calendarSlots')}</h2>
+                <div className="text-lg font-semibold mb-4">{t('views.calendarSlots')}</div>
 
                 <div className="relative mb-4">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />

@@ -453,7 +453,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-2">
-                                                                <h3 className="font-semibold">{key.name}</h3>
+                                                                <div className="font-semibold">{key.name}</div>
                                                                 {isExpired(key.expires_at) && (
                                                                     <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
                                                                         {t("pages.preferences.expired")}
@@ -521,7 +521,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-2">
-                                                                <h3 className="font-semibold">{u.name}</h3>
+                                                                <div className="font-semibold">{u.name}</div>
                                                                 <span className={`text-xs px-2 py-1 rounded ${
                                                                     u.role === 'owner'
                                                                         ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
