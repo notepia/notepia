@@ -81,7 +81,7 @@ const AddNoteDialog = ({
             queryClient.invalidateQueries({ queryKey: ['column-notes', workspaceId, viewId, viewObjectId] })
             onSuccess?.()
             // Navigate to the note detail page
-            navigate(`/workspaces/${workspaceId}/notes/${newNote.id}`)
+            navigate(`/workspaces/${workspaceId}/notes/${newNote.id}?mode=edit`)
         },
         onError: () => {
             addToast({ title: t('views.noteCreateError'), type: 'error' })
