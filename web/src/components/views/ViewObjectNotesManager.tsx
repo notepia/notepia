@@ -39,7 +39,6 @@ const ViewObjectNotesManager = ({
     const removeNoteMutation = useMutation({
         mutationFn: (noteId: string) => removeNoteFromViewObject(workspaceId, viewId, viewObjectId, noteId),
         onSuccess: () => {
-            addToast({ title: t('views.noteRemovedSuccess'), type: 'success' })
             refetchLinkedNotes()
             queryClient.invalidateQueries({ queryKey: ['view-object-notes', workspaceId, viewId, viewObjectId] })
         },

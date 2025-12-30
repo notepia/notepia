@@ -69,7 +69,6 @@ const FilesPage = () => {
         mutationFn: (fileId: string) => deleteFile(currentWorkspaceId!, fileId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['files', currentWorkspaceId] });
-            addToast({ type: 'success', title: t('files.delete_success') });
         },
         onError: () => {
             addToast({ type: 'error', title: t('files.delete_error') });
@@ -82,7 +81,6 @@ const FilesPage = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['files', currentWorkspaceId] });
             setEditingFileId(null);
-            addToast({ type: 'success', title: t('files.rename_success') });
         },
         onError: () => {
             addToast({ type: 'error', title: t('files.rename_error') });
@@ -93,7 +91,6 @@ const FilesPage = () => {
         mutationFn: (file: File) => uploadFile(currentWorkspaceId!, file),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['files', currentWorkspaceId] });
-            addToast({ type: 'success', title: t('files.upload_success') });
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
@@ -147,7 +144,6 @@ const FilesPage = () => {
             // Get the full URL including origin
             const fullUrl = new URL(fileUrl, window.location.origin).href;
             await navigator.clipboard.writeText(fullUrl);
-            addToast({ type: 'success', title: t('files.copy_url_success') });
         } catch (error) {
             addToast({ type: 'error', title: t('files.copy_url_error') });
         }

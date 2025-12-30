@@ -99,7 +99,6 @@ const NoteFormWidget: FC<NoteFormWidgetProps> = ({ config }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes', workspaceId] });
-      addToast({ type: 'success', title: t('notes.createSuccess') });
       // Reset editor content
       editor?.commands.clearContent();
       setNote({ content: initContent });

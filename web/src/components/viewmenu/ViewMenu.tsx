@@ -39,7 +39,6 @@ const ViewMenu = ({ viewType, currentViewId }: ViewMenuProps) => {
             createView(currentWorkspaceId, { name, type: viewType, visibility: 'private' }),
         onSuccess: (newView) => {
             queryClient.invalidateQueries({ queryKey: ['views', currentWorkspaceId, viewType] })
-            addToast({ type: 'success', title: t('views.objectCreatedSuccess') })
             navigate(`/workspaces/${currentWorkspaceId}/${viewType}/${newView.id}`)
             setKeyword("")
         },
@@ -52,7 +51,6 @@ const ViewMenu = ({ viewType, currentViewId }: ViewMenuProps) => {
         mutationFn: (viewId: string) => deleteView(currentWorkspaceId, viewId),
         onSuccess: (_, deletedViewId) => {
             queryClient.invalidateQueries({ queryKey: ['views', currentWorkspaceId, viewType] })
-            addToast({ type: 'success', title: t('views.objectDeletedSuccess') })
 
             // If deleted view is current view, navigate to list page
             if (deletedViewId === currentViewId) {

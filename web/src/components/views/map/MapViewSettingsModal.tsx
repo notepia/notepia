@@ -64,7 +64,6 @@ const MapViewSettingsModal = ({
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['view', workspaceId, view.id] })
             queryClient.invalidateQueries({ queryKey: ['views', workspaceId] })
-            addToast({ type: 'success', title: t('views.settingsUpdated') || 'Settings updated successfully' })
             onOpenChange(false)
         },
         onError: () => {
@@ -109,7 +108,6 @@ const MapViewSettingsModal = ({
             } else {
                 // If only visibility was changed
                 if (visibility !== view.visibility) {
-                    addToast({ type: 'success', title: t('views.settingsUpdated') || 'Settings updated successfully' })
                     onOpenChange(false)
                 } else {
                     addToast({ type: 'error', title: 'Please provide valid settings' })

@@ -46,7 +46,6 @@ const AddNoteDialog = ({
     const addNoteMutation = useMutation({
         mutationFn: (noteId: string) => addNoteToViewObject(workspaceId, viewId, viewObjectId, noteId),
         onSuccess: () => {
-            addToast({ title: t('views.noteAddedSuccess'), type: 'success' })
             queryClient.invalidateQueries({ queryKey: ['view-object-notes', workspaceId, viewId, viewObjectId] })
             queryClient.invalidateQueries({ queryKey: ['column-notes', workspaceId, viewId, viewObjectId] })
             onOpenChange(false)
@@ -76,7 +75,6 @@ const AddNoteDialog = ({
             return newNote
         },
         onSuccess: (newNote) => {
-            addToast({ title: t('views.noteCreatedAndLinked'), type: 'success' })
             queryClient.invalidateQueries({ queryKey: ['view-object-notes', workspaceId, viewId, viewObjectId] })
             queryClient.invalidateQueries({ queryKey: ['column-notes', workspaceId, viewId, viewObjectId] })
             onSuccess?.()

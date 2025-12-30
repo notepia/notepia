@@ -49,7 +49,6 @@ const KanbanViewSettingsModal = ({
                 await visibilityMutation.mutateAsync(visibility)
             }
 
-            addToast({ type: 'success', title: t('views.settingsUpdated') || 'Settings updated successfully' })
             onOpenChange(false)
         } catch (error) {
             addToast({ type: 'error', title: t('views.settingsUpdateError') || 'Failed to update settings' })

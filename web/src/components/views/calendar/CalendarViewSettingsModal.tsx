@@ -37,7 +37,6 @@ const CalendarViewSettingsModal = ({
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['view', workspaceId, view.id] })
             queryClient.invalidateQueries({ queryKey: ['views', workspaceId] })
-            addToast({ type: 'success', title: t('views.settingsUpdated') || 'Settings updated successfully' })
             onOpenChange(false)
         },
         onError: () => {

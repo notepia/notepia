@@ -91,7 +91,6 @@ const WorkspaceHomePage = () => {
     mutationFn: (id: string) => deleteWidget(workspaceId, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['widgets', workspaceId] });
-      addToast({ type: 'success', title: t('widgets.deleteSuccess') });
     },
     onError: () => {
       addToast({ type: 'error', title: t('widgets.deleteError') });

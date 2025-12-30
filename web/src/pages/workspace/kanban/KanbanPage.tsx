@@ -65,7 +65,6 @@ const KanbanPage = () => {
             return newViewObject
         },
         onSuccess: () => {
-            addToast({ title: t('views.objectCreatedSuccess'), type: 'success' })
             refetchViewObjects()
             handleCloseModal()
         },

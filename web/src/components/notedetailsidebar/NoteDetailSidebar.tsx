@@ -41,7 +41,6 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
             try {
                 await queryClient.invalidateQueries({ queryKey: ['notes', workspaceId] })
                 navigate(`/workspaces/${workspaceId}/notes`)
-                addToast({ title: t('messages.noteDeleted') || 'Note deleted', type: 'success' })
             } catch (error) {
                 addToast({ title: t('messages.deleteNoteFailed') || 'Failed to delete note', type: 'error' })
             }
@@ -57,7 +56,6 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
         onSuccess: async () => {
             try {
                 await queryClient.invalidateQueries({ queryKey: ['note', workspaceId, note.id] })
-                addToast({ title: t('messages.visibilityUpdated') || 'Visibility updated', type: 'success' })
             } catch (error) {
                 addToast({ title: t('messages.updateVisibilityFailed') || 'Failed to update visibility', type: 'error' })
             }
@@ -117,7 +115,6 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
             return addNoteToViewObject(workspaceId, viewId, objectId, note.id)
         },
         onSuccess: () => {
-            addToast({ title: t('views.noteAddedSuccess'), type: 'success' })
             refetchViewObjects()
             queryClient.invalidateQueries({ queryKey: ['note-view-objects', workspaceId, note.id] })
             setIsPinning(false)
@@ -157,7 +154,6 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
             return newObject
         },
         onSuccess: () => {
-            addToast({ title: t('views.noteCreatedAndLinked') || 'Object created and linked successfully', type: 'success' })
             refetchViewObjects()
             queryClient.invalidateQueries({ queryKey: ['note-view-objects', workspaceId, note.id] })
             queryClient.invalidateQueries({ queryKey: ['view-objects', workspaceId, selectedViewId] })

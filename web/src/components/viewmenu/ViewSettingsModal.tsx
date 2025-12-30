@@ -71,7 +71,6 @@ const ViewSettingsModal = ({
             }
 
             if (hasChanges) {
-                addToast({ type: 'success', title: t('views.settingsUpdated') || 'Settings updated successfully' })
                 onOpenChange(false)
             } else {
                 onOpenChange(false)

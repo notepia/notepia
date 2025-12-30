@@ -209,7 +209,6 @@ export const NoteWidgetConfigForm: FC<WidgetConfigFormProps<NoteWidgetConfig>> =
     },
     onSuccess: (newNote) => {
       queryClient.invalidateQueries({ queryKey: ['notes', workspaceId, 'widget-config'] });
-      addToast({ type: 'success', title: t('notes.createSuccess') });
       // Automatically select the newly created note
       onChange({ ...config, noteId: newNote.id });
     },

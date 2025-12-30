@@ -70,7 +70,6 @@ const AddWidgetMenu: FC<AddWidgetMenuProps> = ({ parentId }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['widgets', workspaceId] });
-      addToast({ type: 'success', title: t('widgets.createSuccess') });
       handleClose();
     },
     onError: () => {

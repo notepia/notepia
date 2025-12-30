@@ -38,7 +38,6 @@ const MapPage = () => {
                 data: data.data
             }),
         onSuccess: () => {
-            addToast({ title: t('views.objectCreatedSuccess'), type: 'success' })
             refetchViewObjects()
             handleCloseModal()
         },
@@ -50,7 +49,6 @@ const MapPage = () => {
     const deleteMutation = useMutation({
         mutationFn: (objectId: string) => deleteViewObject(currentWorkspaceId, mapId!, objectId),
         onSuccess: () => {
-            addToast({ title: t('views.objectDeletedSuccess'), type: 'success' })
             refetchViewObjects()
         },
         onError: () => {

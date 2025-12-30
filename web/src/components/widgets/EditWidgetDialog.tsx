@@ -41,7 +41,6 @@ const EditWidgetDialog: FC<EditWidgetDialogProps> = ({ widget, isOpen, onClose }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['widgets', workspaceId] });
-      addToast({ type: 'success', title: t('widgets.updateSuccess') });
       onClose();
     },
     onError: () => {
