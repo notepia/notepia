@@ -54,34 +54,36 @@ const CalendarSlotDetail = () => {
 
     return (
         <div className="h-full overflow-y-auto bg-neutral-100 dark:bg-neutral-900">
-            <div className="p-4 border-b dark:border-neutral-700">
-                <button
-                    onClick={handleBack}
-                    className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mb-3"
-                >
-                    <ArrowLeft size={16} />
-                    {view.name}
-                </button>
-
-                <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                        <div className="text-xl font-semibold">{slot.name}</div>
-                        <div className="text-sm text-gray-500 mt-1">
-                            {t('views.calendarSlot')}
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            {new Date(slot.data).toLocaleDateString()}
-                        </div>
-                    </div>
+            {!isAddingNote && (
+                <div className="p-4 border-b dark:border-neutral-700">
                     <button
-                        onClick={() => setIsAddingNote(true)}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                        title={t('views.addNote')}
+                        onClick={handleBack}
+                        className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mb-3"
                     >
-                        <CirclePlus size={20} />
+                        <ArrowLeft size={16} />
+                        {view.name}
                     </button>
+
+                    <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                            <div className="text-xl font-semibold">{slot.name}</div>
+                            <div className="text-sm text-gray-500 mt-1">
+                                {t('views.calendarSlot')}
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                {new Date(slot.data).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setIsAddingNote(true)}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                            title={t('views.addNote')}
+                        >
+                            <CirclePlus size={20} />
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <ViewObjectNotesManager
                 workspaceId={workspaceId}

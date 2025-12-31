@@ -2,7 +2,6 @@ import { Calendar, Settings } from "lucide-react"
 import { useState } from "react"
 import { useTwoColumn } from "@/components/twocolumn"
 import CalendarViewComponent from "./CalendarViewComponent"
-import CreateViewObjectModal from "../CreateViewObjectModal"
 import CalendarViewSettingsModal from "./CalendarViewSettingsModal"
 import ViewHeader from "../common/ViewHeader"
 import ViewMenu from "@/components/viewmenu/ViewMenu"
@@ -65,21 +64,6 @@ const CalendarViewContent = ({
                         </div>
                     </>
                 }
-            />
-
-            <CreateViewObjectModal
-                open={isCreating}
-                onOpenChange={(open) => {
-                    if (!open) handleCloseModal()
-                    else setIsCreating(true)
-                }}
-                viewType="calendar"
-                name={newObjectName}
-                setName={setNewObjectName}
-                data={newObjectData}
-                setData={setNewObjectData}
-                onSubmit={handleCreate}
-                isSubmitting={createMutation.isPending}
             />
 
             <CalendarViewSettingsModal

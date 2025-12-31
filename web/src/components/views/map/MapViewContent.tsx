@@ -2,7 +2,6 @@ import { MapPin, Settings } from "lucide-react"
 import { useState } from "react"
 import { useTwoColumn } from "@/components/twocolumn"
 import MapViewComponent from "./MapViewComponent"
-import CreateViewObjectModal from "../CreateViewObjectModal"
 import MapViewSettingsModal from "./MapViewSettingsModal"
 import ViewHeader from "../common/ViewHeader"
 import ViewMenu from "@/components/viewmenu/ViewMenu"
@@ -68,21 +67,6 @@ const MapViewContent = ({
                     }
                 />
             </div>
-
-            <CreateViewObjectModal
-                open={isCreating}
-                onOpenChange={(open) => {
-                    if (!open) handleCloseModal()
-                    else setIsCreating(true)
-                }}
-                viewType="map"
-                name={newObjectName}
-                setName={setNewObjectName}
-                data={newObjectData}
-                setData={setNewObjectData}
-                onSubmit={handleCreate}
-                isSubmitting={createMutation.isPending}
-            />
 
             <MapViewSettingsModal
                 open={isSettingsOpen}
