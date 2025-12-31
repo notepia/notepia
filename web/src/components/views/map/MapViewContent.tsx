@@ -26,15 +26,6 @@ const MapViewContent = ({
     view,
     viewObjects,
     currentWorkspaceId,
-    isCreating,
-    setIsCreating,
-    handleCloseModal,
-    newObjectName,
-    setNewObjectName,
-    newObjectData,
-    setNewObjectData,
-    handleCreate,
-    createMutation,
     focusedObjectId
 }: MapViewContentProps) => {
     const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()

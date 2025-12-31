@@ -26,15 +26,6 @@ const CalendarViewContent = ({
     view,
     viewObjects,
     currentWorkspaceId,
-    isCreating,
-    setIsCreating,
-    handleCloseModal,
-    newObjectName,
-    setNewObjectName,
-    newObjectData,
-    setNewObjectData,
-    handleCreate,
-    createMutation,
     focusedObjectId
 }: CalendarViewContentProps) => {
     const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
