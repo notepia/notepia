@@ -118,7 +118,15 @@ const CalendarPage = () => {
                         focusedSlotId={slotId}
                         onDelete={handleDelete}
                         isDeleting={deleteMutation.isPending}
-                        onCreateClick={() => setIsCreating(true)}
+                        isCreating={isCreating}
+                        setIsCreating={setIsCreating}
+                        handleCloseModal={handleCloseModal}
+                        newObjectName={newObjectName}
+                        setNewObjectName={setNewObjectName}
+                        newObjectData={newObjectData}
+                        setNewObjectData={setNewObjectData}
+                        handleCreate={handleCreate}
+                        createMutation={createMutation}
                     />
                 )}
             </TwoColumnSidebar>

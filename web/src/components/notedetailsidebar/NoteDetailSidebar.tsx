@@ -3,10 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { deleteNote, NoteData, updateNoteVisibility } from "@/api/note"
 import { getViewObjectsForNote, getPublicViewObjectsForNote, getViews, getViewObjects, addNoteToViewObject, createViewObject } from "@/api/view"
 import { useTranslation } from "react-i18next"
-import { ChevronRight, Calendar, MapPin, Pin, Search, Plus, Trash2, Calendar1Icon, LayoutGrid, Eye, Pencil } from "lucide-react"
+import { ChevronRight, Calendar, MapPin, Pin, Search, Plus, Trash2, Calendar1Icon, LayoutGrid, Eye, Pencil, X } from "lucide-react"
 import { ViewObjectType } from "@/types/view"
 import { Link, useParams, useNavigate } from "react-router-dom"
-import * as Dialog from "@radix-ui/react-dialog"
 import { useToastStore } from "@/stores/toast"
 import CreateViewObjectModal from "@/components/views/CreateViewObjectModal"
 import { Visibility } from "@/types/visibility"
@@ -220,118 +219,128 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
     return (
         <div className="w-full h-full overflow-y-auto bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
             <div className="flex flex-col">
-                {
-                    workspaceId &&
-                    <div className="flex flex-col gap-2 flex-wrap p-4 pb-0">
-                        <VisibilitySelect
-                            value={note.visibility}
-                            onChange={handleUpdateVisibility}
-                        />
-                        {/* Mode Toggle Button */}
-                        {mode !== undefined && onModeChange && (
-                            <button
-                                onClick={() => onModeChange(mode === 'view' ? 'edit' : 'view')}
-                                className="px-2 py-1 inline-flex items-center justify-center gap-2 rounded-lg"
-                            >
-                                {mode === 'view' ? <Pencil size={16} /> : <Eye size={16} />}
-                                <div className="flex-1 text-left px-4">
-                                    {mode === 'view'
-                                        ? (t('common.edit') || 'Edit')
-                                        : (t('common.view') || 'View')}
-                                </div>
-                            </button>
+                {!isPinning ? (
+                    <>
+                        {workspaceId && (
+                            <div className="flex flex-col gap-2 flex-wrap p-4 pb-0">
+                                <VisibilitySelect
+                                    value={note.visibility}
+                                    onChange={handleUpdateVisibility}
+                                />
+                                {/* Mode Toggle Button */}
+                                {mode !== undefined && onModeChange && (
+                                    <button
+                                        onClick={() => onModeChange(mode === 'view' ? 'edit' : 'view')}
+                                        className="px-2 py-1 inline-flex items-center justify-center gap-2 rounded-lg"
+                                    >
+                                        {mode === 'view' ? <Pencil size={16} /> : <Eye size={16} />}
+                                        <div className="flex-1 text-left px-4">
+                                            {mode === 'view'
+                                                ? (t('common.edit') || 'Edit')
+                                                : (t('common.view') || 'View')}
+                                        </div>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setIsPinning(true)}
+                                    disabled={!workspaceId}
+                                    className="px-2 py-1 inline-flex items-center justify-center gap-2 rounded-lg"
+                                >
+                                    <Pin size={16} />
+                                    <div className="flex-1 text-left px-4">
+                                        {t('views.pinTo') || 'Pin to...'}
+                                    </div>
+                                </button>
+                                <button onClick={handleDelete} className="px-2 py-1 text-red-500 rounded-lg inline-flex items-center justify-center gap-2">
+                                    <Trash2 size={16} />
+                                    <div className="flex-1 text-left px-4">
+                                        {t("actions.delete")}
+                                    </div>
+                                </button>
+                            </div>
                         )}
-                        <button
-                            onClick={() => setIsPinning(true)}
-                            disabled={!workspaceId}
-                            className="px-2 py-1 inline-flex items-center justify-center gap-2 rounded-lg "
-                        >
-                            <Pin size={16} />
-                            <div className="flex-1 text-left px-4">
-                                {t('views.pinTo') || 'Pin to...'}
-                            </div>
-                        </button>
-                        <button onClick={handleDelete} className="px-2 py-1 text-red-500 rounded-lg inline-flex items-center justify-center gap-2 ">
-                            <Trash2 size={16} />
-                            <div className="flex-1 text-left px-4">
-                                {t("actions.delete")}
-                            </div>
-                        </button>
-                    </div>
-                }
 
-                <div className="flex flex-col p-4">
-                    {
-                        groupedByView.length > 0 &&
-                        <div className="font-bold text-gray-400 p-2">
-                            {t("common.pinned")}
+                        <div className="flex flex-col p-4">
+                            {groupedByView.length > 0 && (
+                                <div className="font-bold text-gray-400 p-2">
+                                    {t("common.pinned")}
+                                </div>
+                            )}
+                            {groupedByView.length > 0 &&
+                                groupedByView.map((viewGroup) => (
+                                    <div key={viewGroup.view.id}>
+                                        {viewGroup.viewObjects.map((vo: any) => {
+                                            // Determine the URL based on view type and object type
+                                            const getObjectUrl = () => {
+                                                const viewType = viewGroup.view.type
+                                                const viewId = viewGroup.view.id
+                                                const objectId = vo.id
+
+                                                if (workspaceId) {
+                                                    if (viewType === 'calendar') {
+                                                        return `/workspaces/${workspaceId}/calendar/${viewId}/slot/${objectId}`
+                                                    } else if (viewType === 'map') {
+                                                        return `/workspaces/${workspaceId}/map/${viewId}/marker/${objectId}`
+                                                    } else if (viewType === 'kanban') {
+                                                        // Kanban doesn't have object detail pages
+                                                        return `/workspaces/${workspaceId}/kanban/${viewId}`
+                                                    }
+                                                } else {
+                                                    if (viewType === 'calendar') {
+                                                        return `/explore/calendar/${viewId}/slot/${objectId}`
+                                                    } else if (viewType === 'map') {
+                                                        return `/explore/map/${viewId}/marker/${objectId}`
+                                                    } else if (viewType === 'kanban') {
+                                                        return `/explore/kanban/${viewId}`
+                                                    }
+                                                }
+                                                return '#'
+                                            }
+
+                                            return (
+                                                <Link
+                                                    key={vo.id}
+                                                    to={getObjectUrl()}
+                                                >
+                                                    <div className="flex items-center gap-2 text-gray-600 px-2 py-1">
+                                                        <div>
+                                                            {vo.type === "map_marker" ? (
+                                                                <MapPin size={16} />
+                                                            ) : vo.type === "kanban_column" ? (
+                                                                <LayoutGrid size={16} />
+                                                            ) : (
+                                                                <Calendar1Icon size={16} />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 px-2">
+                                                            {vo.name}
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            )
+                                        })}
+                                    </div>
+                                ))}
                         </div>
-                    }
-                    {groupedByView.length > 0 &&
-                        groupedByView.map((viewGroup) => (
-                            <div>
-                                {viewGroup.viewObjects.map((vo: any) => {
-                                    // Determine the URL based on view type and object type
-                                    const getObjectUrl = () => {
-                                        const viewType = viewGroup.view.type
-                                        const viewId = viewGroup.view.id
-                                        const objectId = vo.id
-
-                                        if (workspaceId) {
-                                            if (viewType === 'calendar') {
-                                                return `/workspaces/${workspaceId}/calendar/${viewId}/slot/${objectId}`
-                                            } else if (viewType === 'map') {
-                                                return `/workspaces/${workspaceId}/map/${viewId}/marker/${objectId}`
-                                            } else if (viewType === 'kanban') {
-                                                // Kanban doesn't have object detail pages
-                                                return `/workspaces/${workspaceId}/kanban/${viewId}`
-                                            }
-                                        } else {
-                                            if (viewType === 'calendar') {
-                                                return `/explore/calendar/${viewId}/slot/${objectId}`
-                                            } else if (viewType === 'map') {
-                                                return `/explore/map/${viewId}/marker/${objectId}`
-                                            } else if (viewType === 'kanban') {
-                                                return `/explore/kanban/${viewId}`
-                                            }
-                                        }
-                                        return '#'
-                                    }
-
-                                    return (
-                                        <Link
-                                            key={vo.id}
-                                            to={getObjectUrl()}
-                                        >
-                                            <div className="flex items-center gap-2 text-gray-600 px-2 py-1">
-                                                <div >
-                                                    {vo.type === "map_marker" ? (
-                                                        <MapPin size={16} />
-                                                    ) : vo.type === "kanban_column" ? (
-                                                        <LayoutGrid size={16} />
-                                                    ) : (
-                                                        <Calendar1Icon size={16} />
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 px-2">
-                                                    {vo.name}
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    )
-                                })}
-                            </div>))}
-                </div>
-            </div>
-
-            {/* Pin to View Object Dialog */}
-            <Dialog.Root open={isPinning} onOpenChange={setIsPinning}>
-                <Dialog.Portal>
-                    <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[600px] z-50 max-h-[85vh] overflow-y-auto">
-                        <Dialog.Title className="text-xl font-semibold mb-4">
-                            {t('views.pinNoteToObject') || 'Pin Note to View Object'}
-                        </Dialog.Title>
+                    </>
+                ) : (
+                    /* Pin to View Object Interface */
+                    <div className="flex flex-col p-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold">
+                                {t('views.pinNoteToObject') || 'Pin Note to View Object'}
+                            </h3>
+                            <button
+                                onClick={() => {
+                                    setIsPinning(false)
+                                    setSelectedViewId(null)
+                                    setSearchQuery("")
+                                }}
+                                className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
 
                         {/* Search */}
                         <div className="mb-4">
@@ -355,19 +364,19 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
                                         <button
                                             key={view.id}
                                             onClick={() => setSelectedViewId(view.id)}
-                                            className="w-full text-left p-4 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 flex items-center justify-between"
+                                            className="w-full text-left p-3 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 flex items-center justify-between"
                                         >
                                             <div className="flex items-center gap-3">
                                                 {view.type === 'calendar' ? (
-                                                    <Calendar size={20} className="text-gray-500" />
+                                                    <Calendar size={18} className="text-gray-500" />
                                                 ) : view.type === 'kanban' ? (
-                                                    <LayoutGrid size={20} className="text-gray-500" />
+                                                    <LayoutGrid size={18} className="text-gray-500" />
                                                 ) : (
-                                                    <MapPin size={20} className="text-gray-500" />
+                                                    <MapPin size={18} className="text-gray-500" />
                                                 )}
                                                 <span className="font-medium">{view.name}</span>
                                             </div>
-                                            <ChevronRight size={20} className="text-gray-400" />
+                                            <ChevronRight size={18} className="text-gray-400" />
                                         </button>
                                     ))
                                 ) : (
@@ -406,7 +415,7 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
                                             key={obj.id}
                                             onClick={() => pinNoteMutation.mutate({ viewId: selectedViewId, objectId: obj.id })}
                                             disabled={pinNoteMutation.isPending}
-                                            className="w-full text-left p-4 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 disabled:opacity-50"
+                                            className="w-full text-left p-3 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 disabled:opacity-50"
                                         >
                                             <div className="flex items-center gap-2">
                                                 {obj.type === 'kanban_column' && (() => {
@@ -452,23 +461,15 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
                                         </button>
                                     ))
                                 ) : (
-                                    <p className="text-center text-gray-500 py-8">
+                                    <p className="text-center text-gray-500 py-8 text-sm">
                                         {t('views.allObjectsLinked') || 'All objects in this view are already linked to this note'}
                                     </p>
                                 )}
                             </div>
                         )}
-
-                        <div className="mt-6 flex justify-end">
-                            <Dialog.Close asChild>
-                                <button className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                                    {t('common.close') || 'Close'}
-                                </button>
-                            </Dialog.Close>
-                        </div>
-                    </Dialog.Content>
-                </Dialog.Portal>
-            </Dialog.Root>
+                    </div>
+                )}
+            </div>
 
             {/* Create View Object Modal */}
             {selectedView && (

@@ -16,6 +16,7 @@ interface CreateViewObjectModalProps {
     setData: (data: string) => void
     onSubmit: () => void
     isSubmitting: boolean
+    inline?: boolean // New prop for inline mode
 }
 
 interface NominatimResult {
@@ -47,7 +48,8 @@ const CreateViewObjectModal = ({
     data,
     setData,
     onSubmit,
-    isSubmitting
+    isSubmitting,
+    inline = false
 }: CreateViewObjectModalProps) => {
     const { t } = useTranslation()
     const [searchQuery, setSearchQuery] = useState("")
@@ -487,6 +489,58 @@ const CreateViewObjectModal = ({
         return null
     }
 
+    const formContent = (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+                <label className="block text-sm font-medium mb-2">
+                    {getNameLabel()}
+                </label>
+                <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                    placeholder={t('views.enterName')}
+                    autoFocus
+                />
+            </div>
+
+            {renderDataInput()}
+
+            <div className="flex gap-3 justify-end mt-6">
+                {!inline ? (
+                    <Dialog.Close asChild>
+                        <button
+                            type="button"
+                            className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        >
+                            {t('common.cancel')}
+                        </button>
+                    </Dialog.Close>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() => onOpenChange(false)}
+                        className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                        {t('common.cancel')}
+                    </button>
+                )}
+                <button
+                    type="submit"
+                    disabled={isSubmitting || !name.trim() || (viewType === 'map' && (!latitude || !longitude))}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isSubmitting ? t('common.creating') : t('common.create')}
+                </button>
+            </div>
+        </form>
+    )
+
+    if (inline) {
+        return <div className="space-y-4">{formContent}</div>
+    }
+
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
@@ -495,42 +549,7 @@ const CreateViewObjectModal = ({
                     <Dialog.Title className="text-xl font-semibold mb-4">
                         {getTitle()}
                     </Dialog.Title>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                {getNameLabel()}
-                            </label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
-                                placeholder={t('views.enterName')}
-                                autoFocus
-                            />
-                        </div>
-
-                        {renderDataInput()}
-
-                        <div className="flex gap-3 justify-end mt-6">
-                            <Dialog.Close asChild>
-                                <button
-                                    type="button"
-                                    className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                                >
-                                    {t('common.cancel')}
-                                </button>
-                            </Dialog.Close>
-                            <button
-                                type="submit"
-                                disabled={isSubmitting || !name.trim() || (viewType === 'map' && (!latitude || !longitude))}
-                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isSubmitting ? t('common.creating') : t('common.create')}
-                            </button>
-                        </div>
-                    </form>
+                    {formContent}
                 </Dialog.Content>
             </Dialog.Portal>
         </Dialog.Root>

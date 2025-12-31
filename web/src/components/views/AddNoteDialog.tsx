@@ -18,6 +18,7 @@ interface AddNoteDialogProps {
     onOpenChange: (open: boolean) => void
     linkedNoteIds?: string[]
     onSuccess?: () => void
+    inline?: boolean // New prop for inline mode
 }
 
 const AddNoteDialog = ({
@@ -28,7 +29,8 @@ const AddNoteDialog = ({
     isOpen,
     onOpenChange,
     linkedNoteIds = [],
-    onSuccess
+    onSuccess,
+    inline = false
 }: AddNoteDialogProps) => {
     const { t } = useTranslation()
     const { addToast } = useToastStore()
@@ -88,6 +90,84 @@ const AddNoteDialog = ({
 
     const availableNotes = Array.isArray(allNotes) ? allNotes.filter((note: any) => !linkedNoteIds.includes(note.id)) : []
 
+    const dialogContent = (
+        <>
+            {/* Create New Note Button */}
+            <button
+                onClick={() => createAndLinkNoteMutation.mutate()}
+                disabled={createAndLinkNoteMutation.isPending}
+                className="w-full mb-4 px-4 py-3 bg-black text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+                <FilePlus size={18} />
+                {createAndLinkNoteMutation.isPending ? t('common.creating') : t('views.createNewNote')}
+            </button>
+
+            <div className="relative mb-4">
+                <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t dark:border-neutral-600"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                    <span className="bg-white dark:bg-neutral-800 px-2 text-gray-500">
+                        {t('views.orLinkExisting')}
+                    </span>
+                </div>
+            </div>
+
+            {/* Search */}
+            <div className="mb-4">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={t('views.searchNotes')}
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                    />
+                </div>
+            </div>
+
+            {/* Notes List */}
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+                {availableNotes.length > 0 ? (
+                    availableNotes.map((note: any) => (
+                        <button
+                            key={note.id}
+                            onClick={() => addNoteMutation.mutate(note.id)}
+                            disabled={addNoteMutation.isPending}
+                            className="w-full text-left p-3 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 disabled:opacity-50"
+                        >
+                            <div className="text-sm line-clamp-3 mb-2 overflow-hidden [&_.prose]:text-sm [&_.prose]:leading-normal">
+                                <Renderer content={note.content} />
+                            </div>
+                            <p className="text-xs text-gray-500">
+                                {new Date(note.created_at).toLocaleDateString()}
+                            </p>
+                        </button>
+                    ))
+                ) : (
+                    <p className="text-center text-gray-500 py-8">
+                        {searchQuery ? t('views.noNotesFound') : t('views.allNotesLinked')}
+                    </p>
+                )}
+            </div>
+
+            {!inline && (
+                <div className="mt-6 flex justify-end">
+                    <Dialog.Close asChild>
+                        <button className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                            {t('common.close')}
+                        </button>
+                    </Dialog.Close>
+                </div>
+            )}
+        </>
+    )
+
+    if (inline) {
+        return <div className="space-y-4">{dialogContent}</div>
+    }
+
     return (
         <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>
             <Dialog.Portal>
@@ -96,74 +176,7 @@ const AddNoteDialog = ({
                     <Dialog.Title className="text-xl font-semibold mb-4">
                         {t('views.addNoteToObject', { name: viewObjectName })}
                     </Dialog.Title>
-
-                    {/* Create New Note Button */}
-                    <button
-                        onClick={() => createAndLinkNoteMutation.mutate()}
-                        disabled={createAndLinkNoteMutation.isPending}
-                        className="w-full mb-4 px-4 py-3 bg-black text-white rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <FilePlus size={18} />
-                        {createAndLinkNoteMutation.isPending ? t('common.creating') : t('views.createNewNote')}
-                    </button>
-
-                    <div className="relative mb-4">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t dark:border-neutral-600"></div>
-                        </div>
-                        <div className="relative flex justify-center text-xs">
-                            <span className="bg-white dark:bg-neutral-800 px-2 text-gray-500">
-                                {t('views.orLinkExisting')}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Search */}
-                    <div className="mb-4">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={t('views.searchNotes')}
-                                className="w-full pl-10 pr-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Notes List */}
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {availableNotes.length > 0 ? (
-                            availableNotes.map((note: any) => (
-                                <button
-                                    key={note.id}
-                                    onClick={() => addNoteMutation.mutate(note.id)}
-                                    disabled={addNoteMutation.isPending}
-                                    className="w-full text-left p-3 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 disabled:opacity-50"
-                                >
-                                    <div className="text-sm line-clamp-3 mb-2 overflow-hidden [&_.prose]:text-sm [&_.prose]:leading-normal">
-                                        <Renderer content={note.content} />
-                                    </div>
-                                    <p className="text-xs text-gray-500">
-                                        {new Date(note.created_at).toLocaleDateString()}
-                                    </p>
-                                </button>
-                            ))
-                        ) : (
-                            <p className="text-center text-gray-500 py-8">
-                                {searchQuery ? t('views.noNotesFound') : t('views.allNotesLinked')}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="mt-6 flex justify-end">
-                        <Dialog.Close asChild>
-                            <button className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                                {t('common.close')}
-                            </button>
-                        </Dialog.Close>
-                    </div>
+                    {dialogContent}
                 </Dialog.Content>
             </Dialog.Portal>
         </Dialog.Root>
