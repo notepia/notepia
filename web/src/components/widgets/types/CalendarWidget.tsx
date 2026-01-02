@@ -77,12 +77,8 @@ const CalendarWidget: FC<CalendarWidgetProps> = ({ config }) => {
     calendarDays.push(d);
   }
 
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-
-  const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const monthNames = Array.from({ length: 12 }, (_, i) => t(`time.monthsFull.${i}`));
+  const weekDays = Array.from({ length: 7 }, (_, i) => t(`time.weekDays.${i}`).charAt(0));
 
   // Check if a day has any slots
   const getSlotsForDay = (day: number | null) => {
@@ -193,7 +189,7 @@ const CalendarWidget: FC<CalendarWidgetProps> = ({ config }) => {
                 previousMonth();
               }}
               className="p-3 rounded bg-white dark:bg-neutral-800"
-              title="Previous month"
+              title={t('views.previousMonth')}
             >
               <ChevronLeft size={14} />
             </button>
@@ -203,7 +199,7 @@ const CalendarWidget: FC<CalendarWidgetProps> = ({ config }) => {
                 nextMonth();
               }}
               className="p-3 rounded bg-white dark:bg-neutral-800"
-              title="Next month"
+              title={t('views.nextMonth')}
             >
               <ChevronRight size={14} />
             </button>

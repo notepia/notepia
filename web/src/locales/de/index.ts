@@ -281,6 +281,29 @@ export default {
       10: "Okt",
       11: "Nov",
       12: "Dez"
+    },
+    monthsFull: {
+      0: "Januar",
+      1: "Februar",
+      2: "März",
+      3: "April",
+      4: "Mai",
+      5: "Juni",
+      6: "Juli",
+      7: "August",
+      8: "September",
+      9: "Oktober",
+      10: "November",
+      11: "Dezember"
+    },
+    weekDays: {
+      0: "So",
+      1: "Mo",
+      2: "Di",
+      3: "Mi",
+      4: "Do",
+      5: "Fr",
+      6: "Sa"
     }
   },
   files: {

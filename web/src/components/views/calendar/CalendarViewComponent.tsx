@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTwoColumn } from '@/components/twocolumn/TwoColumn'
+import { useTranslation } from 'react-i18next'
 
 interface CalendarViewComponentProps {
     viewObjects?: any[]
@@ -13,6 +14,7 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
     const navigate = useNavigate()
     const { workspaceId, calendarId } = useParams<{ workspaceId?: string; calendarId: string }>()
     const { openBottomSheet } = useTwoColumn()
+    const { t } = useTranslation()
 
     // Find the focused object's date
     const focusedDate = useMemo(() => {
@@ -90,12 +92,8 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
         }
     }
 
-    const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ]
-
-    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const monthNames = Array.from({ length: 12 }, (_, i) => t(`time.monthsFull.${i}`))
+    const weekDays = Array.from({ length: 7 }, (_, i) => t(`time.weekDays.${i}`))
 
     const previousMonth = () => {
         setCurrentDate(new Date(year, month - 1, 1))
@@ -158,7 +156,7 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
                         <button
                             onClick={previousMonth}
                             className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                            title="Previous month"
+                            title={t('views.previousMonth')}
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -166,12 +164,12 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
                             onClick={() => setCurrentDate(new Date())}
                             className="px-4 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm font-medium"
                         >
-                            Today
+                            {t('views.today')}
                         </button>
                         <button
                             onClick={nextMonth}
                             className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                            title="Next month"
+                            title={t('views.nextMonth')}
                         >
                             <ChevronRight size={20} />
                         </button>
