@@ -18,7 +18,7 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo }) => {
             <>
                 <div className="flex justify-between items-center text-gray-500">
                     <div>
-                        <NoteTime time={note.updated_at ?? ""} />
+                        <NoteTime time={note.created_at ?? ""} />
                     </div>
                     <div>
                         <Link to={linkTo || ""}>
