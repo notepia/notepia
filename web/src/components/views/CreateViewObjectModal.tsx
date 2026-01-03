@@ -546,9 +546,6 @@ const CreateViewObjectModal = ({
                                 />
                             </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                            {t('views.nodePositionHint') || 'Default position is (100, 100)'}
-                        </p>
                     </div>
 
                     {/* Color Picker (Optional) */}

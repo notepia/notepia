@@ -38,7 +38,7 @@ const FlowViewContent = ({
     const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
     return (
-        <div className="flex flex-col h-dvh">
+        <div className="flex flex-col h-dvh bg-neutral-50 dark:bg-neutral-950">
             <ViewHeader
                 menu={<ViewMenu viewType="flow" currentViewId={view.id} />}
                 rightActions={

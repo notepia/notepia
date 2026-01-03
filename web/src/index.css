@@ -232,3 +232,19 @@ ul[data-type="taskList"] > li{
 .marker-label::before {
   display: none !important;
 }
+
+.react-flow__minimap-svg {
+  background: #fff!important;
+}
+
+.react-flow__minimap-svg:where(.dark, .dark *) {
+  background: #222!important;
+}
+
+.react-flow__controls-button {
+  background: #fff!important;
+}
+
+.react-flow__controls-button:where(.dark, .dark *){
+  background: #222!important;
+}

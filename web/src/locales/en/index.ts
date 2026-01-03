@@ -475,6 +475,8 @@ export default {
     searchFlow: "Search / Add Flow",
     noFlows: "No flows yet",
     createFirstFlow: "Create your first flow to get started",
+    createFlowNode: "Create Flow Node",
+    position: "Position",
     flowSettings: "Flow Settings",
     editNode: "Edit Node",
     nodeName: "Node Name",
