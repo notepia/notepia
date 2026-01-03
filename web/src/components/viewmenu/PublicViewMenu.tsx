@@ -49,6 +49,8 @@ const PublicViewMenu = ({ viewType, currentViewId }: PublicViewMenuProps) => {
                 return t('views.map')
             case 'kanban':
                 return t('views.kanban') || 'Kanban'
+            case 'flow':
+                return t('views.flow') || 'Kanban'
             default:
                 return viewType
         }
@@ -57,11 +59,13 @@ const PublicViewMenu = ({ viewType, currentViewId }: PublicViewMenuProps) => {
     const getSearchPlaceholder = () => {
         switch (viewType) {
             case 'calendar':
-                return t('views.searchCalendar')
+                return t('views.searchCalendarOnly')
             case 'map':
-                return t('views.searchMap')
+                return t('views.searchMapOnly')
             case 'kanban':
-                return t('views.searchKanban')
+                return t('views.searchKanbanOnly')
+            case 'flow':
+                return t('views.searchFlowOnly')
             default:
                 return t('placeholder.searchWorkspace')
         }

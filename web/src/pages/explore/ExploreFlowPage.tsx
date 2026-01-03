@@ -31,11 +31,11 @@ const ExploreFlowPage = () => {
     }
 
     return (
-        <div className="h-screen flex flex-col">
+        <div className="flex flex-col h-dvh bg-neutral-50 dark:bg-neutral-950">
             <ViewHeader
                 menu={<PublicViewMenu viewType="flow" currentViewId={view.id} />}
             />
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden border shadow">
                 <FlowViewComponent
                     view={view}
                     viewObjects={viewObjects}
