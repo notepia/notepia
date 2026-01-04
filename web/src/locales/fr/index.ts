@@ -397,6 +397,8 @@ export default {
     month: "Mois",
     week: "Semaine",
     day: "Jour",
+    startTime: "Heure de début",
+    endTime: "Heure de fin",
     calendarTip: "Cliquez sur n'importe quel jour pour afficher ou ajouter des créneaux du calendrier. Utilisez la barre latérale pour gérer vos créneaux.",
     mapTip: "Les marqueurs de carte apparaissent dans la barre latérale. Vous pouvez créer de nouveaux marqueurs et gérer les existants.",
     hideSidebar: "Masquer la barre latérale",

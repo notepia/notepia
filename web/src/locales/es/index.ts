@@ -397,6 +397,8 @@ export default {
     month: "Mes",
     week: "Semana",
     day: "Día",
+    startTime: "Hora de inicio",
+    endTime: "Hora de fin",
     calendarTip: "Haz clic en cualquier día para ver o añadir espacios de calendario. Usa la barra lateral para gestionar tus espacios.",
     mapTip: "Los marcadores del mapa aparecen en la barra lateral. Puedes crear nuevos marcadores y gestionar los existentes.",
     hideSidebar: "Ocultar Barra Lateral",

@@ -398,6 +398,8 @@ export default {
     month: "月",
     week: "周",
     day: "日",
+    startTime: "开始时间",
+    endTime: "结束时间",
     calendarTip: "点击任何一天查看或添加日历槽位。使用侧边栏管理你的槽位。",
     mapTip: "地图标记显示在侧边栏中。你可以创建新标记并管理现有标记。",
     hideSidebar: "隐藏侧边栏",

@@ -397,6 +397,8 @@ export default {
     month: "Monat",
     week: "Woche",
     day: "Tag",
+    startTime: "Startzeit",
+    endTime: "Endzeit",
     calendarTip: "Klicken Sie auf einen beliebigen Tag, um Kalender-Slots anzuzeigen oder hinzuzufügen. Verwenden Sie die Seitenleiste, um Ihre Slots zu verwalten.",
     mapTip: "Kartenmarkierungen werden in der Seitenleiste angezeigt. Sie können neue Markierungen erstellen und vorhandene verwalten.",
     hideSidebar: "Seitenleiste ausblenden",

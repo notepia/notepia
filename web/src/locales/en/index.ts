@@ -398,6 +398,8 @@ export default {
     month: "Month",
     week: "Week",
     day: "Day",
+    startTime: "Start time",
+    endTime: "End time",
     calendarTip: "Click on any day to view or add calendar slots. Use the sidebar to manage your slots.",
     mapTip: "Map markers appear in the sidebar. You can create new markers and manage existing ones.",
     hideSidebar: "Hide Sidebar",
