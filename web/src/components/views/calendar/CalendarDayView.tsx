@@ -176,14 +176,14 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                 </div>
 
                 {/* Day view */}
-                <div className="border dark:border-neutral-700 rounded-lg overflow-hidden max-h-[calc(100dvh-140px)]">
+                <div className="border dark:border-neutral-700 rounded-lg overflow-auto max-h-[calc(100dvh-140px)]">
                     {/* All-day events section */}
                     {allDayEvents.length > 0 && (
                         <div className="bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700 p-3">
                             <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
                                 {t('views.allDay') || 'All day'}
                             </div>
-                            <div className="flex flex-col gap-1">
+                            <div className="flex gap-1 overflow-auto">
                                 {allDayEvents.map((slot) => (
                                     <button
                                         key={slot.id}
@@ -199,7 +199,7 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                     )}
 
                     {/* Time grid */}
-                    <div className="overflow-y-auto max-h-[600px]">
+                    <div className="overflow-y-auto">
                         {timeSlots.map(({ hour, minute }) => {
                             const slots = getSlotsForTimeSlot(hour, minute)
                             const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`

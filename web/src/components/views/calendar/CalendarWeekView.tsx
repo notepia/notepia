@@ -182,7 +182,7 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                 </div>
 
                 {/* Week view grid */}
-                <div className="border dark:border-neutral-700 rounded-lg overflow-hidden">
+                <div className="border dark:border-neutral-700 rounded-lg overflow-hidden flex flex-col h-[calc(100dvh-140px)]">
                     {/* Header row with day names and dates */}
                     <div className="flex bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700">
                         <div className="w-16 p-2 text-sm font-semibold text-gray-600 dark:text-gray-400"></div>
@@ -206,7 +206,7 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                     </div>
 
                     {/* All-day events row */}
-                    <div className="flex bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700">
+                    <div className="flex bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700 shrink-0">
                         <div className="w-16 p-2 text-xs font-semibold text-gray-600 dark:text-gray-400">
                             {t('views.allDay') || 'All day'}
                         </div>
@@ -215,7 +215,7 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                             return (
                                 <div
                                     key={i}
-                                    className="flex-1 p-1 border-l dark:border-neutral-700 min-h-[40px]"
+                                    className="flex-1 p-1 border-l dark:border-neutral-700 "
                                 >
                                     <div className="flex flex-col gap-1">
                                         {allDayEvents.map((slot) => (
@@ -235,7 +235,7 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                     </div>
 
                     {/* Time grid */}
-                    <div className="overflow-y-auto max-h-[calc(100dvh-230px)]">
+                    <div className="overflow-y-auto flex-1">
                         {timeSlots.map((hour) => (
                             <div key={hour} className="flex border-b dark:border-neutral-700">
                                 <div className="w-16 p-2 text-xs font-medium text-gray-600 dark:text-gray-400 border-r dark:border-neutral-700">
