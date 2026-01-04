@@ -115,7 +115,6 @@ const CalendarSlotsList = ({
                             <div className="space-y-4">
                                 {sortedDates.map((date) => (
                                     <div key={date}>
-                                        <div className="text-sm font-medium text-gray-500 mb-2">{date}</div>
                                         <div className="space-y-2">
                                             {groupedSlots[date].map((slot: any) => {
                                                 const isFocused = slot.id === focusedSlotId

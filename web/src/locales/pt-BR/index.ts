@@ -397,6 +397,8 @@ export default {
     month: "Mês",
     week: "Semana",
     day: "Dia",
+    startTime: "Hora de início",
+    endTime: "Hora de término",
     calendarTip: "Clique em qualquer dia para visualizar ou adicionar slots do calendário. Use a barra lateral para gerenciar seus slots.",
     mapTip: "Os marcadores do mapa aparecem na barra lateral. Você pode criar novos marcadores e gerenciar os existentes.",
     hideSidebar: "Ocultar Barra Lateral",

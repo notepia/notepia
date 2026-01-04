@@ -397,6 +397,8 @@ export default {
     month: "월",
     week: "주",
     day: "일",
+    startTime: "시작 시간",
+    endTime: "종료 시간",
     calendarTip: "아무 날이나 클릭하여 캘린더 슬롯을 보거나 추가하세요. 사이드바를 사용하여 슬롯을 관리하세요.",
     mapTip: "지도 마커가 사이드바에 나타납니다. 새 마커를 만들고 기존 마커를 관리할 수 있습니다.",
     hideSidebar: "사이드바 숨기기",

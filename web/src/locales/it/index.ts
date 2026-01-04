@@ -397,6 +397,8 @@ export default {
     month: "Mese",
     week: "Settimana",
     day: "Giorno",
+    startTime: "Ora di inizio",
+    endTime: "Ora di fine",
     calendarTip: "Fai clic su qualsiasi giorno per visualizzare o aggiungere slot calendario. Usa la barra laterale per gestire i tuoi slot.",
     mapTip: "I marcatori della mappa appaiono nella barra laterale. Puoi creare nuovi marcatori e gestire quelli esistenti.",
     hideSidebar: "Nascondi barra laterale",

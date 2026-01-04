@@ -398,6 +398,8 @@ export default {
     month: "月",
     week: "週",
     day: "日",
+    startTime: "開始時間",
+    endTime: "結束時間",
     calendarTip: "點擊任意日期來查看或新增行事曆時段。使用側邊欄來管理你的時段。",
     mapTip: "地圖標記會顯示在側邊欄。你可以建立新標記並管理現有標記。",
     hideSidebar: "隱藏側邊欄",
