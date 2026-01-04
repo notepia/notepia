@@ -43,7 +43,7 @@ export const TwoColumn = ({ children, breakpoint = 1024, defaultBottomSheetOpen 
 
     return (
         <TwoColumnContext.Provider value={{ isSidebarCollapsed, toggleSidebar, openBottomSheet, breakpoint }}>
-            <div className={twMerge(!isCollapse ? "xl:px-4" : "", "w-full h-screen flex overflow-hidden ")}>
+            <div className={twMerge(!isCollapse ? "xl:px-4" : "", "w-full h-dvh flex overflow-hidden ")}>
                 {children}
             </div>
         </TwoColumnContext.Provider>
