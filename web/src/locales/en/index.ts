@@ -334,6 +334,7 @@ export default {
     createView: "Create View",
     editView: "Edit View",
     deleteView: "Delete this view",
+    deleteViewWarning: "This action cannot be undone",
     deleteConfirm: "Are you sure you want to delete this view?",
     noViews: "No views yet. Create your first view!",
     viewName: "View Name",

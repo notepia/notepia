@@ -334,6 +334,7 @@ export default {
     createView: "建立視圖",
     editView: "編輯視圖",
     deleteView: "刪除此視圖",
+    deleteViewWarning: "此操作無法復原",
     deleteConfirm: "確定要刪除這個視圖嗎?",
     noViews: "尚無視圖。建立你的第一個視圖!",
     viewName: "視圖名稱",
