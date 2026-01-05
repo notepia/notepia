@@ -75,6 +75,7 @@ const CreateViewObjectModal = ({
     const [startTime, setStartTime] = useState('')
     const [endTime, setEndTime] = useState('')
     const [isAllDay, setIsAllDay] = useState(true)
+    const [slotColor, setSlotColor] = useState('')
 
     // Parse existing data when modal opens for map type
     useEffect(() => {
@@ -98,6 +99,7 @@ const CreateViewObjectModal = ({
                 if (slotData.start_time) setStartTime(slotData.start_time)
                 if (slotData.end_time) setEndTime(slotData.end_time)
                 if (slotData.is_all_day !== undefined) setIsAllDay(slotData.is_all_day)
+                if (slotData.color) setSlotColor(slotData.color)
             } catch (e) {
                 // Fallback for old format (just a date string)
                 setCalendarDate(data)
@@ -122,6 +124,7 @@ const CreateViewObjectModal = ({
             setStartTime('')
             setEndTime('')
             setIsAllDay(true)
+            setSlotColor('')
         }
     }, [open])
 
@@ -182,9 +185,12 @@ const CreateViewObjectModal = ({
             if (!isAllDay && endTime) {
                 calendarData.end_time = endTime
             }
+            if (slotColor) {
+                calendarData.color = slotColor
+            }
             setData(JSON.stringify(calendarData))
         }
-    }, [calendarDate, startTime, endTime, isAllDay, viewType, setData])
+    }, [calendarDate, startTime, endTime, isAllDay, slotColor, viewType, setData])
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -387,6 +393,37 @@ const CreateViewObjectModal = ({
                             </div>
                         </div>
                     )}
+
+                    {/* Color Picker (Optional) */}
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
+                            {t('views.color') || 'Color'} ({t('common.optional') || 'Optional'})
+                        </label>
+                        <div className="flex gap-2">
+                            <input
+                                type="color"
+                                value={slotColor || '#3B82F6'}
+                                onChange={(e) => setSlotColor(e.target.value)}
+                                className="w-20 h-10 rounded-lg border dark:border-neutral-600 cursor-pointer"
+                            />
+                            <input
+                                type="text"
+                                value={slotColor}
+                                onChange={(e) => setSlotColor(e.target.value)}
+                                placeholder="#3B82F6"
+                                className="flex-1 px-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                            />
+                            {slotColor && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSlotColor('')}
+                                    className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                >
+                                    {t('common.clear') || 'Clear'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </>
             )
         }

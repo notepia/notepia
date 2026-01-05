@@ -227,16 +227,22 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                                     className="flex-1 p-1 border-l dark:border-neutral-700 "
                                 >
                                     <div className="flex flex-col gap-1">
-                                        {allDayEvents.map((slot) => (
-                                            <button
-                                                key={slot.id}
-                                                onClick={() => handleSlotClick(slot)}
-                                                className="text-xs px-2 py-1 bg-blue-500 text-white rounded truncate hover:bg-blue-600 transition-colors"
-                                                title={slot.name}
-                                            >
-                                                {slot.name}
-                                            </button>
-                                        ))}
+                                        {allDayEvents.map((slot) => {
+                                            const slotData = parseSlotData(slot.data)
+                                            const bgColor = slotData?.color || '#3B82F6'
+
+                                            return (
+                                                <button
+                                                    key={slot.id}
+                                                    onClick={() => handleSlotClick(slot)}
+                                                    className="text-xs px-2 py-1 text-white rounded truncate hover:brightness-90 transition-all"
+                                                    style={{ backgroundColor: bgColor }}
+                                                    title={slot.name}
+                                                >
+                                                    {slot.name}
+                                                </button>
+                                            )
+                                        })}
                                     </div>
                                 </div>
                             )
@@ -282,18 +288,20 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                                         const pixelsPerMinute = 80 / 60 // 80px per hour
                                         const topPosition = event.startMinutes * pixelsPerMinute
                                         const height = event.durationMinutes * pixelsPerMinute
+                                        const bgColor = event.slotData.color || '#3B82F6'
 
                                         return (
                                             <button
                                                 key={event.id}
                                                 onClick={() => handleSlotClick(event)}
-                                                className="absolute text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-left overflow-hidden"
+                                                className="absolute text-xs px-2 py-1 text-white rounded hover:brightness-90 transition-all text-left overflow-hidden"
                                                 style={{
                                                     top: `${topPosition + 2}px`,
                                                     left: '4px',
                                                     right: '4px',
                                                     height: `${Math.max(height - 4, 20)}px`,
-                                                    zIndex: 10
+                                                    zIndex: 10,
+                                                    backgroundColor: bgColor
                                                 }}
                                                 title={event.name}
                                             >

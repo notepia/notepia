@@ -96,9 +96,9 @@ const ViewObjectNotesManager = ({
                 /* Add Note Interface */
                 <div className="p-4">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold">
+                        <div className="text-lg font-semibold">
                             {t('views.addNoteToObject', { name: viewObjectName })}
-                        </h3>
+                        </div>
                         <button
                             onClick={() => setIsAddingNote(false)}
                             className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded"

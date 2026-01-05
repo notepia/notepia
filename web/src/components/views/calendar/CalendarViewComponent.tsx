@@ -243,6 +243,7 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
                                                 const timeLabel = slotData && !slotData.is_all_day && slotData.start_time
                                                     ? ` ${slotData.start_time}`
                                                     : ''
+                                                const bgColor = slotData?.color || '#3B82F6'
 
                                                 return (
                                                     <button
@@ -255,7 +256,8 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
                                                                 : `/workspaces/${workspaceId}/calendar/${calendarId}/slot/${slot.id}`
                                                             navigate(path)
                                                         }}
-                                                        className="text-xs px-1.5 py-0.5 bg-blue-500 text-white rounded truncate max-w-full hover:bg-blue-600 transition-colors"
+                                                        className="text-xs px-1.5 py-0.5 text-white rounded truncate max-w-full hover:brightness-90 transition-all"
+                                                        style={{ backgroundColor: bgColor }}
                                                         title={`${slot.name}${timeLabel}`}
                                                     >
                                                         {timeLabel && <span className="opacity-75">{timeLabel}</span>}

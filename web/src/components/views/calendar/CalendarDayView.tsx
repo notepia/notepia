@@ -185,16 +185,22 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                                 {t('views.allDay') || 'All day'}
                             </div>
                             <div className="flex gap-1 overflow-auto">
-                                {allDayEvents.map((slot) => (
-                                    <button
-                                        key={slot.id}
-                                        onClick={() => handleSlotClick(slot)}
-                                        className="text-sm px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-left"
-                                        title={slot.name}
-                                    >
-                                        {slot.name}
-                                    </button>
-                                ))}
+                                {allDayEvents.map((slot) => {
+                                    const slotData = parseSlotData(slot.data)
+                                    const bgColor = slotData?.color || '#3B82F6'
+
+                                    return (
+                                        <button
+                                            key={slot.id}
+                                            onClick={() => handleSlotClick(slot)}
+                                            className="text-sm px-3 py-2 text-white rounded hover:brightness-90 transition-all text-left"
+                                            style={{ backgroundColor: bgColor }}
+                                            title={slot.name}
+                                        >
+                                            {slot.name}
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </div>
                     )}
@@ -229,18 +235,20 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                             const pixelsPerMinute = 80 / 60 // 80px per hour
                             const topPosition = event.startMinutes * pixelsPerMinute
                             const height = event.durationMinutes * pixelsPerMinute
+                            const bgColor = event.slotData.color || '#3B82F6'
 
                             return (
                                 <button
                                     key={event.id}
                                     onClick={() => handleSlotClick(event)}
-                                    className="absolute text-sm px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-left overflow-hidden max-w-36 w-auto"
+                                    className="absolute text-sm px-3 py-1.5 text-white rounded hover:brightness-90 transition-all text-left overflow-hidden max-w-36 w-auto"
                                     style={{
                                         top: `${topPosition + 8}px`, // Add p-2 (8px) top padding offset
                                         left: 'calc(5rem + 1px + 0.5rem)', // w-20 (5rem) + border (1px) + p-2 left padding (0.5rem)
                                         right: '0.5rem', // p-2 right padding
                                         height: `${Math.max(height - 4, 24)}px`, // Slight adjustment for visual spacing, minimum 24px
-                                        zIndex: 10
+                                        zIndex: 10,
+                                        backgroundColor: bgColor
                                     }}
                                     title={event.name}
                                 >

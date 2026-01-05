@@ -168,9 +168,9 @@ const MapMarkersList = ({
                     /* Create Marker Interface */
                     <div>
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">
+                            <div className="text-lg font-semibold">
                                 {t('views.createMarker')}
-                            </h3>
+                            </div>
                             <button
                                 onClick={() => {
                                     if (handleCloseModal) handleCloseModal()

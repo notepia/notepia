@@ -327,9 +327,9 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note, mode, onModeChang
                     /* Pin to View Object Interface */
                     <div className="flex flex-col p-4">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">
+                            <div className="text-lg font-semibold">
                                 {t('views.pinNoteToObject') || 'Pin Note to View Object'}
-                            </h3>
+                            </div>
                             <button
                                 onClick={() => {
                                     setIsPinning(false)

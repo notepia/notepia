@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useNavigate, useParams, useOutletContext } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { CirclePlus, ArrowLeft, Clock } from "lucide-react"
-import { getViewObject } from "@/api/view"
+import { CirclePlus, ArrowLeft, Clock, Edit2, X, Check } from "lucide-react"
+import { getViewObject, updateViewObject } from "@/api/view"
 import ViewObjectNotesManager from "../ViewObjectNotesManager"
 import { CalendarSlotData } from "@/types/view"
 
@@ -17,14 +17,34 @@ interface CalendarSlotDetailContext {
 const CalendarSlotDetail = () => {
     const { t } = useTranslation()
     const navigate = useNavigate()
+    const queryClient = useQueryClient()
     const { slotId } = useParams<{ slotId: string }>()
     const { workspaceId, viewId, view } = useOutletContext<CalendarSlotDetailContext>()
     const [isAddingNote, setIsAddingNote] = useState(false)
+    const [isEditing, setIsEditing] = useState(false)
+
+    // Edit form state
+    const [editName, setEditName] = useState('')
+    const [editDate, setEditDate] = useState('')
+    const [editStartTime, setEditStartTime] = useState('')
+    const [editEndTime, setEditEndTime] = useState('')
+    const [editIsAllDay, setEditIsAllDay] = useState(true)
+    const [editColor, setEditColor] = useState('')
 
     const { data: slot, isLoading } = useQuery({
         queryKey: ['view-object', workspaceId, viewId, slotId],
         queryFn: () => getViewObject(workspaceId, viewId!, slotId!),
         enabled: !!workspaceId && !!viewId && !!slotId,
+    })
+
+    const updateMutation = useMutation({
+        mutationFn: (data: { name?: string; data?: string }) =>
+            updateViewObject(workspaceId, viewId!, slotId!, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['view-object', workspaceId, viewId, slotId] })
+            queryClient.invalidateQueries({ queryKey: ['view-objects', workspaceId, viewId] })
+            setIsEditing(false)
+        },
     })
 
     // Parse slot data
@@ -38,8 +58,58 @@ const CalendarSlotDetail = () => {
         }
     }, [slot])
 
+    // Initialize edit form when slot data changes
+    useEffect(() => {
+        if (slot && slotData) {
+            setEditName(slot.name)
+            setEditDate(slotData.date)
+            setEditStartTime(slotData.start_time || '')
+            setEditEndTime(slotData.end_time || '')
+            setEditIsAllDay(slotData.is_all_day !== false)
+            setEditColor(slotData.color || '')
+        }
+    }, [slot, slotData])
+
     const handleBack = () => {
         navigate(`/workspaces/${workspaceId}/calendar/${viewId}`)
+    }
+
+    const handleEdit = () => {
+        setIsEditing(true)
+    }
+
+    const handleCancelEdit = () => {
+        setIsEditing(false)
+        // Reset form to original values
+        if (slot && slotData) {
+            setEditName(slot.name)
+            setEditDate(slotData.date)
+            setEditStartTime(slotData.start_time || '')
+            setEditEndTime(slotData.end_time || '')
+            setEditIsAllDay(slotData.is_all_day !== false)
+            setEditColor(slotData.color || '')
+        }
+    }
+
+    const handleSave = () => {
+        const updatedData: CalendarSlotData = {
+            date: editDate,
+            is_all_day: editIsAllDay
+        }
+        if (!editIsAllDay && editStartTime) {
+            updatedData.start_time = editStartTime
+        }
+        if (!editIsAllDay && editEndTime) {
+            updatedData.end_time = editEndTime
+        }
+        if (editColor) {
+            updatedData.color = editColor
+        }
+
+        updateMutation.mutate({
+            name: editName,
+            data: JSON.stringify(updatedData)
+        })
     }
 
     if (isLoading) {
@@ -66,7 +136,7 @@ const CalendarSlotDetail = () => {
 
     return (
         <div className="h-full overflow-y-auto bg-neutral-100 dark:bg-neutral-900">
-            {!isAddingNote && (
+            {!isAddingNote && !isEditing && (
                 <div className="p-4 border-b dark:border-neutral-700">
                     <button
                         onClick={handleBack}
@@ -99,16 +169,165 @@ const CalendarSlotDetail = () => {
                                             {slotData.end_time && ` - ${slotData.end_time}`}
                                         </div>
                                     )}
+                                    {slotData.color && (
+                                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                            <div
+                                                className="w-4 h-4 rounded border border-gray-300"
+                                                style={{ backgroundColor: slotData.color }}
+                                            />
+                                            <span>{slotData.color}</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
-                        <button
-                            onClick={() => setIsAddingNote(true)}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                            title={t('views.addNote')}
-                        >
-                            <CirclePlus size={20} />
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleEdit}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                title={t('actions.edit')}
+                            >
+                                <Edit2 size={20} />
+                            </button>
+                            <button
+                                onClick={() => setIsAddingNote(true)}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                title={t('views.addNote')}
+                            >
+                                <CirclePlus size={20} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {!isAddingNote && isEditing && (
+                <div className="p-4 border-b dark:border-neutral-700">
+                    <button
+                        onClick={handleBack}
+                        className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mb-3"
+                    >
+                        <ArrowLeft size={16} />
+                        {view.name}
+                    </button>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="text-xl font-semibold">{t('actions.edit')}</div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleCancelEdit}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                    title={t('common.cancel')}
+                                    disabled={updateMutation.isPending}
+                                >
+                                    <X size={20} />
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                                    title={t('common.save')}
+                                    disabled={updateMutation.isPending}
+                                >
+                                    <Check size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-2">
+                                {t('views.slotName')}
+                            </label>
+                            <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-2">
+                                {t('views.date')}
+                            </label>
+                            <input
+                                type="date"
+                                value={editDate}
+                                onChange={(e) => setEditDate(e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={editIsAllDay}
+                                    onChange={(e) => setEditIsAllDay(e.target.checked)}
+                                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium">
+                                    {t('views.allDay') || 'All day'}
+                                </span>
+                            </label>
+                        </div>
+
+                        {!editIsAllDay && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">
+                                        {t('views.startTime') || 'Start time'}
+                                    </label>
+                                    <input
+                                        type="time"
+                                        value={editStartTime}
+                                        onChange={(e) => setEditStartTime(e.target.value)}
+                                        className="w-full px-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">
+                                        {t('views.endTime') || 'End time'}
+                                    </label>
+                                    <input
+                                        type="time"
+                                        value={editEndTime}
+                                        onChange={(e) => setEditEndTime(e.target.value)}
+                                        className="w-full px-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="block text-sm font-medium mb-2">
+                                {t('views.color') || 'Color'} ({t('common.optional') || 'Optional'})
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="color"
+                                    value={editColor || '#3B82F6'}
+                                    onChange={(e) => setEditColor(e.target.value)}
+                                    className="w-20 h-10 rounded-lg border dark:border-neutral-600 cursor-pointer"
+                                />
+                                <input
+                                    type="text"
+                                    value={editColor}
+                                    onChange={(e) => setEditColor(e.target.value)}
+                                    placeholder="#3B82F6"
+                                    className="flex-1 px-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                                />
+                                {editColor && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditColor('')}
+                                        className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                    >
+                                        {t('common.clear') || 'Clear'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
