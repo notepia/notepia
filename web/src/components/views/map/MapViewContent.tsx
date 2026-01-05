@@ -1,8 +1,6 @@
-import { MapPin, Settings } from "lucide-react"
-import { useState } from "react"
+import { MapPin } from "lucide-react"
 import { useTwoColumn } from "@/components/twocolumn"
 import MapViewComponent from "./MapViewComponent"
-import MapViewSettingsModal from "./MapViewSettingsModal"
 import ViewHeader from "../common/ViewHeader"
 import ViewMenu from "@/components/viewmenu/ViewMenu"
 
@@ -29,7 +27,6 @@ const MapViewContent = ({
     focusedObjectId
 }: MapViewContentProps) => {
     const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
     return (
         <div className="w-full h-full flex flex-col">
@@ -46,25 +43,11 @@ const MapViewContent = ({
                                 >
                                     <MapPin size={18} />
                                 </button>
-                                <button
-                                    onClick={() => setIsSettingsOpen(true)}
-                                    className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                                    title="Settings"
-                                >
-                                    <Settings size={18} />
-                                </button>
                             </div>
                         </>
                     }
                 />
             </div>
-
-            <MapViewSettingsModal
-                open={isSettingsOpen}
-                onOpenChange={setIsSettingsOpen}
-                view={view}
-                workspaceId={currentWorkspaceId}
-            />
 
             <div className="flex-1 overflow-hidden">
                 <MapViewComponent viewObjects={viewObjects} view={view} focusedObjectId={focusedObjectId} />

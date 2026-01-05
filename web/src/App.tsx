@@ -29,6 +29,7 @@ import CalendarListPage from './pages/workspace/views/CalendarListPage';
 import MapListPage from './pages/workspace/views/MapListPage';
 import KanbanListPage from './pages/workspace/views/KanbanListPage';
 import FlowListPage from './pages/workspace/views/FlowListPage';
+import ViewSettingsPage from './pages/workspace/views/ViewSettingsPage';
 import CalendarPage from './pages/workspace/calendar/CalendarPage';
 import CalendarSlotDetailPage from './pages/workspace/calendar/CalendarSlotDetailPage';
 import MapPage from './pages/workspace/map/MapPage';
@@ -103,14 +104,18 @@ function App() {
             <Route path='calendar/:calendarId' element={<CalendarPage />}>
               <Route path='slot/:slotId' element={<CalendarSlotDetailPage />} />
             </Route>
+            <Route path='calendar/:viewId/settings' element={<ViewSettingsPage />} />
             <Route path='map' element={<MapListPage />}></Route>
             <Route path='map/:mapId' element={<MapPage />}>
               <Route path='marker/:markerId' element={<MapMarkerDetailPage />} />
             </Route>
+            <Route path='map/:viewId/settings' element={<ViewSettingsPage />} />
             <Route path='kanban' element={<KanbanListPage />}></Route>
             <Route path='kanban/:kanbanId' element={<KanbanPage />} />
+            <Route path='kanban/:viewId/settings' element={<ViewSettingsPage />} />
             <Route path='flow' element={<FlowListPage />}></Route>
             <Route path='flow/:flowId' element={<FlowPage />} />
+            <Route path='flow/:viewId/settings' element={<ViewSettingsPage />} />
             <Route path='settings' element={<Settings />}></Route>
             <Route path='home' element={<WorkspaceHomePage />}></Route>
             <Route path='' element={<WorkspaceHomePage />}></Route>

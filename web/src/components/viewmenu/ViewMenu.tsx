@@ -8,7 +8,6 @@ import { createView, getViews, deleteView } from "@/api/view"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import { useToastStore } from "@/stores/toast"
-import ViewSettingsModal from "./ViewSettingsModal"
 
 interface ViewMenuProps {
     viewType: ViewType
@@ -22,8 +21,6 @@ const ViewMenu = ({ viewType, currentViewId }: ViewMenuProps) => {
     const queryClient = useQueryClient()
     const { addToast } = useToastStore()
     const [keyword, setKeyword] = useState("")
-    const [settingsModalOpen, setSettingsModalOpen] = useState(false)
-    const [selectedView, setSelectedView] = useState<any>(null)
 
     const { data: views } = useQuery({
         queryKey: ['views', currentWorkspaceId, viewType],
@@ -91,10 +88,12 @@ const ViewMenu = ({ viewType, currentViewId }: ViewMenuProps) => {
         }
     }
 
-    const handleOpenSettings = (e: React.MouseEvent, view: any) => {
-        e.stopPropagation()
-        setSelectedView(view)
-        setSettingsModalOpen(true)
+    const handleOpenSettings = (e?: React.MouseEvent, viewId?: string) => {
+        e?.stopPropagation()
+        const targetViewId = viewId || currentViewId
+        if (targetViewId) {
+            navigate(`/workspaces/${currentWorkspaceId}/${viewType}/${targetViewId}/settings`)
+        }
     }
 
     const getViewTypeLabel = () => {
@@ -170,13 +169,6 @@ const ViewMenu = ({ viewType, currentViewId }: ViewMenuProps) => {
                                 {v.name}
                             </button>
                             <button
-                                onClick={(e) => handleOpenSettings(e, v)}
-                                className="p-2 opacity-0 group-hover:opacity-100 hover:text-blue-600 dark:hover:text-blue-400 transition-opacity"
-                                title={t('views.settings') || 'Settings'}
-                            >
-                                <Settings size={14} />
-                            </button>
-                            <button
                                 onClick={(e) => handleDeleteView(e, v.id)}
                                 className="p-2 opacity-0 group-hover:opacity-100 hover:text-red-600 dark:hover:text-red-400 transition-opacity"
                                 title={t('actions.delete')}
@@ -200,16 +192,20 @@ const ViewMenu = ({ viewType, currentViewId }: ViewMenuProps) => {
                     </div>
                 )}
             </div>
-            </WorkspaceDropdown>
 
-            {selectedView && (
-                <ViewSettingsModal
-                    open={settingsModalOpen}
-                    onOpenChange={setSettingsModalOpen}
-                    view={selectedView}
-                    workspaceId={currentWorkspaceId}
-                />
+            {currentViewId && (
+                <div className="px-2 pt-2 border-t dark:border-neutral-700">
+                    <button
+                        onClick={() => handleOpenSettings()}
+                        className="w-full px-3 py-2 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 flex items-center gap-2 text-sm"
+                        title={t('views.settings') || 'Settings'}
+                    >
+                        <Settings size={16} />
+                        <span>{t('views.settings') || 'Settings'}</span>
+                    </button>
+                </div>
             )}
+            </WorkspaceDropdown>
         </>
     )
 }

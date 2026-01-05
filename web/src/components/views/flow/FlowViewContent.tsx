@@ -1,8 +1,6 @@
-import { Settings, PlusCircle } from "lucide-react"
-import { useState } from "react"
+import { PlusCircle } from "lucide-react"
 import FlowViewComponent from "./FlowViewComponent"
 import CreateViewObjectModal from "../CreateViewObjectModal"
-import FlowViewSettingsModal from "./FlowViewSettingsModal"
 import ViewHeader from "../common/ViewHeader"
 import ViewMenu from "@/components/viewmenu/ViewMenu"
 
@@ -35,8 +33,6 @@ const FlowViewContent = ({
     handleCreate,
     createMutation,
 }: FlowViewContentProps) => {
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-
     return (
         <div className="flex flex-col h-dvh bg-neutral-50 dark:bg-neutral-950">
             <ViewHeader
@@ -49,13 +45,6 @@ const FlowViewContent = ({
                             title="create node"
                         >
                             <PlusCircle size={18} />
-                        </button>
-                        <button
-                            onClick={() => setIsSettingsOpen(true)}
-                            className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                            title="Settings"
-                        >
-                            <Settings size={18} />
                         </button>
                     </div>
                 }
@@ -74,13 +63,6 @@ const FlowViewContent = ({
                 setData={setNewObjectData}
                 onSubmit={handleCreate}
                 isSubmitting={createMutation.isPending}
-            />
-
-            <FlowViewSettingsModal
-                open={isSettingsOpen}
-                onOpenChange={setIsSettingsOpen}
-                view={view}
-                workspaceId={currentWorkspaceId}
             />
 
             <div className="flex-1 overflow-hidden border shadow">

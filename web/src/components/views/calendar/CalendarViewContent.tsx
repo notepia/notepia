@@ -1,11 +1,10 @@
-import { Calendar, Settings } from "lucide-react"
+import { Calendar } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useTwoColumn } from "@/components/twocolumn"
 import CalendarViewComponent from "./CalendarViewComponent"
 import CalendarWeekView from "./CalendarWeekView"
 import CalendarDayView from "./CalendarDayView"
-import CalendarViewSettingsModal from "./CalendarViewSettingsModal"
 import ViewHeader from "../common/ViewHeader"
 import ViewMenu from "@/components/viewmenu/ViewMenu"
 
@@ -35,7 +34,6 @@ const CalendarViewContent = ({
 }: CalendarViewContentProps) => {
     const { t } = useTranslation()
     const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
     const [viewMode, setViewMode] = useState<CalendarViewMode>('month')
 
     return (
@@ -86,23 +84,9 @@ const CalendarViewContent = ({
                             >
                                 <Calendar size={18} />
                             </button>
-                            <button
-                                onClick={() => setIsSettingsOpen(true)}
-                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                                title="Settings"
-                            >
-                                <Settings size={18} />
-                            </button>
                         </div>
                     </>
                 }
-            />
-
-            <CalendarViewSettingsModal
-                open={isSettingsOpen}
-                onOpenChange={setIsSettingsOpen}
-                view={view}
-                workspaceId={currentWorkspaceId}
             />
 
             {viewMode === 'month' && (

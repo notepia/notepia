@@ -1,8 +1,6 @@
-import { Settings, PlusCircle } from "lucide-react"
-import { useState } from "react"
+import { PlusCircle } from "lucide-react"
 import KanbanViewComponent from "./KanbanViewComponent"
 import CreateViewObjectModal from "../CreateViewObjectModal"
-import KanbanViewSettingsModal from "./KanbanViewSettingsModal"
 import ViewHeader from "../common/ViewHeader"
 import ViewMenu from "@/components/viewmenu/ViewMenu"
 
@@ -37,8 +35,6 @@ const KanbanViewContent = ({
     createMutation,
     focusedObjectId
 }: KanbanViewContentProps) => {
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-
     return (
         <div className="flex flex-col h-screen">
             <ViewHeader
@@ -51,13 +47,6 @@ const KanbanViewContent = ({
                             title="create column"
                         >
                             <PlusCircle size={18} />
-                        </button>
-                        <button
-                            onClick={() => setIsSettingsOpen(true)}
-                            className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                            title="Settings"
-                        >
-                            <Settings size={18} />
                         </button>
                     </div>
                 }
@@ -76,13 +65,6 @@ const KanbanViewContent = ({
                 setData={setNewObjectData}
                 onSubmit={handleCreate}
                 isSubmitting={createMutation.isPending}
-            />
-
-            <KanbanViewSettingsModal
-                open={isSettingsOpen}
-                onOpenChange={setIsSettingsOpen}
-                view={view}
-                workspaceId={currentWorkspaceId}
             />
 
             <div className="flex-1 overflow-hidden">
