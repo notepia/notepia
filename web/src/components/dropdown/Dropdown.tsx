@@ -11,7 +11,7 @@ type DropdownProps = {
   buttonTooltip: string;
 };
 
-const WorkspaceDropdown:FC<DropdownProps> = ({ children, className, buttonClassName, buttonTooltip, buttonContent }: DropdownProps) => {
+const Dropdown:FC<DropdownProps> = ({ children, className, buttonClassName, buttonTooltip, buttonContent }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { isCollapse } = useSidebar();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -67,4 +67,4 @@ const WorkspaceDropdown:FC<DropdownProps> = ({ children, className, buttonClassN
   );
 };
 
-export { WorkspaceDropdown };
+export { Dropdown };

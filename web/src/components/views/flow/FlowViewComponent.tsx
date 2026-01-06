@@ -33,6 +33,8 @@ import {
     getSimpleBezierPath,
     getStraightPath,
     EdgeLabelRenderer,
+    NodeResizer,
+    OnSelectionChangeParams,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -68,6 +70,9 @@ const FlowViewComponent = ({
     const [editingEdgeMarkerStart, setEditingEdgeMarkerStart] = useState<boolean>(false)
     const [editingEdgeMarkerEnd, setEditingEdgeMarkerEnd] = useState<boolean>(true)
     const [editingEdgeType, setEditingEdgeType] = useState<EdgeType>('smoothstep')
+
+    // Track selected nodes for handle visibility
+    const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set())
 
     const currentWorkspaceId = workspaceId || params.workspaceId
     const currentViewId = viewId || params.viewId
@@ -311,12 +316,15 @@ const FlowViewComponent = ({
                 data: {
                     ...node,
                     color: nodeData.color,
+                    width: nodeData.width || 250,
+                    height: nodeData.height,
                     onEdit: handleEditNode,
                     onDelete: handleDeleteNode,
                     onNoteClick: handleNoteClick,
                     isPublic,
                     workspaceId: currentWorkspaceId,
                     viewId: currentViewId,
+                    isSelected: selectedNodeIds.has(node.id),
                 },
                 style: {
                     backgroundColor: nodeData.color || '#fff',
@@ -325,7 +333,7 @@ const FlowViewComponent = ({
                 }
             }
         })
-    }, [nodes, currentWorkspaceId, currentViewId, isPublic, handleNoteClick, handleEditNode, handleDeleteNode])
+    }, [nodes, currentWorkspaceId, currentViewId, isPublic, handleNoteClick, handleEditNode, handleDeleteNode, selectedNodeIds])
 
     // Convert viewObjects to React Flow edges
     const flowEdges: Edge[] = useMemo(() => {
@@ -466,6 +474,12 @@ const FlowViewComponent = ({
         [setEdges, createEdgeMutation, isPublic]
     )
 
+    // Handle selection changes to track selected nodes
+    const onSelectionChange = useCallback((params: OnSelectionChangeParams) => {
+        const selectedNodes = params.nodes.map(node => node.id)
+        setSelectedNodeIds(new Set(selectedNodes))
+    }, [])
+
     // Handle edge changes including deletion
     const handleEdgesChangeWithDelete = useCallback(
         (changes: EdgeChange[]) => {
@@ -510,6 +524,7 @@ const FlowViewComponent = ({
                     onNodesChange={handleNodesChangeWithSave}
                     onEdgesChange={handleEdgesChangeWithDelete}
                     onConnect={onConnect}
+                    onSelectionChange={onSelectionChange}
                     nodeTypes={nodeTypes}
                     edgeTypes={edgeTypes}
                     fitView
@@ -788,62 +803,98 @@ const FlowNodeComponent = ({ data }: FlowNodeComponentProps) => {
 
     return (
         <div className="bg-white dark:bg-neutral-900 border-2 border-neutral-300 dark:border-neutral-700 rounded-lg p-4 min-w-[250px]">
-            {/* Connection Handles - All handles can be both source and target */}
-            {/* Top Handle */}
-            <Handle
-                type="source"
-                position={Position.Top}
-                id="top"
-                className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
-            />
-            <Handle
-                type="target"
-                position={Position.Top}
-                id="top-target"
-                className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
-            />
+            {/* Resize handles - only show when node is selected and not in public view */}
+            {data.isSelected && !data.isPublic && (
+                <NodeResizer
+                    minWidth={250}
+                    minHeight={100}
+                    isVisible={data.isSelected}
+                    lineClassName="!border-primary !border-2"
+                    handleClassName="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800"
+                    onResizeEnd={(event, params) => {
+                        // Save new dimensions to backend
+                        if (data.workspaceId && data.viewId && data.id) {
+                            try {
+                                const nodeData = data.data ? JSON.parse(data.data) : { position: { x: 0, y: 0 } }
+                                const newData = {
+                                    ...nodeData,
+                                    width: params.width,
+                                    height: params.height,
+                                }
+                                updateViewObject(
+                                    data.workspaceId,
+                                    data.viewId,
+                                    data.id,
+                                    { data: JSON.stringify(newData) }
+                                ).catch(console.error)
+                            } catch (e) {
+                                console.error('Failed to save resize:', e)
+                            }
+                        }
+                    }}
+                />
+            )}
 
-            {/* Right Handle */}
-            <Handle
-                type="source"
-                position={Position.Right}
-                id="right"
-                className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
-            />
-            <Handle
-                type="target"
-                position={Position.Right}
-                id="right-target"
-                className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
-            />
+            {/* Connection Handles - Only show when node is selected */}
+            {data.isSelected && (
+                <>
+                    {/* Top Handle */}
+                    <Handle
+                        type="source"
+                        position={Position.Top}
+                        id="top"
+                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Top}
+                        id="top-target"
+                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                    />
 
-            {/* Bottom Handle */}
-            <Handle
-                type="source"
-                position={Position.Bottom}
-                id="bottom"
-                className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
-            />
-            <Handle
-                type="target"
-                position={Position.Bottom}
-                id="bottom-target"
-                className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
-            />
+                    {/* Right Handle */}
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id="right"
+                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Right}
+                        id="right-target"
+                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                    />
 
-            {/* Left Handle */}
-            <Handle
-                type="source"
-                position={Position.Left}
-                id="left"
-                className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
-            />
-            <Handle
-                type="target"
-                position={Position.Left}
-                id="left-target"
-                className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
-            />
+                    {/* Bottom Handle */}
+                    <Handle
+                        type="source"
+                        position={Position.Bottom}
+                        id="bottom"
+                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Bottom}
+                        id="bottom-target"
+                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                    />
+
+                    {/* Left Handle */}
+                    <Handle
+                        type="source"
+                        position={Position.Left}
+                        id="left"
+                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Left}
+                        id="left-target"
+                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                    />
+                </>
+            )}
 
             {/* Node Header */}
             <div className="flex items-center justify-between mb-3">

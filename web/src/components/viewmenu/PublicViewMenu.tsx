@@ -1,5 +1,5 @@
 import { ChevronsUpDown } from "lucide-react"
-import { WorkspaceDropdown } from "../workspacedropdown/WorkspaceDropdown"
+import { Dropdown } from "../dropdown/Dropdown"
 import { useMemo, useState } from "react"
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -72,7 +72,7 @@ const PublicViewMenu = ({ viewType, currentViewId }: PublicViewMenuProps) => {
     }
 
     return (
-        <WorkspaceDropdown
+        <Dropdown
             className="w-full"
             buttonClassName="bg-white dark:bg-neutral-700 shadow border dark:border-none w-full px-3 py-1.5 rounded-md text-sm flex justify-center items-center truncate"
             buttonTooltip={currentView?.name ?? getViewTypeLabel()}
@@ -117,7 +117,7 @@ const PublicViewMenu = ({ viewType, currentViewId }: PublicViewMenuProps) => {
                     </div>
                 ))}
             </div>
-        </WorkspaceDropdown>
+        </Dropdown>
     )
 }
 

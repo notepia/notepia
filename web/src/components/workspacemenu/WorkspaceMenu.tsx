@@ -1,5 +1,5 @@
 import { ChevronsUpDown, Plus, Telescope, MonitorCog } from "lucide-react"
-import { WorkspaceDropdown } from "../workspacedropdown/WorkspaceDropdown"
+import { Dropdown } from "../dropdown/Dropdown"
 import { useWorkspaceStore } from "@/stores/workspace"
 import { useMemo, useState } from "react"
 import { useNavigate, useParams, Link } from 'react-router-dom';
@@ -38,7 +38,7 @@ const WorkspaceMenu = () => {
             : workspaces;
     }, [workspaces, keyword]);
 
-    return <WorkspaceDropdown
+    return <Dropdown
         className="w-full "
         buttonClassName=" bg-white dark:bg-neutral-700 shadow border dark:border-none w-full px-3 py-1.5 rounded-md text-sm flex justify-center items-center truncate"
         buttonTooltip={getWorkspaceById(workspaceId!)?.name ?? ""}
@@ -90,7 +90,7 @@ const WorkspaceMenu = () => {
                 </Link>
             </div>
         </div>
-    </WorkspaceDropdown>
+    </Dropdown>
 }
 
 export default WorkspaceMenu
