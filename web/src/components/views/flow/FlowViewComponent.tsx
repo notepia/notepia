@@ -810,6 +810,7 @@ const FlowNodeComponent = ({ data, selected }: FlowNodeComponentProps) => {
     const { t } = useTranslation()
     const { addToast } = useToastStore()
     const queryClient = useQueryClient()
+    const resizeTimerRef = useRef<NodeJS.Timeout>()
 
     const { data: notes = [], refetch: refetchNotes } = useQuery({
         queryKey: ['node-notes', data.workspaceId, data.viewId, data.id],
@@ -840,39 +841,54 @@ const FlowNodeComponent = ({ data, selected }: FlowNodeComponentProps) => {
         }
     }
 
+    // Debounced resize handler - saves to backend after 500ms of inactivity
+    const handleResizeEnd = useCallback((_: any, params: any) => {
+        // Clear any pending save
+        if (resizeTimerRef.current) {
+            clearTimeout(resizeTimerRef.current)
+        }
+
+        // Schedule save after 500ms
+        resizeTimerRef.current = setTimeout(() => {
+            if (data.workspaceId && data.viewId && data.id) {
+                try {
+                    const nodeData = data.data ? JSON.parse(data.data) : { position: { x: 0, y: 0 } }
+                    const newData = {
+                        ...nodeData,
+                        width: params.width,
+                        height: params.height,
+                    }
+                    updateViewObject(
+                        data.workspaceId,
+                        data.viewId,
+                        data.id,
+                        { data: JSON.stringify(newData) }
+                    ).catch(console.error)
+                } catch (e) {
+                    console.error('Failed to save resize:', e)
+                }
+            }
+        }, 500)
+    }, [data])
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (resizeTimerRef.current) {
+                clearTimeout(resizeTimerRef.current)
+            }
+        }
+    }, [])
+
     return (
-        <div className="bg-white dark:bg-neutral-900 border-2 border-neutral-300 dark:border-neutral-700 rounded-lg p-4 min-w-[250px] relative">
+        <div className="bg-white dark:bg-neutral-900 border-2 border-neutral-300 dark:border-neutral-700 rounded-lg p-4 min-w-[250px] h-full relative">
             {/* Resize handles - only show when node is selected and not in public view */}
             {!data.isPublic && (
                 <NodeResizer
-                    minWidth={250}
-                    minHeight={100}
-                    maxWidth={800}
-                    maxHeight={800}
                     isVisible={!!selected}
                     lineClassName="!border-primary !border-2"
                     handleClassName="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 !rounded-sm"
-                    onResizeEnd={(_, params) => {
-                        // Save new dimensions to backend
-                        if (data.workspaceId && data.viewId && data.id) {
-                            try {
-                                const nodeData = data.data ? JSON.parse(data.data) : { position: { x: 0, y: 0 } }
-                                const newData = {
-                                    ...nodeData,
-                                    width: params.width,
-                                    height: params.height,
-                                }
-                                updateViewObject(
-                                    data.workspaceId,
-                                    data.viewId,
-                                    data.id,
-                                    { data: JSON.stringify(newData) }
-                                ).catch(console.error)
-                            } catch (e) {
-                                console.error('Failed to save resize:', e)
-                            }
-                        }
-                    }}
+                    onResize={handleResizeEnd}
                 />
             )}
 
@@ -1001,7 +1017,10 @@ const FlowNodeComponent = ({ data, selected }: FlowNodeComponentProps) => {
             </div>
 
             {/* Notes */}
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            <div
+                className="space-y-2 h-[calc(100%-40px)] overflow-y-auto"
+                onWheel={(e) => e.stopPropagation()}
+            >
                 {notes.map((note: any) => (
                     <div
                         key={note.id}
