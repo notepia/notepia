@@ -309,10 +309,13 @@ const FlowViewComponent = ({
                 console.error('Failed to parse node data:', e)
             }
 
+            const isSelected = selectedNodeIds.has(node.id)
+
             return {
                 id: node.id,
                 type: 'custom',
                 position: nodeData.position,
+                selected: isSelected,
                 data: {
                     ...node,
                     color: nodeData.color,
@@ -324,7 +327,7 @@ const FlowViewComponent = ({
                     isPublic,
                     workspaceId: currentWorkspaceId,
                     viewId: currentViewId,
-                    isSelected: selectedNodeIds.has(node.id),
+                    isSelected,
                 },
                 style: {
                     backgroundColor: nodeData.color || '#fff',
@@ -412,14 +415,14 @@ const FlowViewComponent = ({
         }
     }, [edges, flowEdges])
 
-    // Handle node position changes
+    // Handle node position and dimension changes
     const handleNodesChangeWithSave = useCallback(
         (changes: NodeChange[]) => {
             onNodesChange(changes)
 
             if (isPublic) return // Don't save changes in public view
 
-            // Save position changes to backend
+            // Save position and dimension changes to backend
             changes.forEach((change) => {
                 if (change.type === 'position' && change.position && !change.dragging) {
                     const node = nodes.find((n) => n.id === change.id)
@@ -438,6 +441,37 @@ const FlowViewComponent = ({
                         const newData: FlowNodeData = {
                             ...nodeData,
                             position: change.position,
+                        }
+
+                        updateViewObject(
+                            currentWorkspaceId!,
+                            currentViewId!,
+                            change.id,
+                            { data: JSON.stringify(newData) }
+                        ).catch(() => {
+                            addToast({ title: t('views.objectUpdatedError'), type: 'error' })
+                        })
+                    }
+                }
+                // Handle dimension changes from resizing
+                if (change.type === 'dimensions' && change.dimensions) {
+                    const node = nodes.find((n) => n.id === change.id)
+                    if (node) {
+                        let nodeData: FlowNodeData = {
+                            position: { x: 0, y: 0 }
+                        }
+                        try {
+                            if (node.data) {
+                                nodeData = JSON.parse(node.data)
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse node data:', e)
+                        }
+
+                        const newData: FlowNodeData = {
+                            ...nodeData,
+                            width: change.dimensions.width,
+                            height: change.dimensions.height,
                         }
 
                         updateViewObject(
@@ -532,7 +566,11 @@ const FlowViewComponent = ({
                     edgesFocusable={true}
                     nodesDraggable={!isPublic}
                     nodesConnectable={!isPublic}
+                    nodesFocusable={!isPublic}
                     elementsSelectable={true}
+                    selectNodesOnDrag={false}
+                    panOnDrag={[1, 2]}
+                    selectionOnDrag={false}
                     deleteKeyCode={isPublic ? null : "Delete"}
                 >
                     <Controls />
@@ -764,9 +802,10 @@ const FlowViewComponent = ({
 
 interface FlowNodeComponentProps {
     data: any
+    selected?: boolean
 }
 
-const FlowNodeComponent = ({ data }: FlowNodeComponentProps) => {
+const FlowNodeComponent = ({ data, selected }: FlowNodeComponentProps) => {
     const [isAddingNote, setIsAddingNote] = useState(false)
     const { t } = useTranslation()
     const { addToast } = useToastStore()
@@ -802,15 +841,17 @@ const FlowNodeComponent = ({ data }: FlowNodeComponentProps) => {
     }
 
     return (
-        <div className="bg-white dark:bg-neutral-900 border-2 border-neutral-300 dark:border-neutral-700 rounded-lg p-4 min-w-[250px]">
+        <div className="bg-white dark:bg-neutral-900 border-2 border-neutral-300 dark:border-neutral-700 rounded-lg p-4 min-w-[250px] relative">
             {/* Resize handles - only show when node is selected and not in public view */}
-            {data.isSelected && !data.isPublic && (
+            {!data.isPublic && (
                 <NodeResizer
                     minWidth={250}
                     minHeight={100}
-                    isVisible={data.isSelected}
+                    maxWidth={800}
+                    maxHeight={800}
+                    isVisible={!!selected}
                     lineClassName="!border-primary !border-2"
-                    handleClassName="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800"
+                    handleClassName="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 !rounded-sm"
                     onResizeEnd={(_, params) => {
                         // Save new dimensions to backend
                         if (data.workspaceId && data.viewId && data.id) {
@@ -835,21 +876,21 @@ const FlowNodeComponent = ({ data }: FlowNodeComponentProps) => {
                 />
             )}
 
-            {/* Connection Handles - Only show when node is selected */}
-            {data.isSelected && (
+            {/* Connection Handles - Always visible in non-public mode for easy connectivity */}
+            {!data.isPublic && (
                 <>
                     {/* Top Handle */}
                     <Handle
                         type="source"
                         position={Position.Top}
                         id="top"
-                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                        className="!w-2 !h-2 !bg-primary !border-2 !border-white dark:!border-neutral-800 !opacity-40 hover:!w-4 hover:!h-4 hover:!opacity-100 transition-all"
                     />
                     <Handle
                         type="target"
                         position={Position.Top}
                         id="top-target"
-                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                        className="!w-2 !h-2 !bg-primary !border-2 !border-white dark:!border-neutral-800 !opacity-40 hover:!w-4 hover:!h-4 hover:!opacity-100 transition-all"
                     />
 
                     {/* Right Handle */}
@@ -857,13 +898,13 @@ const FlowNodeComponent = ({ data }: FlowNodeComponentProps) => {
                         type="source"
                         position={Position.Right}
                         id="right"
-                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                        className="!w-2 !h-2 !bg-primary !border-2 !border-white dark:!border-neutral-800 !opacity-40 hover:!w-4 hover:!h-4 hover:!opacity-100 transition-all"
                     />
                     <Handle
                         type="target"
                         position={Position.Right}
                         id="right-target"
-                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                        className="!w-2 !h-2 !bg-primary !border-2 !border-white dark:!border-neutral-800 !opacity-40 hover:!w-4 hover:!h-4 hover:!opacity-100 transition-all"
                     />
 
                     {/* Bottom Handle */}
@@ -871,13 +912,13 @@ const FlowNodeComponent = ({ data }: FlowNodeComponentProps) => {
                         type="source"
                         position={Position.Bottom}
                         id="bottom"
-                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                        className="!w-2 !h-2 !bg-primary !border-2 !border-white dark:!border-neutral-800 !opacity-40 hover:!w-4 hover:!h-4 hover:!opacity-100 transition-all"
                     />
                     <Handle
                         type="target"
                         position={Position.Bottom}
                         id="bottom-target"
-                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                        className="!w-2 !h-2 !bg-primary !border-2 !border-white dark:!border-neutral-800 !opacity-40 hover:!w-4 hover:!h-4 hover:!opacity-100 transition-all"
                     />
 
                     {/* Left Handle */}
@@ -885,13 +926,13 @@ const FlowNodeComponent = ({ data }: FlowNodeComponentProps) => {
                         type="source"
                         position={Position.Left}
                         id="left"
-                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                        className="!w-2 !h-2 !bg-primary !border-2 !border-white dark:!border-neutral-800 !opacity-40 hover:!w-4 hover:!h-4 hover:!opacity-100 transition-all"
                     />
                     <Handle
                         type="target"
                         position={Position.Left}
                         id="left-target"
-                        className="!w-3 !h-3 !bg-primary !border-2 !border-white dark:!border-neutral-800 hover:!w-4 hover:!h-4 transition-all"
+                        className="!w-2 !h-2 !bg-primary !border-2 !border-white dark:!border-neutral-800 !opacity-40 hover:!w-4 hover:!h-4 hover:!opacity-100 transition-all"
                     />
                 </>
             )}
