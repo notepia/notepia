@@ -111,11 +111,11 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
         return check >= startDate && check <= endDate
     }
 
-    // Get timed events for a specific day
+    // Get timed events for a specific day with column positioning for overlaps
     const getTimedEventsForDay = (day: Date) => {
         const dateStr = day.toISOString().split('T')[0]
 
-        return viewObjects
+        const events = viewObjects
             .filter(obj => {
                 if (!obj.data) return false
 
@@ -177,10 +177,68 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                 return {
                     ...obj,
                     startMinutes: startTotalMinutes,
+                    endMinutes: endTotalMinutes,
                     durationMinutes,
                     slotData
                 }
             })
+
+        // Sort by start time, then by duration (longer events first)
+        events.sort((a, b) => {
+            if (a.startMinutes !== b.startMinutes) {
+                return a.startMinutes - b.startMinutes
+            }
+            return b.durationMinutes - a.durationMinutes
+        })
+
+        // Calculate column positions for overlapping events
+        const columns: Array<{ endMinutes: number }[]> = []
+        const eventPositions: Array<{ column: number; totalColumns: number }> = []
+
+        events.forEach((event) => {
+            // Find the first column where this event can fit
+            let columnIndex = 0
+            for (let i = 0; i < columns.length; i++) {
+                const column = columns[i]
+                // Check if all events in this column end before this event starts
+                const canFit = column.every(e => e.endMinutes <= event.startMinutes)
+                if (canFit) {
+                    columnIndex = i
+                    break
+                }
+                columnIndex = i + 1
+            }
+
+            // Create new column if needed
+            if (columnIndex >= columns.length) {
+                columns.push([])
+            }
+
+            // Add event to column
+            columns[columnIndex].push({ endMinutes: event.endMinutes })
+            eventPositions.push({ column: columnIndex, totalColumns: 0 })
+        })
+
+        // Calculate total columns for each event (for width calculation)
+        events.forEach((event, index) => {
+            let maxColumn = eventPositions[index].column
+            // Check all events that overlap with this one
+            events.forEach((other, otherIndex) => {
+                if (index === otherIndex) return
+                // Check if they overlap
+                const overlap = !(event.endMinutes <= other.startMinutes || other.endMinutes <= event.startMinutes)
+                if (overlap) {
+                    maxColumn = Math.max(maxColumn, eventPositions[otherIndex].column)
+                }
+            })
+            eventPositions[index].totalColumns = maxColumn + 1
+        })
+
+        return events.map((event, index) => ({
+            ...event,
+            column: eventPositions[index].column,
+            totalColumns: eventPositions[index].totalColumns
+        }))
     }
 
     // Get all-day events for a specific day
@@ -336,7 +394,7 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
 
                             {/* Day columns */}
                             {weekDays.map((day, dayIndex) => (
-                                <div key={dayIndex} className="flex-1 relative border-l dark:border-neutral-700">
+                                <div key={dayIndex} className="flex-1 relative border-l dark:border-neutral-700 overflow-x-auto">
                                     {/* Time slot backgrounds */}
                                     {timeSlots.map((hour) => (
                                         <div
@@ -358,6 +416,11 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                                         const height = event.durationMinutes * pixelsPerMinute
                                         const bgColor = event.slotData.color || '#3B82F6'
 
+                                        // Calculate width and position based on column
+                                        const columnWidth = 100 / event.totalColumns
+                                        const leftPercent = (event.column * columnWidth)
+                                        const widthPercent = columnWidth
+
                                         return (
                                             <button
                                                 key={event.id}
@@ -365,8 +428,8 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                                                 className="absolute text-xs px-2 py-1 text-white rounded hover:brightness-90 transition-all text-left overflow-hidden"
                                                 style={{
                                                     top: `${topPosition + 2}px`,
-                                                    left: '4px',
-                                                    right: '4px',
+                                                    left: `${leftPercent}%`,
+                                                    width: `calc(${widthPercent}% - 4px)`,
                                                     height: `${Math.max(height - 4, 20)}px`,
                                                     zIndex: 10,
                                                     backgroundColor: bgColor

@@ -187,6 +187,58 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
         })
     }
 
+    // Split calendar days into weeks
+    const calendarWeeks: Array<Array<{ day: number; isCurrentMonth: boolean; year: number; month: number }>> = []
+    for (let i = 0; i < calendarDays.length; i += 7) {
+        calendarWeeks.push(calendarDays.slice(i, i + 7))
+    }
+
+    // Get all slots that span across days in a week
+    const getWeekSlots = (weekDays: Array<{ day: number; isCurrentMonth: boolean; year: number; month: number }>) => {
+        if (!viewObjects) return []
+
+        const weekSlots: Array<{
+            slot: any
+            slotData: CalendarSlotData
+            startDayIndex: number
+            endDayIndex: number
+        }> = []
+
+        // Get unique slots that appear in this week
+        const slotSet = new Set<string>()
+
+        viewObjects.forEach(obj => {
+            if (!obj.data) return
+
+            const slotData = parseSlotData(obj.data)
+            if (!slotData) return
+
+            // Check if slot intersects with this week
+            let startDayIndex = -1
+            let endDayIndex = -1
+
+            weekDays.forEach((dayObj, dayIndex) => {
+                if (isDateInSlotRange(dayObj, slotData)) {
+                    if (startDayIndex === -1) startDayIndex = dayIndex
+                    endDayIndex = dayIndex
+                }
+            })
+
+            // If slot appears in this week and not already added
+            if (startDayIndex !== -1 && !slotSet.has(obj.id)) {
+                slotSet.add(obj.id)
+                weekSlots.push({
+                    slot: obj,
+                    slotData,
+                    startDayIndex,
+                    endDayIndex
+                })
+            }
+        })
+
+        return weekSlots
+    }
+
     return (
         <div className="">
             <div className="mb-6">
@@ -219,79 +271,78 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
                 </div>
 
                 {/* Calendar Grid */}
-                <div className="grid grid-cols-7 ">
+                <div className="border dark:border-neutral-700 rounded-lg overflow-hidden">
                     {/* Week day headers */}
-                    {weekDays.map((day) => (
-                        <div
-                            key={day}
-                            className="text-center font-semibold text-sm py-2 text-gray-600 dark:text-gray-400"
-                        >
-                            {day}
-                        </div>
-                    ))}
-
-                    {/* Calendar days */}
-                    {calendarDays.map((dayObj, index) => {
-                        const daySlots = getSlotsForDay(dayObj)
-                        const slotCount = daySlots.length
-                        const isTodayCell = isToday(dayObj)
-
-                        return (
+                    <div className="grid grid-cols-7 bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700">
+                        {weekDays.map((day) => (
                             <div
-                                key={index}
-                                className={`
-                                    aspect-square p-2 border dark:border-neutral-700 overflow-y-auto
-                                    ${isTodayCell ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700' : 'bg-white dark:bg-neutral-900'}
-                                    ${dayObj.isCurrentMonth ? 'hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer' : ''}
-                                    ${dayObj.isCurrentMonth && slotCount > 0 ? 'border-blue-400 dark:border-blue-600' : ''}
-                                    transition-colors
-                                `}
+                                key={day}
+                                className="text-center font-semibold text-sm py-2 text-gray-600 dark:text-gray-400"
                             >
-                                <div className="h-full flex flex-col justify-between">
-                                    <div className={`
-                                        text-sm font-medium
-                                        ${isTodayCell ? 'text-blue-600 dark:text-blue-400' : ''}
-                                        ${dayObj.isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-600'}
-                                    `}>
-                                        {dayObj.day}
-                                    </div>
-                                    {slotCount > 0 && (
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {daySlots.slice(0, 3).map((slot, i) => {
-                                                const slotData = parseSlotData(slot.data)
-                                                const timeLabel = slotData && !slotData.is_all_day && slotData.start_time
-                                                    ? ` ${slotData.start_time}`
-                                                    : ''
-                                                const bgColor = slotData?.color || '#3B82F6'
+                                {day}
+                            </div>
+                        ))}
+                    </div>
 
-                                                return (
-                                                    <button
-                                                        key={i}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            openBottomSheet()
-                                                            const path = isPublic
-                                                                ? `/explore/calendar/${calendarId}/slot/${slot.id}`
-                                                                : `/workspaces/${workspaceId}/calendar/${calendarId}/slot/${slot.id}`
-                                                            navigate(path)
-                                                        }}
-                                                        className="text-xs px-1.5 py-0.5 text-white rounded truncate max-w-full hover:brightness-90 transition-all"
-                                                        style={{ backgroundColor: bgColor }}
-                                                        title={`${slot.name}${timeLabel}`}
-                                                    >
-                                                        {timeLabel && <span className="opacity-75">{timeLabel}</span>}
-                                                        {timeLabel && ' '}
-                                                        {slot.name}
-                                                    </button>
-                                                )
-                                            })}
-                                            {slotCount > 3 && (
-                                                <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                                                    +{slotCount - 3}
+                    {/* Calendar weeks */}
+                    {calendarWeeks.map((weekDays, weekIndex) => {
+                        return (
+                            <div key={weekIndex} className="border-b dark:border-neutral-700 last:border-b-0">
+                                {/* Day cells row */}
+                                <div className="grid grid-cols-7">
+                                    {weekDays.map((dayObj, dayIndex) => {
+                                        const isTodayCell = isToday(dayObj)
+                                        const daySlots = getSlotsForDay(dayObj)
+
+                                        return (
+                                            <div
+                                                key={dayIndex}
+                                                className={`
+                                                    aspect-square p-2 border-r dark:border-neutral-700 last:border-r-0 overflow-y-auto
+                                                    ${isTodayCell ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-neutral-900'}
+                                                    ${dayObj.isCurrentMonth ? 'hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer' : ''}
+                                                    transition-colors
+                                                `}
+                                            >
+                                                <div className={`
+                                                    text-sm font-medium mb-1
+                                                    ${isTodayCell ? 'text-blue-600 dark:text-blue-400' : ''}
+                                                    ${dayObj.isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-600'}
+                                                `}>
+                                                    {dayObj.day}
                                                 </div>
-                                            )}
-                                        </div>
-                                    )}
+
+                                                {/* Slots for this day */}
+                                                <div className="space-y-1">
+                                                    {daySlots.map((slot) => {
+                                                        const slotData = parseSlotData(slot.data)
+                                                        const bgColor = slotData?.color || '#3B82F6'
+
+                                                        return (
+                                                            <button
+                                                                key={slot.id}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    openBottomSheet()
+                                                                    const path = isPublic
+                                                                        ? `/explore/calendar/${calendarId}/slot/${slot.id}`
+                                                                        : `/workspaces/${workspaceId}/calendar/${calendarId}/slot/${slot.id}`
+                                                                    navigate(path)
+                                                                }}
+                                                                className="w-full text-left text-xs px-2 py-1 text-white rounded truncate hover:brightness-90 transition-all block"
+                                                                style={{
+                                                                    backgroundColor: bgColor,
+                                                                }}
+                                                                title={slot.name}
+                                                            >
+                                                                {slot.name}
+                                                            </button>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         )

@@ -96,11 +96,11 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
         return check >= startDate && check <= endDate
     }
 
-    // Get timed events for the current day
+    // Get timed events for the current day with column positioning for overlaps
     const getTimedEvents = () => {
         const dateStr = currentDate.toISOString().split('T')[0]
 
-        return viewObjects
+        const events = viewObjects
             .filter(obj => {
                 if (!obj.data) return false
 
@@ -162,10 +162,68 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                 return {
                     ...obj,
                     startMinutes: startTotalMinutes,
+                    endMinutes: endTotalMinutes,
                     durationMinutes,
                     slotData
                 }
             })
+
+        // Sort by start time, then by duration (longer events first)
+        events.sort((a, b) => {
+            if (a.startMinutes !== b.startMinutes) {
+                return a.startMinutes - b.startMinutes
+            }
+            return b.durationMinutes - a.durationMinutes
+        })
+
+        // Calculate column positions for overlapping events
+        const columns: Array<{ endMinutes: number }[]> = []
+        const eventPositions: Array<{ column: number; totalColumns: number }> = []
+
+        events.forEach((event) => {
+            // Find the first column where this event can fit
+            let columnIndex = 0
+            for (let i = 0; i < columns.length; i++) {
+                const column = columns[i]
+                // Check if all events in this column end before this event starts
+                const canFit = column.every(e => e.endMinutes <= event.startMinutes)
+                if (canFit) {
+                    columnIndex = i
+                    break
+                }
+                columnIndex = i + 1
+            }
+
+            // Create new column if needed
+            if (columnIndex >= columns.length) {
+                columns.push([])
+            }
+
+            // Add event to column
+            columns[columnIndex].push({ endMinutes: event.endMinutes })
+            eventPositions.push({ column: columnIndex, totalColumns: 0 })
+        })
+
+        // Calculate total columns for each event (for width calculation)
+        events.forEach((event, index) => {
+            let maxColumn = eventPositions[index].column
+            // Check all events that overlap with this one
+            events.forEach((other, otherIndex) => {
+                if (index === otherIndex) return
+                // Check if they overlap
+                const overlap = !(event.endMinutes <= other.startMinutes || other.endMinutes <= event.startMinutes)
+                if (overlap) {
+                    maxColumn = Math.max(maxColumn, eventPositions[otherIndex].column)
+                }
+            })
+            eventPositions[index].totalColumns = maxColumn + 1
+        })
+
+        return events.map((event, index) => ({
+            ...event,
+            column: eventPositions[index].column,
+            totalColumns: eventPositions[index].totalColumns
+        }))
     }
 
     // Get all-day events for the current day
@@ -274,7 +332,7 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                     )}
 
                     {/* Time grid */}
-                    <div className="overflow-y-auto relative">
+                    <div className="overflow-y-auto overflow-x-auto relative">
                         {/* Time slot grid */}
                         {timeSlots.map(({ hour }) => {
                             const timeStr = `${hour.toString().padStart(2, '0')}:00`
@@ -286,7 +344,7 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                                         hour === 0 ? 'border-t-2 dark:border-t-neutral-600' : ''
                                     } ${isToday ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
                                 >
-                                    <div className="w-20 p-2 text-xs font-medium text-gray-600 dark:text-gray-400 border-r dark:border-neutral-700">
+                                    <div className="w-20 p-2 text-xs font-medium text-gray-600 dark:text-gray-400 border-r dark:border-neutral-700 shrink-0">
                                         {timeStr}
                                     </div>
                                     <div className="flex-1 p-2 min-h-[80px] relative">
@@ -305,15 +363,21 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                             const height = event.durationMinutes * pixelsPerMinute
                             const bgColor = event.slotData.color || '#3B82F6'
 
+                            // Calculate width and position based on column
+                            const baseLeft = 5 + 0.0625 + 0.5 // w-20 (5rem) + border (1px = 0.0625rem) + p-2 left padding (0.5rem)
+                            const availableWidth = `calc(100% - ${baseLeft}rem - 0.5rem)` // Total width minus left offset and right padding
+                            const columnWidth = `calc(${availableWidth} / ${event.totalColumns})`
+                            const leftOffset = `calc(${baseLeft}rem + ${columnWidth} * ${event.column})`
+
                             return (
                                 <button
                                     key={event.id}
                                     onClick={() => handleSlotClick(event)}
-                                    className="absolute text-sm px-3 py-1.5 text-white rounded hover:brightness-90 transition-all text-left overflow-hidden max-w-36 w-auto"
+                                    className="absolute text-sm px-3 py-1.5 text-white rounded hover:brightness-90 transition-all text-left overflow-hidden"
                                     style={{
                                         top: `${topPosition + 8}px`, // Add p-2 (8px) top padding offset
-                                        left: 'calc(5rem + 1px + 0.5rem)', // w-20 (5rem) + border (1px) + p-2 left padding (0.5rem)
-                                        right: '0.5rem', // p-2 right padding
+                                        left: leftOffset,
+                                        width: `calc(${columnWidth} - 4px)`,
                                         height: `${Math.max(height - 4, 24)}px`, // Slight adjustment for visual spacing, minimum 24px
                                         zIndex: 10,
                                         backgroundColor: bgColor
