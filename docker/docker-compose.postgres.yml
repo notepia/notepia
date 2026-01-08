@@ -20,6 +20,21 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: notepia-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Notepia Application (optional - uncomment to run app with postgres)
   # notepia:
   #   build:
@@ -33,12 +48,17 @@ services:
   #     DB_DRIVER: postgres
   #     DB_DSN: "host=postgres port=5432 user=notepia password=notepia_password dbname=notepia sslmode=disable TimeZone=UTC"
   #     DB_MIGRATIONS_PATH: "file://migrations/postgres"
+  #     REDIS_ADDR: redis:6379
   #   depends_on:
   #     postgres:
+  #       condition: service_healthy
+  #     redis:
   #       condition: service_healthy
   #   volumes:
   #     - ./bin/uploads:/app/bin/uploads
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local
