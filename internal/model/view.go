@@ -15,8 +15,6 @@ type View struct {
 	Type            string `json:"type"`
 	Data            string `json:"data"`
 	Visibility      string `json:"visibility"`
-	YjsState        []byte `json:"yjs_state,omitempty"`
-	YjsStateVector  []byte `json:"yjs_state_vector,omitempty"`
 	CreatedAt       string `json:"created_at"`
 	CreatedBy       string `json:"created_by"`
 	UpdatedAt       string `json:"updated_at"`

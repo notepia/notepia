@@ -39,11 +39,11 @@ type Client struct {
 	send chan []byte
 
 	// The room this client belongs to
-	room *Room
+	room RoomInterface
 }
 
 // NewClient creates a new WebSocket client
-func NewClient(conn *websocket.Conn, userID, userName, viewID string, room *Room) *Client {
+func NewClient(conn *websocket.Conn, userID, userName, viewID string, room RoomInterface) *Client {
 	return &Client{
 		conn:     conn,
 		UserID:   userID,
@@ -57,7 +57,7 @@ func NewClient(conn *websocket.Conn, userID, userName, viewID string, room *Room
 // readPump pumps messages from the WebSocket connection to the room
 func (c *Client) readPump() {
 	defer func() {
-		c.room.unregister <- c
+		c.room.Unregister(c)
 		c.conn.Close()
 	}()
 
@@ -78,11 +78,11 @@ func (c *Client) readPump() {
 		}
 
 		// Broadcast message to all clients in the room
-		c.room.broadcast <- &Message{
+		c.room.Broadcast(&Message{
 			Type:   MessageTypeYjsUpdate,
 			Data:   message,
 			Sender: c,
-		}
+		})
 	}
 }
 

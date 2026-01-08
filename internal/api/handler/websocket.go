@@ -52,8 +52,7 @@ func (h *Handler) HandleViewWebSocket(c echo.Context) error {
 
 	// Verify the view exists and user has access to it
 	// TODO: Add proper permission checking based on workspace membership
-	view := model.View{ID: viewID}
-	_, err := h.db.FindView(view)
+	view, err := h.db.FindView(model.View{ID: viewID})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "View not found")
 	}
@@ -65,8 +64,15 @@ func (h *Handler) HandleViewWebSocket(c echo.Context) error {
 		return err
 	}
 
-	// Get or create room for this view
-	room := h.hub.GetOrCreateRoom(viewID)
+	// Get or create room based on view type
+	var room ws.RoomInterface
+	if view.Type == "whiteboard" {
+		room = h.hub.GetOrCreateWhiteboardRoom(viewID)
+		log.Printf("Using whiteboard room for view %s", viewID)
+	} else {
+		room = h.hub.GetOrCreateRoom(viewID)
+		log.Printf("Using Y.js room for view %s", viewID)
+	}
 
 	// Create client
 	client := ws.NewClient(conn, user.ID, user.Name, viewID, room)

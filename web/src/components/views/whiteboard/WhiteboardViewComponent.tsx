@@ -3,8 +3,7 @@ import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, ViewObje
 import { useTranslation } from 'react-i18next';
 import WhiteboardToolbar, { Tool } from './WhiteboardToolbar';
 import AddElementDialog from './AddElementDialog';
-import { useYjsView, useYjsMap } from '../../../hooks/use-yjs-view';
-import { useYjsSyncStatus, getSyncStatusMessage } from '../../../hooks/use-yjs-sync-status';
+import { useWhiteboardWebSocket } from '../../../hooks/use-whiteboard-websocket';
 
 interface WhiteboardViewComponentProps {
     view?: any;
@@ -13,11 +12,17 @@ interface WhiteboardViewComponentProps {
     viewId?: string;
 }
 
+interface CanvasObject {
+    id: string;
+    type: 'stroke' | 'shape';
+    data: WhiteboardStrokeData | WhiteboardShapeData;
+}
+
 interface WhiteboardObject {
     id: string;
     type: ViewObjectType;
     name: string;
-    data: WhiteboardStrokeData | WhiteboardShapeData | WhiteboardTextData;
+    data: WhiteboardTextData | any;
 }
 
 const WhiteboardViewComponent = ({
@@ -27,36 +32,37 @@ const WhiteboardViewComponent = ({
 }: WhiteboardViewComponentProps) => {
     const { t } = useTranslation();
 
-    // Y.js integration
-    const { doc, provider, getMap } = useYjsView({
+    // WebSocket integration for real-time sync
+    const {
+        sendUpdate,
+        isConnected,
+        onlineUsers,
+        canvasObjects: remoteCanvasObjects,
+        viewObjects: remoteViewObjects
+    } = useWhiteboardWebSocket({
         viewId: viewId || '',
         workspaceId: workspaceId || '',
         enabled: !isPublic && !!viewId && !!workspaceId,
     });
 
-    const syncStatus = useYjsSyncStatus(provider, doc);
-
-    // Get separate maps for canvas (strokes/shapes) and view objects (text/note/view)
-    const canvasMap = getMap('canvas');
-    const viewObjectsMap = getMap('viewobjects');
-
-    // Get canvas objects (strokes, shapes) from Y.js Map
-    const canvasObjects = useYjsMap<WhiteboardObject>(canvasMap);
-
-    // Get view objects (text, note, view) from Y.js Map
-    const viewObjects = useYjsMap<WhiteboardObject>(viewObjectsMap);
-
     // Canvas ref
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    // Canvas state (strokes and shapes)
+    const [canvasObjects, setCanvasObjects] = useState<Map<string, CanvasObject>>(new Map());
+
+    // View objects state (text, notes, views)
+    const [viewObjects, setViewObjects] = useState<Map<string, WhiteboardObject>>(new Map());
 
     // Drawing state
     const [currentTool, setCurrentTool] = useState<Tool>('select');
     const [currentColor, setCurrentColor] = useState('#000000');
     const [currentStrokeWidth, setCurrentStrokeWidth] = useState(2);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+    const [isDraggingObject, setIsDraggingObject] = useState(false);
+    const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
 
     // Current drawing data
     const [currentPoints, setCurrentPoints] = useState<{ x: number; y: number }[]>([]);
@@ -64,7 +70,9 @@ const WhiteboardViewComponent = ({
 
     // Viewport state
     const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
+    const [isPanning, setIsPanning] = useState(false);
     const [lastPanPoint, setLastPanPoint] = useState<{ x: number; y: number } | null>(null);
+    const [isSpacePressed, setIsSpacePressed] = useState(false);
 
     // Dialog state
     const [isAddingNote, setIsAddingNote] = useState(false);
@@ -72,6 +80,19 @@ const WhiteboardViewComponent = ({
 
     // Canvas size
     const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+
+    // Sync remote updates to local state
+    useEffect(() => {
+        if (remoteCanvasObjects) {
+            setCanvasObjects(new Map(remoteCanvasObjects));
+        }
+    }, [remoteCanvasObjects]);
+
+    useEffect(() => {
+        if (remoteViewObjects) {
+            setViewObjects(new Map(remoteViewObjects));
+        }
+    }, [remoteViewObjects]);
 
     // Resize canvas to fit container
     useEffect(() => {
@@ -137,9 +158,9 @@ const WhiteboardViewComponent = ({
         canvasObjects.forEach((obj, objId) => {
             const isSelected = selectedObjectId === objId;
 
-            if (obj.type === 'whiteboard_stroke') {
+            if (obj.type === 'stroke') {
                 renderStroke(ctx, obj.data as WhiteboardStrokeData, isSelected);
-            } else if (obj.type === 'whiteboard_shape') {
+            } else if (obj.type === 'shape') {
                 renderShape(ctx, obj.data as WhiteboardShapeData, isSelected);
             }
         });
@@ -316,29 +337,111 @@ const WhiteboardViewComponent = ({
         return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     };
 
-    // Event handlers
-    const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // Get pointer position (works for both mouse and touch)
+    const getPointerPosition = (e: React.MouseEvent | React.TouchEvent) => {
+        let clientX: number, clientY: number;
+
+        if ('touches' in e) {
+            if (e.touches.length === 0) return null;
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        return screenToCanvas(clientX, clientY);
+    };
+
+    // Event handlers (unified for mouse and touch)
+    const handlePointerDown = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
         if (isPublic) return;
 
-        const pos = screenToCanvas(e.clientX, e.clientY);
+        const pos = getPointerPosition(e);
+        if (!pos) return;
+
+        let clientX: number, clientY: number;
+        if ('touches' in e) {
+            if (e.touches.length === 0) return;
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        // Middle mouse button = pan
+        if (e.type === 'mousedown' && (e as React.MouseEvent).button === 1) {
+            setIsPanning(true);
+            setLastPanPoint({ x: clientX, y: clientY });
+            return;
+        }
+
+        // Space key pressed = pan mode
+        if (isSpacePressed) {
+            setIsPanning(true);
+            setLastPanPoint({ x: clientX, y: clientY });
+            return;
+        }
 
         if (currentTool === 'select') {
             const clickedObject = findObjectAtPosition(pos.x, pos.y);
             if (clickedObject) {
                 setSelectedObjectId(clickedObject.id);
+                setIsDraggingObject(true);
+
+                // Calculate drag offset based on object type
+                let objPos = { x: 0, y: 0 };
+
+                if (clickedObject.type === 'canvas') {
+                    const canvasObj = canvasObjects.get(clickedObject.id);
+                    if (canvasObj) {
+                        if (canvasObj.type === 'stroke') {
+                            const data = canvasObj.data as WhiteboardStrokeData;
+                            const minX = Math.min(...data.points.map(p => p.x));
+                            const minY = Math.min(...data.points.map(p => p.y));
+                            objPos = { x: minX, y: minY };
+                        } else if (canvasObj.type === 'shape') {
+                            const data = canvasObj.data as WhiteboardShapeData;
+                            objPos = data.position;
+                        }
+                    }
+                } else {
+                    const viewObj = viewObjects.get(clickedObject.id);
+                    if (viewObj && viewObj.data) {
+                        objPos = viewObj.data.position || { x: 0, y: 0 };
+                    }
+                }
+
+                setDragOffset({
+                    x: pos.x - objPos.x,
+                    y: pos.y - objPos.y
+                });
             } else {
+                // Clicked on empty space with select tool = pan canvas
+                setIsPanning(true);
+                setLastPanPoint({ x: clientX, y: clientY });
                 setSelectedObjectId(null);
+                setIsDraggingObject(false);
+                setDragOffset(null);
             }
         } else if (currentTool === 'pen') {
             setIsDrawing(true);
             setCurrentPoints([pos]);
+        } else if (currentTool === 'eraser') {
+            setIsDrawing(true);
+            // Check if clicking on an object to erase
+            const objectToErase = findObjectAtPosition(pos.x, pos.y);
+            if (objectToErase) {
+                handleEraseObject(objectToErase.id);
+            }
         } else if (currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line') {
             setIsDrawing(true);
             setStartPoint(pos);
             setCurrentPoints([pos]);
         } else if (currentTool === 'text') {
             const text = prompt(t('whiteboard.enterText') || 'Enter text:');
-            if (text && viewObjectsMap) {
+            if (text) {
                 const textData: WhiteboardTextData = {
                     position: pos,
                     text,
@@ -346,12 +449,15 @@ const WhiteboardViewComponent = ({
                     fontSize: 24
                 };
                 const id = generateId();
-                viewObjectsMap.set(id, {
+                const newObject: WhiteboardObject = {
                     id,
                     type: 'whiteboard_text',
                     name: `Text: ${text.substring(0, 20)}`,
                     data: textData
-                });
+                };
+
+                setViewObjects(prev => new Map(prev).set(id, newObject));
+                sendUpdate({ type: 'add_view_object', object: newObject });
             }
         } else if (currentTool === 'note') {
             setIsAddingNote(true);
@@ -360,45 +466,135 @@ const WhiteboardViewComponent = ({
         }
     };
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const handlePointerMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
         if (isPublic) return;
 
-        const pos = screenToCanvas(e.clientX, e.clientY);
+        const pos = getPointerPosition(e);
+        if (!pos) return;
 
-        if (isDragging && lastPanPoint) {
-            const dx = e.clientX - lastPanPoint.x;
-            const dy = e.clientY - lastPanPoint.y;
+        if (isPanning && lastPanPoint) {
+            let clientX: number, clientY: number;
+            if ('touches' in e) {
+                if (e.touches.length === 0) return;
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const dx = clientX - lastPanPoint.x;
+            const dy = clientY - lastPanPoint.y;
             setViewport(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
-            setLastPanPoint({ x: e.clientX, y: e.clientY });
+            setLastPanPoint({ x: clientX, y: clientY });
+        } else if (isDraggingObject && selectedObjectId && dragOffset) {
+            // Handle object dragging
+            const newPos = {
+                x: pos.x - dragOffset.x,
+                y: pos.y - dragOffset.y
+            };
+
+            // Update object position
+            const canvasObj = canvasObjects.get(selectedObjectId);
+            const viewObj = viewObjects.get(selectedObjectId);
+
+            if (canvasObj) {
+                const updatedObj = { ...canvasObj };
+
+                if (updatedObj.type === 'stroke') {
+                    const data = updatedObj.data as WhiteboardStrokeData;
+                    const minX = Math.min(...data.points.map(p => p.x));
+                    const minY = Math.min(...data.points.map(p => p.y));
+                    const dx = newPos.x - minX;
+                    const dy = newPos.y - minY;
+
+                    updatedObj.data = {
+                        ...data,
+                        points: data.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
+                    };
+                } else if (updatedObj.type === 'shape') {
+                    const data = updatedObj.data as WhiteboardShapeData;
+                    updatedObj.data = {
+                        ...data,
+                        position: newPos
+                    };
+                }
+
+                setCanvasObjects(prev => new Map(prev).set(selectedObjectId, updatedObj));
+            } else if (viewObj) {
+                const updatedObj = { ...viewObj };
+                updatedObj.data = {
+                    ...updatedObj.data,
+                    position: newPos
+                };
+                setViewObjects(prev => new Map(prev).set(selectedObjectId, updatedObj));
+            }
+
+            render();
         } else if (isDrawing) {
-            setCurrentPoints(prev => [...prev, pos]);
+            if (currentTool === 'eraser') {
+                // Continuous erasing while moving
+                const objectToErase = findObjectAtPosition(pos.x, pos.y);
+                if (objectToErase) {
+                    handleEraseObject(objectToErase.id);
+                }
+            } else {
+                setCurrentPoints(prev => [...prev, pos]);
+            }
             render();
         }
     };
 
-    const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const handlePointerUp = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
         if (isPublic) return;
 
-        if (isDragging) {
-            setIsDragging(false);
+        if (isPanning) {
+            setIsPanning(false);
             setLastPanPoint(null);
-        } else if (isDrawing) {
-            const pos = screenToCanvas(e.clientX, e.clientY);
+        } else if (isDraggingObject && selectedObjectId) {
+            // Finish dragging - send update to server
+            const canvasObj = canvasObjects.get(selectedObjectId);
+            const viewObj = viewObjects.get(selectedObjectId);
 
-            if (currentTool === 'pen' && currentPoints.length > 1 && canvasMap) {
+            if (canvasObj) {
+                sendUpdate({
+                    type: 'update_canvas_object',
+                    object: canvasObj
+                });
+            } else if (viewObj) {
+                sendUpdate({
+                    type: 'update_view_object',
+                    object: viewObj
+                });
+            }
+
+            setIsDraggingObject(false);
+            setDragOffset(null);
+        } else if (isDrawing) {
+            const pos = getPointerPosition(e);
+            if (!pos) {
+                setIsDrawing(false);
+                setCurrentPoints([]);
+                setStartPoint(null);
+                return;
+            }
+
+            if (currentTool === 'pen' && currentPoints.length > 1) {
                 const strokeData: WhiteboardStrokeData = {
                     points: currentPoints,
                     color: currentColor,
                     width: currentStrokeWidth
                 };
                 const id = generateId();
-                canvasMap.set(id, {
+                const newObject: CanvasObject = {
                     id,
-                    type: 'whiteboard_stroke',
-                    name: 'Stroke',
+                    type: 'stroke',
                     data: strokeData
-                });
-            } else if (startPoint && (currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line') && canvasMap) {
+                };
+
+                setCanvasObjects(prev => new Map(prev).set(id, newObject));
+                sendUpdate({ type: 'add_canvas_object', object: newObject });
+            } else if (startPoint && (currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line')) {
                 const shapeData: WhiteboardShapeData = {
                     type: currentTool as 'rectangle' | 'circle' | 'line',
                     position: startPoint,
@@ -411,12 +607,14 @@ const WhiteboardViewComponent = ({
                     filled: false
                 };
                 const id = generateId();
-                canvasMap.set(id, {
+                const newObject: CanvasObject = {
                     id,
-                    type: 'whiteboard_shape',
-                    name: currentTool,
+                    type: 'shape',
                     data: shapeData
-                });
+                };
+
+                setCanvasObjects(prev => new Map(prev).set(id, newObject));
+                sendUpdate({ type: 'add_canvas_object', object: newObject });
             }
 
             setIsDrawing(false);
@@ -425,6 +623,7 @@ const WhiteboardViewComponent = ({
         }
     };
 
+    // Handle wheel for zoom
     const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
         e.preventDefault();
         const delta = e.deltaY * -0.001;
@@ -432,74 +631,192 @@ const WhiteboardViewComponent = ({
         setViewport(prev => ({ ...prev, zoom: newZoom }));
     };
 
-    const findObjectAtPosition = (x: number, y: number): WhiteboardObject | null => {
-        // Combine canvas and view objects, reverse to check top to bottom
-        const allObjects = [
-            ...Array.from(viewObjects.values()),  // View objects on top
-            ...Array.from(canvasObjects.values()) // Canvas objects below
-        ].reverse();
+    // Handle pinch to zoom and two-finger pan on touch devices
+    const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        if (e.touches.length === 2) {
+            // Two finger gesture - start tracking
+            e.preventDefault();
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
 
-        for (const obj of allObjects) {
+            // Calculate initial distance for pinch zoom
+            const distance = Math.sqrt(
+                Math.pow(touch2.clientX - touch1.clientX, 2) +
+                Math.pow(touch2.clientY - touch1.clientY, 2)
+            );
+
+            // Calculate midpoint for pan
+            const midX = (touch1.clientX + touch2.clientX) / 2;
+            const midY = (touch1.clientY + touch2.clientY) / 2;
+
+            setLastPanPoint({ x: distance, y: midY });
+            // Store midpoint in a separate state or use existing mechanism
+            (e.currentTarget as any).twoFingerMidpoint = { x: midX, y: midY };
+        } else {
+            handlePointerDown(e);
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        if (e.touches.length === 2) {
+            // Two finger gesture - pinch zoom and pan
+            e.preventDefault();
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+
+            // Calculate current distance for pinch zoom
+            const distance = Math.sqrt(
+                Math.pow(touch2.clientX - touch1.clientX, 2) +
+                Math.pow(touch2.clientY - touch1.clientY, 2)
+            );
+
+            // Calculate current midpoint for pan
+            const midX = (touch1.clientX + touch2.clientX) / 2;
+            const midY = (touch1.clientY + touch2.clientY) / 2;
+
+            if (lastPanPoint) {
+                // Handle pinch zoom
+                const scale = distance / lastPanPoint.x;
+                const newZoom = Math.max(0.1, Math.min(5, viewport.zoom * scale));
+
+                // Handle two-finger pan
+                const prevMidpoint = (e.currentTarget as any).twoFingerMidpoint || { x: midX, y: midY };
+                const dx = midX - prevMidpoint.x;
+                const dy = midY - prevMidpoint.y;
+
+                setViewport(prev => ({
+                    ...prev,
+                    zoom: newZoom,
+                    x: prev.x + dx,
+                    y: prev.y + dy
+                }));
+
+                setLastPanPoint({ x: distance, y: midY });
+                (e.currentTarget as any).twoFingerMidpoint = { x: midX, y: midY };
+            }
+        } else {
+            handlePointerMove(e);
+        }
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        if (e.touches.length < 2) {
+            setLastPanPoint(null);
+            delete (e.currentTarget as any).twoFingerMidpoint;
+        }
+        if (e.touches.length === 0) {
+            handlePointerUp(e);
+        }
+    };
+
+    const findObjectAtPosition = (x: number, y: number): { id: string; type: 'canvas' | 'view' } | null => {
+        // Check view objects first (on top)
+        for (const [id, obj] of Array.from(viewObjects.entries()).reverse()) {
             try {
                 const data = obj.data;
 
-                if (obj.type === 'whiteboard_stroke') {
+                if (obj.type === 'whiteboard_text') {
+                    const textData = data as WhiteboardTextData;
+                    const canvas = canvasRef.current;
+                    const ctx = canvas?.getContext('2d');
+                    if (ctx) {
+                        ctx.font = `${textData.fontSize}px sans-serif`;
+                        const metrics = ctx.measureText(textData.text);
+                        if (x >= textData.position.x - 5 && x <= textData.position.x + metrics.width + 5 &&
+                            y >= textData.position.y - textData.fontSize - 5 && y <= textData.position.y + 5) {
+                            return { id, type: 'view' };
+                        }
+                    }
+                } else if (obj.type === 'whiteboard_note' || obj.type === 'whiteboard_view') {
+                    const posData = data as any;
+                    const width = posData.width || 200;
+                    const height = posData.height || 150;
+                    if (x >= posData.position.x && x <= posData.position.x + width &&
+                        y >= posData.position.y && y <= posData.position.y + height) {
+                        return { id, type: 'view' };
+                    }
+                }
+            } catch (e) {
+                console.error('Error checking view object:', e);
+            }
+        }
+
+        // Check canvas objects
+        for (const [id, obj] of Array.from(canvasObjects.entries()).reverse()) {
+            try {
+                const data = obj.data;
+
+                if (obj.type === 'stroke') {
                     const strokeData = data as WhiteboardStrokeData;
                     const minX = Math.min(...strokeData.points.map(p => p.x));
                     const maxX = Math.max(...strokeData.points.map(p => p.x));
                     const minY = Math.min(...strokeData.points.map(p => p.y));
                     const maxY = Math.max(...strokeData.points.map(p => p.y));
                     if (x >= minX - 5 && x <= maxX + 5 && y >= minY - 5 && y <= maxY + 5) {
-                        return obj;
+                        return { id, type: 'canvas' };
                     }
-                } else if (obj.type === 'whiteboard_shape') {
+                } else if (obj.type === 'shape') {
                     const shapeData = data as WhiteboardShapeData;
                     if (shapeData.type === 'rectangle') {
                         if (x >= shapeData.position.x && x <= shapeData.position.x + shapeData.dimensions.width &&
                             y >= shapeData.position.y && y <= shapeData.position.y + shapeData.dimensions.height) {
-                            return obj;
+                            return { id, type: 'canvas' };
                         }
-                    }
-                } else if (obj.type === 'whiteboard_text' || obj.type === 'whiteboard_note' || obj.type === 'whiteboard_view') {
-                    const posData = data as any;
-                    const width = posData.width || 200;
-                    const height = posData.height || 150;
-                    if (x >= posData.position.x && x <= posData.position.x + width &&
-                        y >= posData.position.y && y <= posData.position.y + height) {
-                        return obj;
                     }
                 }
             } catch (e) {
-                console.error('Error checking object:', e);
+                console.error('Error checking canvas object:', e);
             }
         }
         return null;
     };
 
+    const handleEraseObject = (objId: string) => {
+        const canvasObj = canvasObjects.get(objId);
+        const viewObj = viewObjects.get(objId);
+
+        if (canvasObj) {
+            setCanvasObjects(prev => {
+                const newMap = new Map(prev);
+                newMap.delete(objId);
+                return newMap;
+            });
+            sendUpdate({ type: 'delete_canvas_object', id: objId });
+        } else if (viewObj) {
+            setViewObjects(prev => {
+                const newMap = new Map(prev);
+                newMap.delete(objId);
+                return newMap;
+            });
+            sendUpdate({ type: 'delete_view_object', id: objId });
+        }
+    };
+
     const handleClear = () => {
         if (window.confirm(t('whiteboard.clearConfirm') || 'Clear all? This cannot be undone.')) {
-            // Clear both canvas and view objects
-            if (canvasMap) canvasMap.clear();
-            if (viewObjectsMap) viewObjectsMap.clear();
+            setCanvasObjects(new Map());
+            setViewObjects(new Map());
+            sendUpdate({ type: 'clear_all' });
         }
     };
 
     const handleDelete = () => {
         if (!selectedObjectId) return;
+        handleEraseObject(selectedObjectId);
+        setSelectedObjectId(null);
+    };
 
-        // Find the object in either map
-        const canvasObj = canvasObjects.get(selectedObjectId);
-        const viewObj = viewObjects.get(selectedObjectId);
+    // Zoom controls
+    const handleZoomIn = () => {
+        setViewport(prev => ({ ...prev, zoom: Math.min(5, prev.zoom * 1.2) }));
+    };
 
-        if (canvasObj && canvasMap) {
-            // Delete from canvas map (strokes, shapes)
-            canvasMap.delete(selectedObjectId);
-            setSelectedObjectId(null);
-        } else if (viewObj && viewObjectsMap) {
-            // Delete from view objects map (text, note, view)
-            viewObjectsMap.delete(selectedObjectId);
-            setSelectedObjectId(null);
-        }
+    const handleZoomOut = () => {
+        setViewport(prev => ({ ...prev, zoom: Math.max(0.1, prev.zoom / 1.2) }));
+    };
+
+    const handleResetZoom = () => {
+        setViewport({ x: 0, y: 0, zoom: 1 });
     };
 
     // Handle keyboard shortcuts
@@ -509,12 +826,29 @@ const WhiteboardViewComponent = ({
                 handleDelete();
             } else if (e.key === 'Escape') {
                 setSelectedObjectId(null);
+            } else if (e.key === ' ' && !isDrawing && !isDraggingObject) {
+                e.preventDefault(); // Prevent page scroll
+                setIsSpacePressed(true);
+            }
+        };
+
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.key === ' ') {
+                setIsSpacePressed(false);
+                if (isPanning && !isDraggingObject) {
+                    setIsPanning(false);
+                    setLastPanPoint(null);
+                }
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedObjectId, canvasMap, viewObjectsMap]);
+        window.addEventListener('keyup', handleKeyUp);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [selectedObjectId, isDrawing, isDraggingObject, isPanning]);
 
     return (
         <>
@@ -523,16 +857,43 @@ const WhiteboardViewComponent = ({
                 {!isPublic && (
                     <div className="absolute top-4 right-4 z-10 bg-white dark:bg-neutral-800 rounded-lg shadow-md px-3 py-2 flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${
-                            syncStatus.isConnected ? 'bg-green-500' : 'bg-red-500'
+                            isConnected ? 'bg-green-500' : 'bg-red-500'
                         }`} />
                         <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                            {getSyncStatusMessage(syncStatus)}
+                            {isConnected ? t('whiteboard.connected') || 'Connected' : t('whiteboard.disconnected') || 'Disconnected'}
                         </span>
-                        {syncStatus.onlineUsers > 1 && (
+                        {onlineUsers > 1 && (
                             <span className="text-xs text-neutral-500">
-                                • {syncStatus.onlineUsers} online
+                                • {onlineUsers} online
                             </span>
                         )}
+                    </div>
+                )}
+
+                {/* Zoom controls */}
+                {!isPublic && (
+                    <div className="absolute bottom-4 right-4 z-10 bg-white dark:bg-neutral-800 rounded-lg shadow-md p-2 flex flex-col gap-2">
+                        <button
+                            onClick={handleZoomIn}
+                            className="px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm font-medium"
+                            title={t('whiteboard.zoomIn') || 'Zoom In'}
+                        >
+                            +
+                        </button>
+                        <button
+                            onClick={handleResetZoom}
+                            className="px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-xs font-medium"
+                            title={t('whiteboard.resetZoom') || 'Reset Zoom'}
+                        >
+                            {Math.round(viewport.zoom * 100)}%
+                        </button>
+                        <button
+                            onClick={handleZoomOut}
+                            className="px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm font-medium"
+                            title={t('whiteboard.zoomOut') || 'Zoom Out'}
+                        >
+                            −
+                        </button>
                     </div>
                 )}
 
@@ -540,11 +901,20 @@ const WhiteboardViewComponent = ({
                     ref={canvasRef}
                     width={canvasSize.width}
                     height={canvasSize.height}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
+                    onMouseDown={handlePointerDown}
+                    onMouseMove={handlePointerMove}
+                    onMouseUp={handlePointerUp}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                     onWheel={handleWheel}
-                    className="cursor-crosshair"
+                    className={`touch-none ${
+                        isPanning || isSpacePressed
+                            ? 'cursor-grab active:cursor-grabbing'
+                            : isDraggingObject
+                            ? 'cursor-move'
+                            : 'cursor-crosshair'
+                    }`}
                 />
 
                 <WhiteboardToolbar

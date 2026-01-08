@@ -1,7 +1,7 @@
-import { Pen, Square, Circle, Minus, Type, FileText, LayoutGrid, Hand, Trash2 } from 'lucide-react';
+import { Pen, Square, Circle, Minus, Type, FileText, LayoutGrid, Hand, Trash2, Eraser } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export type Tool = 'select' | 'pen' | 'rectangle' | 'circle' | 'line' | 'text' | 'note' | 'view';
+export type Tool = 'select' | 'pen' | 'eraser' | 'rectangle' | 'circle' | 'line' | 'text' | 'note' | 'view';
 
 interface WhiteboardToolbarProps {
     currentTool: Tool;
@@ -29,6 +29,7 @@ const WhiteboardToolbar = ({
     const tools: { id: Tool; icon: React.ReactNode; label: string }[] = [
         { id: 'select', icon: <Hand size={18} />, label: t('whiteboard.select') || 'Select' },
         { id: 'pen', icon: <Pen size={18} />, label: t('whiteboard.pen') || 'Pen' },
+        { id: 'eraser', icon: <Eraser size={18} />, label: t('whiteboard.eraser') || 'Eraser' },
         { id: 'rectangle', icon: <Square size={18} />, label: t('whiteboard.rectangle') || 'Rectangle' },
         { id: 'circle', icon: <Circle size={18} />, label: t('whiteboard.circle') || 'Circle' },
         { id: 'line', icon: <Minus size={18} />, label: t('whiteboard.line') || 'Line' },
@@ -49,7 +50,7 @@ const WhiteboardToolbar = ({
                         <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
                             {t('whiteboard.tools') || 'Tools'}
                         </div>
-                        <div className="grid grid-cols-4 gap-1">
+                        <div className="grid grid-cols-3 gap-1">
                             {tools.map((tool) => (
                                 <button
                                     key={tool.id}

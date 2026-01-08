@@ -10,14 +10,15 @@ import (
 
 // Hub maintains the set of active rooms and coordinates their lifecycle
 type Hub struct {
-	// Registered rooms by view ID
-	rooms map[string]*Room
+	// Registered rooms by view ID (can be either Y.js Room or WhiteboardRoom)
+	rooms map[string]RoomInterface
 
 	// Mutex for thread-safe access to rooms
 	mu sync.RWMutex
 
-	// Redis cache
-	cache *redis.ViewCache
+	// Redis caches
+	cache           *redis.ViewCache
+	whiteboardCache *redis.WhiteboardCache
 
 	// Cleanup ticker
 	cleanupTicker *time.Ticker
@@ -27,12 +28,13 @@ type Hub struct {
 }
 
 // NewHub creates a new Hub
-func NewHub(cache *redis.ViewCache) *Hub {
+func NewHub(cache *redis.ViewCache, whiteboardCache *redis.WhiteboardCache) *Hub {
 	hub := &Hub{
-		rooms:         make(map[string]*Room),
-		cache:         cache,
-		cleanupTicker: time.NewTicker(5 * time.Minute),
-		done:          make(chan struct{}),
+		rooms:           make(map[string]RoomInterface),
+		cache:           cache,
+		whiteboardCache: whiteboardCache,
+		cleanupTicker:   time.NewTicker(5 * time.Minute),
+		done:            make(chan struct{}),
 	}
 
 	// Start cleanup goroutine
@@ -41,8 +43,8 @@ func NewHub(cache *redis.ViewCache) *Hub {
 	return hub
 }
 
-// GetOrCreateRoom gets an existing room or creates a new one
-func (h *Hub) GetOrCreateRoom(viewID string) *Room {
+// GetOrCreateRoom gets an existing room or creates a new one (Y.js room for non-whiteboard views)
+func (h *Hub) GetOrCreateRoom(viewID string) RoomInterface {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -54,14 +56,33 @@ func (h *Hub) GetOrCreateRoom(viewID string) *Room {
 		// Start the room's event loop
 		go room.Run()
 
-		log.Printf("Created new room for view %s", viewID)
+		log.Printf("Created new Y.js room for view %s", viewID)
+	}
+
+	return room
+}
+
+// GetOrCreateWhiteboardRoom gets an existing room or creates a new whiteboard room
+func (h *Hub) GetOrCreateWhiteboardRoom(viewID string) RoomInterface {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	room, exists := h.rooms[viewID]
+	if !exists {
+		room = NewWhiteboardRoom(viewID, h.whiteboardCache)
+		h.rooms[viewID] = room
+
+		// Start the room's event loop
+		go room.Run()
+
+		log.Printf("Created new whiteboard room for view %s", viewID)
 	}
 
 	return room
 }
 
 // GetRoom gets an existing room (returns nil if not found)
-func (h *Hub) GetRoom(viewID string) *Room {
+func (h *Hub) GetRoom(viewID string) RoomInterface {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -114,7 +135,7 @@ func (h *Hub) Stop() {
 		log.Printf("Stopped room for view %s", viewID)
 	}
 
-	h.rooms = make(map[string]*Room)
+	h.rooms = make(map[string]RoomInterface)
 }
 
 // Stats returns statistics about the hub

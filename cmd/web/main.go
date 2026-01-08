@@ -50,11 +50,12 @@ func main() {
 	defer redisClient.Close()
 	log.Printf("Redis connected: %s", redisConfig.Addr)
 
-	// Initialize ViewCache
+	// Initialize caches
 	viewCache := redis.NewViewCache(redisClient)
+	whiteboardCache := redis.NewWhiteboardCache(redisClient)
 
 	// Initialize WebSocket Hub
-	hub := websocket.NewHub(viewCache)
+	hub := websocket.NewHub(viewCache, whiteboardCache)
 	log.Println("WebSocket Hub initialized")
 
 	// Setup server with WebSocket support

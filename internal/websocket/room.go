@@ -183,3 +183,8 @@ func (r *Room) Register(client *Client) {
 func (r *Room) Unregister(client *Client) {
 	r.unregister <- client
 }
+
+// Broadcast sends a message to the room's broadcast channel
+func (r *Room) Broadcast(message *Message) {
+	r.broadcast <- message
+}

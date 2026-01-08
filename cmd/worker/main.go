@@ -38,15 +38,23 @@ func main() {
 	defer redisClient.Close()
 	log.Printf("Redis connected: %s", redisConfig.Addr)
 
-	// Initialize ViewCache
+	// Initialize caches
 	viewCache := redis.NewViewCache(redisClient)
+	whiteboardCache := redis.NewWhiteboardCache(redisClient)
 
-	// Initialize and start worker
-	persister := worker.NewPersister(viewCache, db)
-	if err := persister.Start(); err != nil {
-		log.Fatalf("Failed to start worker: %v", err)
+	// Initialize and start Y.js persister (for non-whiteboard views)
+	yjsPersister := worker.NewPersister(viewCache, db)
+	if err := yjsPersister.Start(); err != nil {
+		log.Fatalf("Failed to start Y.js persister: %v", err)
 	}
-	log.Println("Worker started, will persist data every 5 minutes")
+	log.Println("Y.js persister started, will persist data every 5 minutes")
+
+	// Initialize and start whiteboard persister
+	whiteboardPersister := worker.NewWhiteboardPersister(whiteboardCache, db)
+	if err := whiteboardPersister.Start(); err != nil {
+		log.Fatalf("Failed to start whiteboard persister: %v", err)
+	}
+	log.Println("Whiteboard persister started, will persist data every 5 minutes")
 
 	// Wait for interrupt signal to gracefully shutdown
 	quit := make(chan os.Signal, 1)
@@ -56,10 +64,14 @@ func main() {
 	log.Println("Shutting down worker...")
 
 	// Force persist before shutdown
-	if err := persister.ForcePersist(); err != nil {
-		log.Printf("Error during final persist: %v", err)
+	if err := yjsPersister.ForcePersist(); err != nil {
+		log.Printf("Error during final Y.js persist: %v", err)
+	}
+	if err := whiteboardPersister.ForcePersist(); err != nil {
+		log.Printf("Error during final whiteboard persist: %v", err)
 	}
 
-	persister.Stop()
+	yjsPersister.Stop()
+	whiteboardPersister.Stop()
 	log.Println("Worker stopped")
 }
