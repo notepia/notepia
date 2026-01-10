@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/notepia/notepia/internal/db"
-	"github.com/notepia/notepia/internal/model"
 	"github.com/notepia/notepia/internal/redis"
 	"github.com/robfig/cron/v3"
 )
@@ -102,14 +101,10 @@ func (p *Persister) PersistView(ctx context.Context, viewID string) error {
 		return err
 	}
 
-	// If we have either state or updates, persist to database
+	// If we have either state or updates, merge them and keep in Redis
+	// Note: YjsState is no longer persisted to database, only kept in Redis
+	// For whiteboard views, state is persisted separately by WhiteboardPersister
 	if len(state) > 0 || len(updates) > 0 {
-		// Find the view in database
-		view, err := p.db.FindView(model.View{ID: viewID})
-		if err != nil {
-			return err
-		}
-
 		// Merge all updates into a single state
 		// In a real implementation, you would use Y.js to properly merge these
 		// For now, we'll just store the latest state and the list of updates
@@ -125,25 +120,17 @@ func (p *Persister) PersistView(ctx context.Context, viewID string) error {
 			finalState = updates[len(updates)-1]
 		}
 
-		// Update the view with the Y.js state
-		view.YjsState = finalState
-
-		// Update in database
-		if err := p.db.UpdateView(view); err != nil {
-			return err
-		}
-
-		// Clear the updates from Redis since we've persisted them
+		// Clear the updates from Redis since we've merged them into state
 		if err := p.cache.ClearViewYjsUpdates(ctx, viewID); err != nil {
 			log.Printf("Warning: failed to clear updates for view %s: %v", viewID, err)
 		}
 
-		// Update the cached state
+		// Update the cached state in Redis
 		if err := p.cache.SetViewYjsState(ctx, viewID, finalState); err != nil {
 			log.Printf("Warning: failed to update cached state for view %s: %v", viewID, err)
 		}
 
-		log.Printf("Persisted view %s (state: %d bytes, updates: %d)", viewID, len(finalState), len(updates))
+		log.Printf("Merged Y.js state for view %s (state: %d bytes, updates: %d)", viewID, len(finalState), len(updates))
 	}
 
 	return nil

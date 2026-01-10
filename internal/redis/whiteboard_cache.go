@@ -11,6 +11,7 @@ const (
 	// Cache key patterns for whiteboard
 	whiteboardCanvasKey      = "whiteboard:%s:canvas"
 	whiteboardViewObjectsKey = "whiteboard:%s:viewobjects"
+	whiteboardYjsStateKey    = "whiteboard:%s:yjsstate"
 
 	// TTL for cached data (24 hours)
 	whiteboardCacheTTL = 24 * time.Hour
@@ -143,14 +144,28 @@ func (wc *WhiteboardCache) ClearViewObjects(ctx context.Context, viewID string) 
 	return wc.client.rdb.Del(ctx, key).Err()
 }
 
+// GetYjsState retrieves the Y.js CRDT state for a whiteboard
+func (wc *WhiteboardCache) GetYjsState(ctx context.Context, viewID string) ([]byte, error) {
+	key := fmt.Sprintf(whiteboardYjsStateKey, viewID)
+	return wc.client.rdb.Get(ctx, key).Bytes()
+}
+
+// SetYjsState stores the Y.js CRDT state for a whiteboard
+func (wc *WhiteboardCache) SetYjsState(ctx context.Context, viewID string, state []byte) error {
+	key := fmt.Sprintf(whiteboardYjsStateKey, viewID)
+	return wc.client.rdb.Set(ctx, key, state, whiteboardCacheTTL).Err()
+}
+
 // RefreshTTL refreshes the TTL for a whiteboard's cached data
 func (wc *WhiteboardCache) RefreshTTL(ctx context.Context, viewID string) error {
 	canvasKey := fmt.Sprintf(whiteboardCanvasKey, viewID)
 	viewObjectsKey := fmt.Sprintf(whiteboardViewObjectsKey, viewID)
+	yjsStateKey := fmt.Sprintf(whiteboardYjsStateKey, viewID)
 
 	pipe := wc.client.rdb.Pipeline()
 	pipe.Expire(ctx, canvasKey, whiteboardCacheTTL)
 	pipe.Expire(ctx, viewObjectsKey, whiteboardCacheTTL)
+	pipe.Expire(ctx, yjsStateKey, whiteboardCacheTTL)
 
 	_, err := pipe.Exec(ctx)
 	return err

@@ -69,19 +69,28 @@ func (h *Handler) HandleViewWebSocket(c echo.Context) error {
 	if view.Type == "whiteboard" {
 		room = h.hub.GetOrCreateWhiteboardRoom(viewID)
 		log.Printf("Using whiteboard room for view %s", viewID)
+
+		// Create whiteboard client (sends text messages for JSON)
+		client := ws.NewWhiteboardClient(conn, user.ID, user.Name, viewID, room)
+
+		// Register client with the room
+		room.Register(client.Client)
+
+		// Start client's read and write pumps
+		client.Run()
 	} else {
 		room = h.hub.GetOrCreateRoom(viewID)
 		log.Printf("Using Y.js room for view %s", viewID)
+
+		// Create regular client (sends binary messages for Y.js)
+		client := ws.NewClient(conn, user.ID, user.Name, viewID, room)
+
+		// Register client with the room
+		room.Register(client)
+
+		// Start client's read and write pumps
+		client.Run()
 	}
-
-	// Create client
-	client := ws.NewClient(conn, user.ID, user.Name, viewID, room)
-
-	// Register client with the room
-	room.Register(client)
-
-	// Start client's read and write pumps
-	client.Run()
 
 	return nil
 }

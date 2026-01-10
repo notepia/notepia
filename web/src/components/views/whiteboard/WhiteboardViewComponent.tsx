@@ -342,9 +342,11 @@ const WhiteboardViewComponent = ({
         let clientX: number, clientY: number;
 
         if ('touches' in e) {
-            if (e.touches.length === 0) return null;
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
+            // For touch events, use changedTouches when touches is empty (on touchend)
+            const touch = e.touches.length > 0 ? e.touches[0] : e.changedTouches[0];
+            if (!touch) return null;
+            clientX = touch.clientX;
+            clientY = touch.clientY;
         } else {
             clientX = e.clientX;
             clientY = e.clientY;
@@ -653,6 +655,11 @@ const WhiteboardViewComponent = ({
             // Store midpoint in a separate state or use existing mechanism
             (e.currentTarget as any).twoFingerMidpoint = { x: midX, y: midY };
         } else {
+            // Single finger touch - prevent default to avoid scrolling when drawing
+            if (currentTool === 'pen' || currentTool === 'eraser' ||
+                currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line') {
+                e.preventDefault();
+            }
             handlePointerDown(e);
         }
     };
@@ -695,6 +702,10 @@ const WhiteboardViewComponent = ({
                 (e.currentTarget as any).twoFingerMidpoint = { x: midX, y: midY };
             }
         } else {
+            // Single finger touch - prevent default when drawing or dragging
+            if (isDrawing || isDraggingObject || isPanning) {
+                e.preventDefault();
+            }
             handlePointerMove(e);
         }
     };
@@ -705,6 +716,10 @@ const WhiteboardViewComponent = ({
             delete (e.currentTarget as any).twoFingerMidpoint;
         }
         if (e.touches.length === 0) {
+            // Prevent default when finishing drawing or dragging
+            if (isDrawing || isDraggingObject || isPanning) {
+                e.preventDefault();
+            }
             handlePointerUp(e);
         }
     };
@@ -908,7 +923,8 @@ const WhiteboardViewComponent = ({
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                     onWheel={handleWheel}
-                    className={`touch-none ${
+                    style={{ touchAction: 'none' }}
+                    className={`${
                         isPanning || isSpacePressed
                             ? 'cursor-grab active:cursor-grabbing'
                             : isDraggingObject

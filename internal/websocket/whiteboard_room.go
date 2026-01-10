@@ -14,6 +14,9 @@ type WhiteboardMessageType string
 const (
 	WhiteboardMessageTypeAuth               WhiteboardMessageType = "auth"
 	WhiteboardMessageTypeInit               WhiteboardMessageType = "init"
+	WhiteboardMessageTypeAcquireLock        WhiteboardMessageType = "acquire_lock"
+	WhiteboardMessageTypeLockAcquired       WhiteboardMessageType = "lock_acquired"
+	WhiteboardMessageTypeInitializeData     WhiteboardMessageType = "initialize_data"
 	WhiteboardMessageTypeAddCanvasObject    WhiteboardMessageType = "add_canvas_object"
 	WhiteboardMessageTypeUpdateCanvasObject WhiteboardMessageType = "update_canvas_object"
 	WhiteboardMessageTypeDeleteCanvasObject WhiteboardMessageType = "delete_canvas_object"
@@ -31,6 +34,9 @@ type WhiteboardMessage struct {
 	ViewObjects   map[string]redis.ViewObject    `json:"view_objects,omitempty"`
 	Object        json.RawMessage                `json:"object,omitempty"`
 	ID            string                         `json:"id,omitempty"`
+	Initialized   bool                           `json:"initialized,omitempty"`
+	LockAcquired  bool                           `json:"lock_acquired,omitempty"`
+	YjsState      []byte                         `json:"yjs_state,omitempty"`
 }
 
 // WhiteboardRoom manages all clients for a specific whiteboard view
@@ -58,6 +64,9 @@ type WhiteboardRoom struct {
 
 	// Cancel function
 	cancel context.CancelFunc
+
+	// Track if room has been initialized
+	initialized bool
 }
 
 // NewWhiteboardRoom creates a new whiteboard room
@@ -65,14 +74,15 @@ func NewWhiteboardRoom(viewID string, cache *redis.WhiteboardCache) *WhiteboardR
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &WhiteboardRoom{
-		viewID:     viewID,
-		clients:    make(map[*Client]bool),
-		broadcast:  make(chan *Message, 256),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		cache:      cache,
-		ctx:        ctx,
-		cancel:     cancel,
+		viewID:      viewID,
+		clients:     make(map[*Client]bool),
+		broadcast:   make(chan *Message, 256),
+		register:    make(chan *Client),
+		unregister:  make(chan *Client),
+		cache:       cache,
+		ctx:         ctx,
+		cancel:      cancel,
+		initialized: false,
 	}
 }
 
@@ -97,7 +107,7 @@ func (r *WhiteboardRoom) Run() {
 				client.UserID, client.UserName, r.viewID, len(r.clients))
 
 			// Send initial state to the new client
-			go r.sendInitialState(client)
+			go r.sendInitialStateToClient(client)
 
 		case client := <-r.unregister:
 			if _, ok := r.clients[client]; ok {
@@ -114,43 +124,6 @@ func (r *WhiteboardRoom) Run() {
 	}
 }
 
-// sendInitialState sends the current whiteboard state to a newly connected client
-func (r *WhiteboardRoom) sendInitialState(client *Client) {
-	// Get canvas objects from cache
-	canvasObjects, err := r.cache.GetCanvasObjects(r.ctx, r.viewID)
-	if err != nil {
-		log.Printf("Error loading canvas objects: %v", err)
-		canvasObjects = make(map[string]redis.CanvasObject)
-	}
-
-	// Get view objects from cache
-	viewObjects, err := r.cache.GetViewObjects(r.ctx, r.viewID)
-	if err != nil {
-		log.Printf("Error loading view objects: %v", err)
-		viewObjects = make(map[string]redis.ViewObject)
-	}
-
-	// Send initial state message
-	initMsg := WhiteboardMessage{
-		Type:          WhiteboardMessageTypeInit,
-		CanvasObjects: canvasObjects,
-		ViewObjects:   viewObjects,
-	}
-
-	data, err := json.Marshal(initMsg)
-	if err != nil {
-		log.Printf("Error marshaling init message: %v", err)
-		return
-	}
-
-	select {
-	case client.send <- data:
-		log.Printf("Sent initial state to client %s (%d canvas objects, %d view objects)",
-			client.UserID, len(canvasObjects), len(viewObjects))
-	default:
-		log.Printf("Failed to send initial state to client %s", client.UserID)
-	}
-}
 
 // handleMessage processes incoming whiteboard messages
 func (r *WhiteboardRoom) handleMessage(msg *Message) {
@@ -162,6 +135,88 @@ func (r *WhiteboardRoom) handleMessage(msg *Message) {
 	}
 
 	switch whiteboardMsg.Type {
+	case WhiteboardMessageTypeAcquireLock:
+		// Client wants to acquire initialization lock
+		acquired, err := r.cache.AcquireWhiteboardInitLock(r.ctx, r.viewID)
+		if err != nil {
+			log.Printf("Error acquiring init lock: %v", err)
+			acquired = false
+		}
+
+		// Send response back to the requesting client
+		response := WhiteboardMessage{
+			Type:         WhiteboardMessageTypeLockAcquired,
+			LockAcquired: acquired,
+		}
+		data, err := json.Marshal(response)
+		if err != nil {
+			log.Printf("Error marshaling lock response: %v", err)
+			return
+		}
+
+		select {
+		case msg.Sender.send <- data:
+			log.Printf("Sent lock acquisition response to client %s: %v", msg.Sender.UserID, acquired)
+		default:
+			log.Printf("Failed to send lock response to client %s", msg.Sender.UserID)
+		}
+
+	case WhiteboardMessageTypeInitializeData:
+		// Client is sending initial data after fetching from DB and converting with Y.js
+		// Store canvas objects
+		if whiteboardMsg.CanvasObjects != nil {
+			for id, obj := range whiteboardMsg.CanvasObjects {
+				obj.ID = id
+				if err := r.cache.SetCanvasObject(r.ctx, r.viewID, obj); err != nil {
+					log.Printf("Error storing canvas object during init: %v", err)
+				}
+			}
+		}
+
+		// Store view objects
+		if whiteboardMsg.ViewObjects != nil {
+			for id, obj := range whiteboardMsg.ViewObjects {
+				obj.ID = id
+				if err := r.cache.SetViewObject(r.ctx, r.viewID, obj); err != nil {
+					log.Printf("Error storing view object during init: %v", err)
+				}
+			}
+		}
+
+		// Store Y.js CRDT state
+		if whiteboardMsg.YjsState != nil && len(whiteboardMsg.YjsState) > 0 {
+			if err := r.cache.SetYjsState(r.ctx, r.viewID, whiteboardMsg.YjsState); err != nil {
+				log.Printf("Error storing Y.js state during init: %v", err)
+			}
+		}
+
+		// Mark as initialized
+		if err := r.cache.MarkWhiteboardInitialized(r.ctx, r.viewID); err != nil {
+			log.Printf("Error marking whiteboard as initialized: %v", err)
+		}
+
+		// Release the lock
+		if err := r.cache.ReleaseWhiteboardInitLock(r.ctx, r.viewID); err != nil {
+			log.Printf("Error releasing init lock: %v", err)
+		}
+
+		log.Printf("Whiteboard %s initialized by client %s (Y.js state: %d bytes)",
+			r.viewID, msg.Sender.UserID, len(whiteboardMsg.YjsState))
+
+		// Broadcast the initialization data (including Y.js state) to all other clients for CRDT synchronization
+		// Don't send back to the sender as they already have it
+		for client := range r.clients {
+			if client != msg.Sender {
+				select {
+				case client.send <- msg.Data:
+				default:
+					close(client.send)
+					delete(r.clients, client)
+					log.Printf("Client %s send buffer full during init, disconnecting", client.UserID)
+				}
+			}
+		}
+
 	case WhiteboardMessageTypeAddCanvasObject, WhiteboardMessageTypeUpdateCanvasObject:
 		// Parse the object
 		var obj redis.CanvasObject

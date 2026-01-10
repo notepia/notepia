@@ -24,14 +24,14 @@ func NewWhiteboardPersister(cache *redis.WhiteboardCache, database db.DB) *White
 	return &WhiteboardPersister{
 		cache: cache,
 		db:    database,
-		cron:  cron.New(),
+		cron:  cron.New(cron.WithSeconds()),
 	}
 }
 
 // Start starts the persister with a schedule
 func (p *WhiteboardPersister) Start() error {
-	// Run every 5 minutes
-	_, err := p.cron.AddFunc("*/5 * * * *", func() {
+	// Run every 30 seconds (seconds, minutes, hours, day of month, month, day of week)
+	_, err := p.cron.AddFunc("*/30 * * * * *", func() {
 		if err := p.PersistAll(); err != nil {
 			log.Printf("Error persisting whiteboard data: %v", err)
 		}
@@ -42,7 +42,7 @@ func (p *WhiteboardPersister) Start() error {
 	}
 
 	p.cron.Start()
-	log.Println("Whiteboard persister started, will run every 5 minutes")
+	log.Println("Whiteboard persister started, will run every 30 seconds")
 
 	return nil
 }
