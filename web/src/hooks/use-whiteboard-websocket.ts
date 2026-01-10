@@ -38,7 +38,6 @@ export function useWhiteboardWebSocket(options: UseWhiteboardWebSocketOptions) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
     const [isConnected, setIsConnected] = useState(false);
-    const [onlineUsers, setOnlineUsers] = useState(1);
     const [canvasObjects, setCanvasObjects] = useState<Map<string, CanvasObject> | null>(null);
     const [viewObjects, setViewObjects] = useState<Map<string, ViewObject> | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
@@ -326,7 +325,6 @@ export function useWhiteboardWebSocket(options: UseWhiteboardWebSocketOptions) {
     return {
         sendUpdate,
         isConnected,
-        onlineUsers,
         canvasObjects,
         viewObjects,
         isInitialized

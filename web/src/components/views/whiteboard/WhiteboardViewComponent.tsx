@@ -42,7 +42,6 @@ const WhiteboardViewComponent = ({
     const {
         sendUpdate,
         isConnected,
-        onlineUsers,
         canvasObjects: remoteCanvasObjects,
         viewObjects: remoteViewObjects
     } = useWhiteboardWebSocket({
@@ -111,7 +110,17 @@ const WhiteboardViewComponent = ({
 
     useEffect(() => {
         if (remoteViewObjects) {
-            setViewObjects(new Map(remoteViewObjects));
+            // Convert ViewObject map to WhiteboardObject map
+            const convertedMap = new Map<string, WhiteboardObject>();
+            remoteViewObjects.forEach((obj, key) => {
+                convertedMap.set(key, {
+                    id: obj.id,
+                    type: obj.type as ViewObjectType,
+                    name: obj.name,
+                    data: obj.data
+                });
+            });
+            setViewObjects(convertedMap);
         }
     }, [remoteViewObjects]);
 
