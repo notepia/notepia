@@ -896,9 +896,9 @@ const WhiteboardViewComponent = ({
                         <span className="text-xs text-neutral-600 dark:text-neutral-400">
                             {isConnected ? t('whiteboard.connected') || 'Connected' : t('whiteboard.disconnected') || 'Disconnected'}
                         </span>
-                        {onlineUsers > 1 && (
+                        {isConnected && (
                             <span className="text-xs text-neutral-500">
-                                • {onlineUsers} online
+                                • {onlineUsers} {onlineUsers === 1 ? t('whiteboard.online') || 'online' : t('whiteboard.onlineUsers') || 'online'}
                             </span>
                         )}
                     </div>

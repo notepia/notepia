@@ -545,6 +545,13 @@ export default {
     noNotes: "無可用筆記",
     noViews: "無可用視圖",
     settingsInfo: "白板設定可在此處配置",
+    connected: "已連線",
+    disconnected: "已斷線",
+    online: "線上",
+    onlineUsers: "線上",
+    zoomIn: "放大",
+    zoomOut: "縮小",
+    resetZoom: "重設縮放",
     syncStatus: {
       connecting: "連線中...",
       connected: "已連線",

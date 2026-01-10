@@ -544,6 +544,13 @@ export default {
     noNotes: "No notes available",
     noViews: "No views available",
     settingsInfo: "Whiteboard settings can be configured here",
+    connected: "Connected",
+    disconnected: "Disconnected",
+    online: "online",
+    onlineUsers: "online",
+    zoomIn: "Zoom In",
+    zoomOut: "Zoom Out",
+    resetZoom: "Reset Zoom",
     syncStatus: {
       connecting: "Connecting...",
       connected: "Connected",
