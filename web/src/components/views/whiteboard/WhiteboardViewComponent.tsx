@@ -10,6 +10,8 @@ interface WhiteboardViewComponentProps {
     isPublic?: boolean;
     workspaceId?: string;
     viewId?: string;
+    initialCanvasObjects?: Record<string, any>;
+    initialViewObjects?: Record<string, any>;
 }
 
 interface CanvasObject {
@@ -28,7 +30,9 @@ interface WhiteboardObject {
 const WhiteboardViewComponent = ({
     isPublic = false,
     workspaceId,
-    viewId
+    viewId,
+    initialCanvasObjects,
+    initialViewObjects
 }: WhiteboardViewComponentProps) => {
     const { t } = useTranslation();
 
@@ -44,6 +48,7 @@ const WhiteboardViewComponent = ({
         workspaceId: workspaceId || '',
         enabled: !!viewId && (isPublic || !!workspaceId),
         isPublic: isPublic,
+        skipInitialFetch: isPublic && !!(initialCanvasObjects && initialViewObjects),
     });
 
     // Canvas ref
@@ -82,7 +87,20 @@ const WhiteboardViewComponent = ({
     // Canvas size
     const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
 
-    // Sync remote updates to local state
+    // Initialize with API data for public mode
+    useEffect(() => {
+        if (isPublic && initialCanvasObjects) {
+            setCanvasObjects(new Map(Object.entries(initialCanvasObjects)));
+        }
+    }, [isPublic, initialCanvasObjects]);
+
+    useEffect(() => {
+        if (isPublic && initialViewObjects) {
+            setViewObjects(new Map(Object.entries(initialViewObjects)));
+        }
+    }, [isPublic, initialViewObjects]);
+
+    // Sync remote updates to local state (for non-public or real-time updates)
     useEffect(() => {
         if (remoteCanvasObjects) {
             setCanvasObjects(new Map(remoteCanvasObjects));

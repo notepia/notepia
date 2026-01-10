@@ -5,6 +5,7 @@ interface UseWhiteboardWebSocketOptions {
     workspaceId: string;
     enabled: boolean;
     isPublic?: boolean;
+    skipInitialFetch?: boolean;
 }
 
 interface CanvasObject {
@@ -32,7 +33,7 @@ interface WhiteboardMessage {
 }
 
 export function useWhiteboardWebSocket(options: UseWhiteboardWebSocketOptions) {
-    const { viewId, workspaceId, enabled, isPublic = false } = options;
+    const { viewId, workspaceId, enabled, isPublic = false, skipInitialFetch = false } = options;
 
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
@@ -76,6 +77,13 @@ export function useWhiteboardWebSocket(options: UseWhiteboardWebSocketOptions) {
 
                     switch (message.type) {
                         case 'init':
+                            // Skip initial data fetch if requested (e.g., public mode using API)
+                            if (skipInitialFetch) {
+                                console.log('Skipping initial WebSocket data fetch (using API data)');
+                                setIsInitialized(true);
+                                break;
+                            }
+
                             // Initial state from server
                             if (message.canvas_objects) {
                                 setCanvasObjects(new Map(Object.entries(message.canvas_objects)));
