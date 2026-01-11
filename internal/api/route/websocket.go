@@ -17,6 +17,9 @@ func RegisterWebSocket(e *echo.Echo, h handler.Handler, auth middlewares.AuthMid
 	// WebSocket endpoint for view collaboration
 	ws.GET("/views/:viewId", h.HandleViewWebSocket)
 
+	// WebSocket endpoint for note collaboration
+	ws.GET("/notes/:noteId", h.HandleNoteWebSocket)
+
 	// Hub statistics endpoint (for monitoring)
 	ws.GET("/stats", h.HandleHubStats)
 

@@ -14,6 +14,7 @@ import (
 	"github.com/notepia/notepia/internal/api/validate"
 	"github.com/notepia/notepia/internal/config"
 	"github.com/notepia/notepia/internal/db"
+	"github.com/notepia/notepia/internal/redis"
 	"github.com/notepia/notepia/internal/storage"
 	"github.com/notepia/notepia/internal/websocket"
 )
@@ -21,7 +22,7 @@ import (
 //go:embed dist/*
 var webAssets embed.FS
 
-func New(db db.DB, storage storage.Storage, hub *websocket.Hub) (*echo.Echo, error) {
+func New(db db.DB, storage storage.Storage, hub *websocket.Hub, noteCache *redis.NoteCache) (*echo.Echo, error) {
 	e := echo.New()
 
 	subFS, err := fs.Sub(webAssets, "dist")
@@ -42,7 +43,7 @@ func New(db db.DB, storage storage.Storage, hub *websocket.Hub) (*echo.Echo, err
 
 	apiRoot := config.C.GetString(config.SERVER_API_ROOT_PATH)
 
-	handler := handler.NewHandler(db, storage, hub)
+	handler := handler.NewHandler(db, storage, hub, noteCache)
 	auth := middlewares.NewAuthMiddleware(db)
 	workspace := middlewares.NewWorkspaceMiddleware(db)
 
