@@ -33,15 +33,21 @@ RUN go mod download
 COPY . .
 COPY --from=frontend /app/web/dist /app/internal/server/dist
 
+# Build both web and worker binaries
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
     GOOS=linux GOARCH=amd64 go build \
     -ldflags "-X main.Version=${APP_VERSION}" \
-    -o /out/app ./cmd/web/main.go
+    -o /out/web ./cmd/web/main.go
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
+    GOOS=linux GOARCH=amd64 go build \
+    -ldflags "-X main.Version=${APP_VERSION}" \
+    -o /out/worker ./cmd/worker/main.go
 
 # ---------- Stage 3: final runtime ----------
-
-FROM alpine:latest AS web
+FROM alpine:latest
 WORKDIR /usr/local/app
 
 RUN apk add --no-cache tzdata
@@ -50,9 +56,12 @@ ENV TZ="UTC"
 
 COPY ./migrations /usr/local/app/migrations
 
-COPY --from=backend /out/app ./app
+# Copy both binaries
+COPY --from=backend /out/web ./web
+COPY --from=backend /out/worker ./worker
 
 RUN mkdir -p ./bin
 VOLUME /usr/local/app/bin
 
-ENTRYPOINT ["./app"]
+# Default to web service, but can be overridden
+ENTRYPOINT ["./web"]

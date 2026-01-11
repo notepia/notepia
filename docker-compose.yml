@@ -17,8 +17,10 @@ services:
   notepia-web:
     build:
       context: .
-      dockerfile: Dockerfile.web
+      dockerfile: Dockerfile
+    image: notepia/notepia:local
     container_name: notepia-web
+    command: ["./web"]
     ports:
       - "8080:8080"
     volumes:
@@ -34,10 +36,9 @@ services:
     restart: unless-stopped
 
   notepia-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.worker
+    image: notepia/notepia:local
     container_name: notepia-worker
+    command: ["./worker"]
     volumes:
       - "./bin:/usr/local/app/bin"
     environment:

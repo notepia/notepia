@@ -71,23 +71,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build web Docker image (no push)
+      - name: Build Docker image (no push)
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.web
+          file: ./Dockerfile
           push: false
-          tags: notepia-web:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build worker Docker image (no push)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.worker
-          push: false
-          tags: notepia-worker:test
+          tags: notepia:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
