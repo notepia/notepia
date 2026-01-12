@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, ViewObjectType } from '../../../types/view';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, WhiteboardNoteData, ViewObjectType } from '../../../types/view';
 import { useTranslation } from 'react-i18next';
 import WhiteboardToolbar, { Tool } from './WhiteboardToolbar';
 import AddElementDialog from './AddElementDialog';
 import { useWhiteboardWebSocket } from '../../../hooks/use-whiteboard-websocket';
+import NoteOverlay from './NoteOverlay';
+import { renderStroke, renderShape, renderText, renderNoteOrView, renderGrid } from './renderUtils';
 
 interface WhiteboardViewComponentProps {
     view?: any;
@@ -70,6 +72,9 @@ const WhiteboardViewComponent = ({
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
     const [isDraggingObject, setIsDraggingObject] = useState(false);
     const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
+    const [isResizing, setIsResizing] = useState(false);
+    const [resizeHandle, setResizeHandle] = useState<'se' | 'sw' | 'ne' | 'nw' | null>(null);
+    const [resizeStartSize, setResizeStartSize] = useState<{ width: number; height: number } | null>(null);
 
     // Current drawing data
     const [currentPoints, setCurrentPoints] = useState<{ x: number; y: number }[]>([]);
@@ -163,35 +168,16 @@ const WhiteboardViewComponent = ({
         ctx.scale(viewport.zoom, viewport.zoom);
 
         // Draw grid
-        ctx.strokeStyle = '#e0e0e0';
-        ctx.lineWidth = 1 / viewport.zoom;
-        const gridSize = 50;
-        const startX = Math.floor(-viewport.x / viewport.zoom / gridSize) * gridSize;
-        const startY = Math.floor(-viewport.y / viewport.zoom / gridSize) * gridSize;
-        const endX = Math.ceil((canvas.width - viewport.x) / viewport.zoom / gridSize) * gridSize;
-        const endY = Math.ceil((canvas.height - viewport.y) / viewport.zoom / gridSize) * gridSize;
-
-        for (let x = startX; x <= endX; x += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(x, startY);
-            ctx.lineTo(x, endY);
-            ctx.stroke();
-        }
-        for (let y = startY; y <= endY; y += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(startX, y);
-            ctx.lineTo(endX, y);
-            ctx.stroke();
-        }
+        renderGrid(ctx, canvas, viewport);
 
         // Render canvas objects (strokes, shapes)
         canvasObjects.forEach((obj, objId) => {
             const isSelected = selectedObjectId === objId;
 
             if (obj.type === 'stroke') {
-                renderStroke(ctx, obj.data as WhiteboardStrokeData, isSelected);
+                renderStroke(ctx, obj.data as WhiteboardStrokeData, isSelected, viewport);
             } else if (obj.type === 'shape') {
-                renderShape(ctx, obj.data as WhiteboardShapeData, isSelected);
+                renderShape(ctx, obj.data as WhiteboardShapeData, isSelected, viewport);
             }
         });
 
@@ -200,9 +186,9 @@ const WhiteboardViewComponent = ({
             const isSelected = selectedObjectId === objId;
 
             if (obj.type === 'whiteboard_text') {
-                renderText(ctx, obj.data as WhiteboardTextData, isSelected);
+                renderText(ctx, obj.data as WhiteboardTextData, isSelected, viewport);
             } else if (obj.type === 'whiteboard_note' || obj.type === 'whiteboard_view') {
-                renderNoteOrView(ctx, obj.data, obj, isSelected);
+                renderNoteOrView(ctx, obj.data, obj, isSelected, viewport);
             }
         });
 
@@ -247,115 +233,6 @@ const WhiteboardViewComponent = ({
 
         ctx.restore();
     }, [viewport, canvasObjects, viewObjects, isDrawing, currentTool, currentPoints, startPoint, currentColor, currentStrokeWidth, selectedObjectId]);
-
-    // Render functions for different object types
-    const renderStroke = (ctx: CanvasRenderingContext2D, data: WhiteboardStrokeData, isSelected: boolean) => {
-        if (!data.points || data.points.length === 0) return;
-
-        ctx.strokeStyle = data.color;
-        ctx.lineWidth = data.width;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        ctx.moveTo(data.points[0].x, data.points[0].y);
-        for (let i = 1; i < data.points.length; i++) {
-            ctx.lineTo(data.points[i].x, data.points[i].y);
-        }
-        ctx.stroke();
-
-        if (isSelected) {
-            const minX = Math.min(...data.points.map(p => p.x));
-            const maxX = Math.max(...data.points.map(p => p.x));
-            const minY = Math.min(...data.points.map(p => p.y));
-            const maxY = Math.max(...data.points.map(p => p.y));
-            ctx.strokeStyle = '#3b82f6';
-            ctx.lineWidth = 2 / viewport.zoom;
-            ctx.setLineDash([5 / viewport.zoom, 5 / viewport.zoom]);
-            ctx.strokeRect(minX - 5, minY - 5, maxX - minX + 10, maxY - minY + 10);
-            ctx.setLineDash([]);
-        }
-    };
-
-    const renderShape = (ctx: CanvasRenderingContext2D, data: WhiteboardShapeData, isSelected: boolean) => {
-        ctx.strokeStyle = data.color;
-        ctx.lineWidth = data.strokeWidth;
-
-        if (data.type === 'rectangle') {
-            if (data.filled) {
-                ctx.fillStyle = data.color;
-                ctx.fillRect(data.position.x, data.position.y, data.dimensions.width, data.dimensions.height);
-            }
-            ctx.strokeRect(data.position.x, data.position.y, data.dimensions.width, data.dimensions.height);
-        } else if (data.type === 'circle') {
-            const radius = Math.sqrt(Math.pow(data.dimensions.width, 2) + Math.pow(data.dimensions.height, 2));
-            ctx.beginPath();
-            ctx.arc(data.position.x, data.position.y, radius, 0, 2 * Math.PI);
-            if (data.filled) {
-                ctx.fillStyle = data.color;
-                ctx.fill();
-            }
-            ctx.stroke();
-        } else if (data.type === 'line') {
-            ctx.beginPath();
-            ctx.moveTo(data.position.x, data.position.y);
-            ctx.lineTo(data.position.x + data.dimensions.width, data.position.y + data.dimensions.height);
-            ctx.stroke();
-        }
-
-        if (isSelected) {
-            ctx.strokeStyle = '#3b82f6';
-            ctx.lineWidth = 2 / viewport.zoom;
-            ctx.setLineDash([5 / viewport.zoom, 5 / viewport.zoom]);
-            if (data.type === 'rectangle') {
-                ctx.strokeRect(data.position.x - 5, data.position.y - 5, data.dimensions.width + 10, data.dimensions.height + 10);
-            } else if (data.type === 'circle') {
-                const radius = Math.sqrt(Math.pow(data.dimensions.width, 2) + Math.pow(data.dimensions.height, 2));
-                ctx.beginPath();
-                ctx.arc(data.position.x, data.position.y, radius + 5, 0, 2 * Math.PI);
-                ctx.stroke();
-            }
-            ctx.setLineDash([]);
-        }
-    };
-
-    const renderText = (ctx: CanvasRenderingContext2D, data: WhiteboardTextData, isSelected: boolean) => {
-        ctx.fillStyle = data.color;
-        ctx.font = `${data.fontSize}px sans-serif`;
-        ctx.fillText(data.text, data.position.x, data.position.y);
-
-        if (isSelected) {
-            const metrics = ctx.measureText(data.text);
-            ctx.strokeStyle = '#3b82f6';
-            ctx.lineWidth = 2 / viewport.zoom;
-            ctx.setLineDash([5 / viewport.zoom, 5 / viewport.zoom]);
-            ctx.strokeRect(data.position.x - 5, data.position.y - data.fontSize - 5, metrics.width + 10, data.fontSize + 10);
-            ctx.setLineDash([]);
-        }
-    };
-
-    const renderNoteOrView = (ctx: CanvasRenderingContext2D, data: any, obj: any, isSelected: boolean) => {
-        const width = data.width || 200;
-        const height = data.height || 150;
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(data.position.x, data.position.y, width, height);
-
-        ctx.strokeStyle = '#e0e0e0';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(data.position.x, data.position.y, width, height);
-
-        ctx.fillStyle = '#000000';
-        ctx.font = '14px sans-serif';
-        ctx.fillText(obj.name || 'Note', data.position.x + 10, data.position.y + 25);
-
-        if (isSelected) {
-            ctx.strokeStyle = '#3b82f6';
-            ctx.lineWidth = 2 / viewport.zoom;
-            ctx.setLineDash([5 / viewport.zoom, 5 / viewport.zoom]);
-            ctx.strokeRect(data.position.x - 5, data.position.y - 5, width + 10, height + 10);
-            ctx.setLineDash([]);
-        }
-    };
 
     // Re-render when dependencies change
     useEffect(() => {
@@ -419,36 +296,57 @@ const WhiteboardViewComponent = ({
         if (currentTool === 'select') {
             const clickedObject = findObjectAtPosition(pos.x, pos.y);
             if (clickedObject) {
-                setSelectedObjectId(clickedObject.id);
-                setIsDraggingObject(true);
-
-                // Calculate drag offset based on object type
-                let objPos = { x: 0, y: 0 };
-
-                if (clickedObject.type === 'canvas') {
-                    const canvasObj = canvasObjects.get(clickedObject.id);
-                    if (canvasObj) {
-                        if (canvasObj.type === 'stroke') {
-                            const data = canvasObj.data as WhiteboardStrokeData;
-                            const minX = Math.min(...data.points.map(p => p.x));
-                            const minY = Math.min(...data.points.map(p => p.y));
-                            objPos = { x: minX, y: minY };
-                        } else if (canvasObj.type === 'shape') {
-                            const data = canvasObj.data as WhiteboardShapeData;
-                            objPos = data.position;
-                        }
-                    }
-                } else {
+                // First check if clicking on a resize handle
+                const handle = checkResizeHandle(pos.x, pos.y, clickedObject.id);
+                if (handle && clickedObject.type === 'view') {
+                    // Start resizing
+                    setSelectedObjectId(clickedObject.id);
+                    setIsResizing(true);
+                    setResizeHandle(handle);
                     const viewObj = viewObjects.get(clickedObject.id);
                     if (viewObj && viewObj.data) {
-                        objPos = viewObj.data.position || { x: 0, y: 0 };
+                        setResizeStartSize({
+                            width: viewObj.data.width || 250,
+                            height: viewObj.data.height || 200
+                        });
                     }
-                }
+                    setDragOffset({
+                        x: pos.x,
+                        y: pos.y
+                    });
+                } else {
+                    // Start dragging
+                    setSelectedObjectId(clickedObject.id);
+                    setIsDraggingObject(true);
 
-                setDragOffset({
-                    x: pos.x - objPos.x,
-                    y: pos.y - objPos.y
-                });
+                    // Calculate drag offset based on object type
+                    let objPos = { x: 0, y: 0 };
+
+                    if (clickedObject.type === 'canvas') {
+                        const canvasObj = canvasObjects.get(clickedObject.id);
+                        if (canvasObj) {
+                            if (canvasObj.type === 'stroke') {
+                                const data = canvasObj.data as WhiteboardStrokeData;
+                                const minX = Math.min(...data.points.map(p => p.x));
+                                const minY = Math.min(...data.points.map(p => p.y));
+                                objPos = { x: minX, y: minY };
+                            } else if (canvasObj.type === 'shape') {
+                                const data = canvasObj.data as WhiteboardShapeData;
+                                objPos = data.position;
+                            }
+                        }
+                    } else {
+                        const viewObj = viewObjects.get(clickedObject.id);
+                        if (viewObj && viewObj.data) {
+                            objPos = viewObj.data.position || { x: 0, y: 0 };
+                        }
+                    }
+
+                    setDragOffset({
+                        x: pos.x - objPos.x,
+                        y: pos.y - objPos.y
+                    });
+                }
             } else {
                 // Clicked on empty space with select tool = pan canvas
                 setIsPanning(true);
@@ -563,6 +461,60 @@ const WhiteboardViewComponent = ({
             }
 
             render();
+        } else if (isResizing && selectedObjectId && dragOffset && resizeHandle && resizeStartSize) {
+            // Handle object resizing
+            const viewObj = viewObjects.get(selectedObjectId);
+            if (viewObj) {
+                const dx = pos.x - dragOffset.x;
+                const dy = pos.y - dragOffset.y;
+
+                let newWidth = resizeStartSize.width;
+                let newHeight = resizeStartSize.height;
+                let newPosition = { ...viewObj.data.position };
+
+                // Calculate new size based on which handle is being dragged
+                switch (resizeHandle) {
+                    case 'se': // Southeast - increase width and height
+                        newWidth = Math.max(100, resizeStartSize.width + dx);
+                        newHeight = Math.max(100, resizeStartSize.height + dy);
+                        break;
+                    case 'sw': // Southwest - decrease width, increase height, adjust x
+                        newWidth = Math.max(100, resizeStartSize.width - dx);
+                        newHeight = Math.max(100, resizeStartSize.height + dy);
+                        if (newWidth > 100) {
+                            newPosition.x = viewObj.data.position.x + dx;
+                        }
+                        break;
+                    case 'ne': // Northeast - increase width, decrease height, adjust y
+                        newWidth = Math.max(100, resizeStartSize.width + dx);
+                        newHeight = Math.max(100, resizeStartSize.height - dy);
+                        if (newHeight > 100) {
+                            newPosition.y = viewObj.data.position.y + dy;
+                        }
+                        break;
+                    case 'nw': // Northwest - decrease both, adjust x and y
+                        newWidth = Math.max(100, resizeStartSize.width - dx);
+                        newHeight = Math.max(100, resizeStartSize.height - dy);
+                        if (newWidth > 100) {
+                            newPosition.x = viewObj.data.position.x + dx;
+                        }
+                        if (newHeight > 100) {
+                            newPosition.y = viewObj.data.position.y + dy;
+                        }
+                        break;
+                }
+
+                const updatedObj = { ...viewObj };
+                updatedObj.data = {
+                    ...updatedObj.data,
+                    width: newWidth,
+                    height: newHeight,
+                    position: newPosition
+                };
+                setViewObjects(prev => new Map(prev).set(selectedObjectId, updatedObj));
+            }
+
+            render();
         } else if (isDrawing) {
             if (currentTool === 'eraser') {
                 // Continuous erasing while moving
@@ -601,6 +553,21 @@ const WhiteboardViewComponent = ({
             }
 
             setIsDraggingObject(false);
+            setDragOffset(null);
+        } else if (isResizing && selectedObjectId) {
+            // Finish resizing - send update to server
+            const viewObj = viewObjects.get(selectedObjectId);
+
+            if (viewObj) {
+                sendUpdate({
+                    type: 'update_view_object',
+                    object: viewObj
+                });
+            }
+
+            setIsResizing(false);
+            setResizeHandle(null);
+            setResizeStartSize(null);
             setDragOffset(null);
         } else if (isDrawing) {
             const pos = getPointerPosition(e);
@@ -754,6 +721,40 @@ const WhiteboardViewComponent = ({
         }
     };
 
+    // Check if clicking on a resize handle
+    const checkResizeHandle = (x: number, y: number, objId: string): 'se' | 'sw' | 'ne' | 'nw' | null => {
+        const viewObj = viewObjects.get(objId);
+        if (!viewObj || (viewObj.type !== 'whiteboard_note' && viewObj.type !== 'whiteboard_view')) {
+            return null;
+        }
+
+        const data = viewObj.data;
+        const width = data.width || 250;
+        const height = data.height || 200;
+        const handleSize = 10; // Size of resize handle in canvas units
+
+        // Check each corner
+        const corners = [
+            { handle: 'se' as const, x: data.position.x + width, y: data.position.y + height }, // Southeast
+            { handle: 'sw' as const, x: data.position.x, y: data.position.y + height }, // Southwest
+            { handle: 'ne' as const, x: data.position.x + width, y: data.position.y }, // Northeast
+            { handle: 'nw' as const, x: data.position.x, y: data.position.y }, // Northwest
+        ];
+
+        for (const corner of corners) {
+            if (
+                x >= corner.x - handleSize &&
+                x <= corner.x + handleSize &&
+                y >= corner.y - handleSize &&
+                y <= corner.y + handleSize
+            ) {
+                return corner.handle;
+            }
+        }
+
+        return null;
+    };
+
     const findObjectAtPosition = (x: number, y: number): { id: string; type: 'canvas' | 'view' } | null => {
         // Check view objects first (on top)
         for (const [id, obj] of Array.from(viewObjects.entries()).reverse()) {
@@ -864,6 +865,49 @@ const WhiteboardViewComponent = ({
         setViewport({ x: 0, y: 0, zoom: 1 });
     };
 
+    // Get cursor style based on position
+    const getCursor = useCallback(() => {
+        if (isResizing) {
+            switch (resizeHandle) {
+                case 'se': return 'nwse-resize';
+                case 'sw': return 'nesw-resize';
+                case 'ne': return 'nesw-resize';
+                case 'nw': return 'nwse-resize';
+                default: return 'default';
+            }
+        }
+        if (isDraggingObject) return 'move';
+        if (isPanning || isSpacePressed) return 'grab';
+        return 'crosshair';
+    }, [isResizing, resizeHandle, isDraggingObject, isPanning, isSpacePressed]);
+
+    // Handle element added from dialog
+    const handleElementAdded = useCallback((element: any) => {
+        console.log('[Whiteboard] Element added via dialog:', element);
+
+        // Parse data if it's a JSON string
+        let parsedData = element.data;
+        if (typeof parsedData === 'string') {
+            try {
+                parsedData = JSON.parse(parsedData);
+            } catch (e) {
+                console.error('Failed to parse element data:', e);
+            }
+        }
+
+        // Add to local state
+        const newViewObject: WhiteboardObject = {
+            id: element.id,
+            type: element.type as ViewObjectType,
+            name: element.name,
+            data: parsedData
+        };
+        setViewObjects(prev => new Map(prev).set(element.id, newViewObject));
+
+        // Broadcast to other clients via WebSocket
+        sendUpdate({ type: 'add_view_object', object: newViewObject });
+    }, [sendUpdate]);
+
     // Handle keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -871,7 +915,10 @@ const WhiteboardViewComponent = ({
                 handleDelete();
             } else if (e.key === 'Escape') {
                 setSelectedObjectId(null);
-            } else if (e.key === ' ' && !isDrawing && !isDraggingObject) {
+                setIsResizing(false);
+                setResizeHandle(null);
+                setResizeStartSize(null);
+            } else if (e.key === ' ' && !isDrawing && !isDraggingObject && !isResizing) {
                 e.preventDefault(); // Prevent page scroll
                 setIsSpacePressed(true);
             }
@@ -909,6 +956,25 @@ const WhiteboardViewComponent = ({
                         </span>
                     </div>
                 )}
+
+                {/* Note overlays */}
+                {Array.from(viewObjects.entries()).map(([objId, obj]) => {
+                    if (obj.type === 'whiteboard_note') {
+                        const noteData = obj.data as WhiteboardNoteData;
+                        return (
+                            <NoteOverlay
+                                key={objId}
+                                noteId={noteData.noteId}
+                                position={noteData.position}
+                                width={noteData.width || 250}
+                                height={noteData.height || 200}
+                                viewport={viewport}
+                                workspaceId={workspaceId}
+                            />
+                        );
+                    }
+                    return null;
+                })}
 
                 {/* Zoom controls */}
                 {!isPublic && (
@@ -948,14 +1014,7 @@ const WhiteboardViewComponent = ({
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                     onWheel={handleWheel}
-                    style={{ touchAction: 'none' }}
-                    className={`${
-                        isPanning || isSpacePressed
-                            ? 'cursor-grab active:cursor-grabbing'
-                            : isDraggingObject
-                            ? 'cursor-move'
-                            : 'cursor-crosshair'
-                    }`}
+                    style={{ touchAction: 'none', cursor: getCursor() }}
                 />
 
                 <WhiteboardToolbar
@@ -986,6 +1045,7 @@ const WhiteboardViewComponent = ({
                         isOpen={isAddingNote}
                         onOpenChange={setIsAddingNote}
                         elementType="note"
+                        onElementAdded={handleElementAdded}
                     />
                     <AddElementDialog
                         workspaceId={workspaceId}
@@ -993,6 +1053,7 @@ const WhiteboardViewComponent = ({
                         isOpen={isAddingView}
                         onOpenChange={setIsAddingView}
                         elementType="view"
+                        onElementAdded={handleElementAdded}
                     />
                 </>
             )}

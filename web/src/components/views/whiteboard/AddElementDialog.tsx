@@ -6,8 +6,9 @@ import { createViewObject } from '@/api/view';
 import { getNotes } from '@/api/note';
 import { getViews } from '@/api/view';
 import { useToastStore } from '@/stores/toast';
-import { Dialog } from 'radix-ui';
+import * as Dialog from '@radix-ui/react-dialog';
 import { WhiteboardNoteData, WhiteboardViewRefData } from '@/types/view';
+import { extractTextFromTipTapJSON } from '@/utils/tiptap';
 
 interface AddElementDialogProps {
     workspaceId: string;
@@ -15,6 +16,7 @@ interface AddElementDialogProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     elementType: 'note' | 'view';
+    onElementAdded?: (element: any) => void;
 }
 
 const AddElementDialog = ({
@@ -22,7 +24,8 @@ const AddElementDialog = ({
     viewId,
     isOpen,
     onOpenChange,
-    elementType
+    elementType,
+    onElementAdded
 }: AddElementDialogProps) => {
     const { t } = useTranslation();
     const { addToast } = useToastStore();
@@ -38,7 +41,7 @@ const AddElementDialog = ({
 
     const { data: views = [] } = useQuery({
         queryKey: ['views', workspaceId],
-        queryFn: () => getViews(workspaceId),
+        queryFn: () => getViews(workspaceId, 1, 100),
         enabled: isOpen && elementType === 'view'
     });
 
@@ -51,6 +54,10 @@ const AddElementDialog = ({
             const position = { x: 100, y: 100 };
 
             if (elementType === 'note') {
+                // Find the selected note to get its title
+                const selectedNote = notes.find((n: any) => n.id === id);
+                const noteTitle = selectedNote?.title || extractTextFromTipTapJSON(selectedNote?.content || '').substring(0, 50) || t('notes.untitled') || 'Untitled';
+
                 const noteData: WhiteboardNoteData = {
                     position,
                     noteId: id,
@@ -58,7 +65,7 @@ const AddElementDialog = ({
                     height: 200
                 };
                 return createViewObject(workspaceId, viewId, {
-                    name: `Note`,
+                    name: noteTitle,
                     type: 'whiteboard_note',
                     data: JSON.stringify(noteData)
                 });
@@ -76,8 +83,19 @@ const AddElementDialog = ({
                 });
             }
         },
-        onSuccess: () => {
+        onSuccess: (newObject) => {
             queryClient.invalidateQueries({ queryKey: ['view-objects', workspaceId, viewId] });
+
+            // Notify parent component to send WebSocket update
+            if (onElementAdded && newObject) {
+                onElementAdded({
+                    id: newObject.id,
+                    type: newObject.type,
+                    name: newObject.name,
+                    data: newObject.data
+                });
+            }
+
             onOpenChange(false);
             setSearchQuery('');
         },
@@ -127,18 +145,23 @@ const AddElementDialog = ({
                                     disabled={addElementMutation.isPending}
                                     className="w-full text-left p-3 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 disabled:opacity-50 transition-colors"
                                 >
-                                    <div className="font-medium truncate">
-                                        {elementType === 'note' ? (
-                                            <div className="text-sm line-clamp-2">
-                                                {item.content ? `${item.content.substring(0, 100)}...` : 'Empty note'}
+                                    {elementType === 'note' ? (
+                                        <div>
+                                            <div className="font-medium truncate">
+                                                {item.title || t('notes.untitled') || 'Untitled'}
                                             </div>
-                                        ) : (
-                                            item.name
-                                        )}
-                                    </div>
-                                    {elementType === 'view' && (
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            {item.type}
+                                            <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                                {item.content ? extractTextFromTipTapJSON(item.content).substring(0, 100) : t('notes.emptyNote') || 'Empty note'}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <div className="font-medium truncate">
+                                                {item.name}
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                {item.type}
+                                            </div>
                                         </div>
                                     )}
                                 </button>
