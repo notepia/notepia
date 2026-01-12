@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react"
+import { FC } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { TaskItem, TaskList } from "@tiptap/extension-list"
@@ -56,8 +56,6 @@ const ReadOnlyNoteContent: FC<ReadOnlyNoteContentProps> = ({ note }) => {
         content: JSON.parse(note.content),
         editable: false,
     }, [note.id])
-
-    const providerValue = useMemo(() => ({ editor }), [editor])
 
     if (!editor) {
         return null

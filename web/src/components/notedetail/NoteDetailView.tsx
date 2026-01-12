@@ -89,7 +89,7 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                             {isConnected && activeUsers.length > 0 && (
                                 <div className="flex items-center gap-1 px-2">
                                     <div className="flex -space-x-2">
-                                        {activeUsers.slice(0, 3).map((user, index) => (
+                                        {activeUsers.slice(0, 3).map((user) => (
                                             <div
                                                 key={user.id}
                                                 className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center border-2 border-white dark:border-gray-800"
