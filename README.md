@@ -81,8 +81,6 @@ services:
     volumes:
       - notepia_data:/usr/local/app/bin
     environment:
-      PORT: 8080
-      APP_SECRET: change-me-to-a-secure-random-string
       REDIS_ADDR: redis:6379
     depends_on:
       redis:
@@ -114,15 +112,6 @@ Start the services:
 ```bash
 docker compose up -d
 ```
-
----
-
-### Notes
-
-* Make sure to set a **strong `APP_SECRET`** in production.
-* Persistent storage can be added later via volumes if needed.
-
----
 
 ## 🤝 Contributing
 
