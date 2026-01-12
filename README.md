@@ -18,13 +18,22 @@ Build your own workspace with widgets, keep everything in one place, and stay in
   Arrange and customize widgets freely within each workspace.
 
 * 🗓️ **Calendar View**
-Visualize pins and content in a calendar-based view for better time-based organization.
+  Visualize pins and content in a calendar-based view for better time-based organization.
 
 * 🗺️ **Map View**
-View location-based pins on an interactive map, perfect for travel plans or geo-related notes.
+  View location-based pins on an interactive map, perfect for travel plans or geo-related notes.
 
-* ➕ **More Views Coming**
-The view system is designed to be extensible, with more views planned in future releases.
+* 📋 **Kanban Board**
+  Organize tasks with a powerful kanban board supporting drag-and-drop, multiple columns, and task management.
+
+* 🔄 **Flow Diagram**
+  Create and edit visual flowcharts and diagrams with an intuitive node-based editor.
+
+* 🎨 **Collaborative Whiteboard**
+  Real-time collaborative whiteboard for brainstorming, sketching, and visual planning with your team.
+
+* ✍️ **Real-time Collaborative Notes**
+  Edit notes together in real-time with CRDT-based synchronization powered by Y.js, ensuring conflict-free collaboration.
 
 * 🌐 **Modern Web Interface**
   Clean, responsive UI optimized for both desktop and mobile devices.
@@ -42,32 +51,11 @@ The view system is designed to be extensible, with more views planned in future 
 
 ## 🚀 Installation
 
-### Docker (Recommended)
+### Docker Compose (Recommended)
 
 Notepia is available on Docker Hub as a single image that can run both the web service and background worker.
 
-#### Quick Start (Web Service Only)
-
-For simple deployments without background processing:
-
-```bash
-docker run -d \
-  --name notepia \
-  -p 8080:8080 \
-  -v notepia:/usr/local/app/bin \
-  -e APP_SECRET=change-me-to-a-secure-random-string \
-  notepia/notepia
-```
-
-Then open your browser and visit:
-
-```
-http://localhost:8080
-```
-
-#### Full Setup with Worker (Recommended)
-
-For production use with background job processing, use Docker Compose:
+For production use with background job processing and real-time collaboration features:
 
 ```yaml
 services:

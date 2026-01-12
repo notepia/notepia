@@ -14,17 +14,27 @@ import { ImageNode } from './extensions/imagenode/ImageNode'
 import { uploadFile, listFiles } from '@/api/file'
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id'
 import { NoteData } from '@/api/note'
+import * as Y from 'yjs'
 
 interface Props {
   note: NoteData
   canDrag?: boolean
   onChange?: (data: any) => void
+  yDoc?: Y.Doc | null
+  yText?: Y.Text | null
 }
 
-const Editor: FC<Props> = ({ note, onChange, canDrag = true }) => {
+const Editor: FC<Props> = ({
+  note,
+  onChange,
+  canDrag = true,
+  yDoc,
+  yText
+}) => {
   const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation()
   const lastContentRef = useRef<string>(note.content)
+  const isApplyingYjsUpdate = useRef(false)
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -183,14 +193,31 @@ const Editor: FC<Props> = ({ note, onChange, canDrag = true }) => {
     },
     content: JSON.parse(note.content),
     onUpdate({ editor }) {
-      if (onChange) {
-        // Save as JSON string (recommended by TipTap)
-        const json = editor.getJSON()
-        const newContent = JSON.stringify(json)
+      // Avoid infinite loop when applying Y.js updates
+      if (isApplyingYjsUpdate.current) return;
 
-        // Only trigger onChange if content actually changed
-        if (newContent !== lastContentRef.current) {
-          lastContentRef.current = newContent
+      // Save as JSON string (recommended by TipTap)
+      const json = editor.getJSON()
+      const newContent = JSON.stringify(json)
+
+      // Only process if content actually changed
+      if (newContent !== lastContentRef.current) {
+        lastContentRef.current = newContent
+
+        // Update Y.Text for CRDT collaboration
+        if (yText && yDoc) {
+          console.log('[Editor] Before Y.Text update, content length:', newContent.length);
+          yDoc.transact(() => {
+            yText.delete(0, yText.length);
+            yText.insert(0, newContent);
+          }, 'local');
+          console.log('[Editor] Updated Y.Text from editor change, origin: local');
+        } else {
+          console.log('[Editor] WARNING: yText or yDoc is null, cannot update CRDT');
+        }
+
+        // Trigger onChange callback if provided
+        if (onChange) {
           onChange({ content: newContent })
         }
       }
@@ -201,6 +228,44 @@ const Editor: FC<Props> = ({ note, onChange, canDrag = true }) => {
   useEffect(() => {
     lastContentRef.current = note.content
   }, [note.content])
+
+  // Listen for Y.Text changes from other clients and update editor
+  useEffect(() => {
+    if (!editor || !yText) return;
+
+    const observer = () => {
+      const newContent = yText.toString();
+
+      // Avoid applying if content is the same
+      if (newContent === lastContentRef.current) return;
+
+      try {
+        const contentJson = JSON.parse(newContent);
+
+        // Set flag to prevent infinite loop
+        isApplyingYjsUpdate.current = true;
+
+        // Update editor content
+        editor.commands.setContent(contentJson, false);
+        lastContentRef.current = newContent;
+
+        isApplyingYjsUpdate.current = false;
+
+        console.log('Applied Y.js content update from other client');
+      } catch (error) {
+        console.error('Error parsing Y.js content:', error);
+      }
+    };
+
+    yText.observe(observer);
+
+    return () => {
+      yText.unobserve(observer);
+    };
+  }, [editor, yText])
+
+  // Note: Content sync is now handled by Y.js CRDT updates
+  // No need for periodic full content sync anymore
 
   // Cleanup editor on unmount
   useEffect(() => {

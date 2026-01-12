@@ -1,108 +1,73 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useParams, useSearchParams } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { useParams } from "react-router-dom"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { useEffect, useState, useRef, useCallback, FC } from "react"
-import { getNote, NoteData, updateNote } from "@/api/note"
+import { useEffect, useState, FC } from "react"
+import { getNote, NoteData } from "@/api/note"
 import { useTranslation } from "react-i18next"
 import NoteDetailView from "@/components/notedetail/NoteDetailView"
 import NoteDetailSidebar from "@/components/notedetailsidebar/NoteDetailSidebar"
 import { TwoColumn, TwoColumnMain, TwoColumnSidebar, useTwoColumn } from "@/components/twocolumn"
-import { toast } from "@/stores/toast"
 import { EllipsisIcon } from "lucide-react"
+import { useNoteWebSocket } from "@/hooks/use-note-websocket"
 
 const NoteDetailPage = () => {
-    const [searchParams] = useSearchParams()
-    const initialMode = searchParams.get('mode') === 'edit' ? 'edit' : 'view'
     const [note, setNote] = useState<NoteData | null>(null)
-    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-    const [mode, setMode] = useState<'view' | 'edit'>(initialMode)
     const currentWorkspaceId = useCurrentWorkspaceId()
     const { noteId } = useParams()
     const { t } = useTranslation()
-    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-    const queryClient = useQueryClient()
 
+    // Connect to WebSocket for real-time collaboration
+    const {
+        isConnected,
+        noteData: wsNoteData,
+        hasYjsSnapshot,
+        title: wsTitle,
+        content: wsContent,
+        activeUsers,
+        sendUpdateTitle,
+        yDoc,
+        yText
+    } = useNoteWebSocket({
+        noteId: noteId || '',
+        workspaceId: currentWorkspaceId || '',
+        enabled: !!noteId && !!currentWorkspaceId
+    })
+
+    // Only fetch from REST API if note is NOT initialized (no Y.js snapshot)
+    // Once Y.js snapshot exists, use WebSocket data only
     const { data: fetchedNote } = useQuery({
         queryKey: ['note', currentWorkspaceId, noteId],
         queryFn: () => getNote(currentWorkspaceId, noteId!),
-        enabled: !!noteId && !!currentWorkspaceId,
+        enabled: !!noteId && !!currentWorkspaceId && hasYjsSnapshot === false,
+        staleTime: 0,
+        gcTime: 0,
+        refetchOnMount: true,
     })
-
-    const updateNoteMutation = useMutation({
-        mutationFn: (data: NoteData) => updateNote(currentWorkspaceId, data),
-        onSuccess: () => {
-            setSaveStatus('saved')
-            queryClient.invalidateQueries({ queryKey: ['note', currentWorkspaceId, noteId] })
-            queryClient.invalidateQueries({ queryKey: ['notes', currentWorkspaceId] })
-            setTimeout(() => setSaveStatus('idle'), 2000)
-        },
-        onError: (error) => {
-            setSaveStatus('idle')
-            toast.error(t("messages.saveNoteFailed"))
-            console.error("Failed to save note:", error)
-        }
-    })
-
-    const handleNoteChange = useCallback((data: any) => {
-        if (!note || !noteId) return
-
-        const updatedNote = {
-            ...note,
-            ...data
-        }
-
-        setNote(updatedNote)
-
-        // Clear previous timeout
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current)
-        }
-
-        setSaveStatus('saving')
-
-        // Set new timeout for auto-save (debounced by 1 second)
-        saveTimeoutRef.current = setTimeout(() => {
-            updateNoteMutation.mutate({
-                id: noteId,
-                ...updatedNote
-            })
-        }, 1000)
-    }, [note, noteId, updateNoteMutation])
 
     useEffect(() => {
-        if (fetchedNote) {
+        if (hasYjsSnapshot && wsNoteData) {
+            // Note is initialized - use WebSocket data
+            setNote(wsNoteData)
+            console.log('[NoteDetailPage] Using WebSocket note data (Y.js initialized)')
+        } else if (!hasYjsSnapshot && fetchedNote) {
+            // Note is not initialized - use REST API data
             setNote(fetchedNote)
+            console.log('[NoteDetailPage] Using REST API note data (not initialized)')
         }
-    }, [fetchedNote])
-
-    // Update mode when URL search params change
-    useEffect(() => {
-        const modeParam = searchParams.get('mode')
-        if (modeParam === 'edit') {
-            setMode('edit')
-        } else if (modeParam === null) {
-            setMode('view')
-        }
-    }, [searchParams])
-
-    // Cleanup timeout on unmount
-    useEffect(() => {
-        return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current)
-            }
-        }
-    }, [])
+    }, [hasYjsSnapshot, wsNoteData, fetchedNote])
 
     return (
         <TwoColumn>
             <NoteDetailContent
                 note={note}
                 t={t}
-                handleNoteChange={handleNoteChange}
-                saveStatus={saveStatus}
-                mode={mode}
-                onModeChange={setMode}
+                wsTitle={wsTitle}
+                wsContent={wsContent}
+                activeUsers={activeUsers}
+                isConnected={isConnected}
+                onTitleChange={sendUpdateTitle}
+                yDoc={yDoc}
+                yText={yText}
             />
         </TwoColumn>
     )
@@ -111,14 +76,27 @@ const NoteDetailPage = () => {
 interface NoteDetailContentProps {
     note: NoteData | null
     t: any
-    handleNoteChange: (data: any) => void
-    saveStatus: 'idle' | 'saving' | 'saved'
-    mode: 'view' | 'edit'
-    onModeChange: (mode: 'view' | 'edit') => void
+    wsTitle: string
+    wsContent: string
+    activeUsers: Array<{ id: string; name: string }>
+    isConnected: boolean
+    onTitleChange: (title: string) => void
+    yDoc: any
+    yText: any
 }
 
-const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChange, saveStatus, mode, onModeChange }) => {
-    const { toggleSidebar,isSidebarCollapsed } = useTwoColumn()
+const NoteDetailContent: FC<NoteDetailContentProps> = ({
+    note,
+    t,
+    wsTitle,
+    wsContent,
+    activeUsers,
+    isConnected,
+    onTitleChange,
+    yDoc,
+    yText
+}) => {
+    const { toggleSidebar, isSidebarCollapsed } = useTwoColumn()
 
     return (
         <>
@@ -127,6 +105,13 @@ const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChan
             >
                 <NoteDetailView
                     note={note}
+                    wsTitle={wsTitle}
+                    wsContent={wsContent}
+                    activeUsers={activeUsers}
+                    isConnected={isConnected}
+                    onTitleChange={onTitleChange}
+                    yDoc={yDoc}
+                    yText={yText}
                     menu={
                         note ? (
                             <button
@@ -138,13 +123,10 @@ const NoteDetailContent: FC<NoteDetailContentProps> = ({ note, t, handleNoteChan
                             </button>
                         ) : undefined
                     }
-                    isEditable={mode === 'edit'}
-                    onChange={handleNoteChange}
-                    saveStatus={saveStatus}
                 />
             </TwoColumnMain>
             <TwoColumnSidebar>
-                {note && <NoteDetailSidebar note={note} mode={mode} onModeChange={onModeChange} />}
+                {note && <NoteDetailSidebar note={note} />}
             </TwoColumnSidebar>
         </>
     )

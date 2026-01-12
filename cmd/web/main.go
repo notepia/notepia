@@ -13,6 +13,7 @@ import (
 	"github.com/notepia/notepia/internal/redis"
 	"github.com/notepia/notepia/internal/server"
 	"github.com/notepia/notepia/internal/websocket"
+	"github.com/notepia/notepia/internal/worker"
 )
 
 // Version is set at build time via ldflags
@@ -53,13 +54,20 @@ func main() {
 	// Initialize caches
 	viewCache := redis.NewViewCache(redisClient)
 	whiteboardCache := redis.NewWhiteboardCache(redisClient)
+	noteCache := redis.NewNoteCache(redisClient)
 
 	// Initialize WebSocket Hub
-	hub := websocket.NewHub(viewCache, whiteboardCache)
+	hub := websocket.NewHub(db, viewCache, whiteboardCache, noteCache)
 	log.Println("WebSocket Hub initialized")
 
+	// Initialize and start note persister
+	notePersister := worker.NewNotePersister(noteCache, db)
+	if err := notePersister.Start(); err != nil {
+		log.Fatalf("Failed to start note persister: %v", err)
+	}
+
 	// Setup server with WebSocket support
-	e, err := server.New(db, storage, hub)
+	e, err := server.New(db, storage, hub, noteCache)
 	if err != nil {
 		log.Fatalf("Failed to setup server: %v", err)
 	}
@@ -91,6 +99,12 @@ func main() {
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Fatal(err)
 	}
+
+	// Force persist notes before stopping
+	if err := notePersister.ForcePersist(); err != nil {
+		log.Printf("Error force persisting notes: %v", err)
+	}
+	notePersister.Stop()
 
 	hub.Stop()
 	log.Println("Server stopped")
