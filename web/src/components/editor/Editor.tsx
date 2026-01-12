@@ -246,7 +246,7 @@ const Editor: FC<Props> = ({
         isApplyingYjsUpdate.current = true;
 
         // Update editor content
-        editor.commands.setContent(contentJson, false);
+        editor.commands.setContent(contentJson);
         lastContentRef.current = newContent;
 
         isApplyingYjsUpdate.current = false;

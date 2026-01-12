@@ -19,7 +19,7 @@ const NoteDetailPage = () => {
     // Connect to WebSocket for real-time collaboration
     const {
         isConnected,
-        noteData: wsNoteData,
+        noteData,
         hasYjsSnapshot,
         title: wsTitle,
         content: wsContent,
@@ -45,16 +45,16 @@ const NoteDetailPage = () => {
     })
 
     useEffect(() => {
-        if (hasYjsSnapshot && wsNoteData) {
+        if (hasYjsSnapshot && noteData) {
             // Note is initialized - use WebSocket data
-            setNote(wsNoteData)
+            setNote(noteData as NoteData | null)
             console.log('[NoteDetailPage] Using WebSocket note data (Y.js initialized)')
         } else if (!hasYjsSnapshot && fetchedNote) {
             // Note is not initialized - use REST API data
             setNote(fetchedNote)
             console.log('[NoteDetailPage] Using REST API note data (not initialized)')
         }
-    }, [hasYjsSnapshot, wsNoteData, fetchedNote])
+    }, [hasYjsSnapshot, noteData, fetchedNote])
 
     return (
         <TwoColumn>
