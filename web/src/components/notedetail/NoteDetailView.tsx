@@ -11,8 +11,6 @@ interface NoteDetailViewProps {
     menu?: ReactNode
     wsTitle: string
     wsContent: string
-    activeUsers: Array<{ id: string; name: string }>
-    isConnected: boolean
     onTitleChange: (title: string) => void
     yDoc?: any
     yText?: any
@@ -23,8 +21,6 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
     menu,
     wsTitle,
     wsContent,
-    activeUsers,
-    isConnected,
     onTitleChange,
     yDoc,
     yText
@@ -85,27 +81,6 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                                 className="flex-1 text-lg font-semibold border-none outline-none bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600 min-w-0"
                                 onChange={onTitleChange}
                             />
-                            {/* Connection status indicator */}
-                            {isConnected && activeUsers.length > 0 && (
-                                <div className="flex items-center gap-1 px-2">
-                                    <div className="flex -space-x-2">
-                                        {activeUsers.slice(0, 3).map((user) => (
-                                            <div
-                                                key={user.id}
-                                                className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center border-2 border-white dark:border-gray-800"
-                                                title={user.name}
-                                            >
-                                                {user.name.charAt(0).toUpperCase()}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {activeUsers.length > 3 && (
-                                        <span className="text-xs text-gray-500">
-                                            +{activeUsers.length - 3}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
                             {menu && <div className="inline-flex flex-shrink-0">{menu}</div>}
                         </div>
                     </div>
@@ -122,27 +97,8 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                                             className="flex-1 text-4xl font-semibold border-none outline-none bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-600 min-w-0"
                                             onChange={onTitleChange}
                                         />
-                                        {/* Desktop active users */}
-                                        {isConnected && activeUsers.length > 0 && (
-                                            <div className="flex items-center gap-2 ml-4">
-                                                <div className="flex -space-x-2">
-                                                    {activeUsers.slice(0, 5).map((user) => (
-                                                        <div
-                                                            key={user.id}
-                                                            className="w-8 h-8 rounded-full bg-blue-500 text-white text-sm flex items-center justify-center border-2 border-white dark:border-gray-800"
-                                                            title={user.name}
-                                                        >
-                                                            {user.name.charAt(0).toUpperCase()}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                {activeUsers.length > 5 && (
-                                                    <span className="text-sm text-gray-500">
-                                                        +{activeUsers.length - 5}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
+
+                                        {menu && <div className="inline-flex flex-shrink-0">{menu}</div>}
                                     </div>
                                     <div className="px-4">
                                         <div key={`editor-${note.id}`}>

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useState, FC } from "react"
 import { getPublicNote, NoteData } from "@/api/note"
 import { useTranslation } from "react-i18next"
-import NoteDetailSidebar from "@/components/notedetailsidebar/NoteDetailSidebar"
+import NoteDetailMenu from "@/components/notedetailmenu/NoteDetailMenu"
 import { TwoColumn, TwoColumnMain, TwoColumnSidebar, useTwoColumn } from "@/components/twocolumn"
 import { Ellipsis, ArrowLeft } from "lucide-react"
 import ReadOnlyNoteContent from "@/components/readonlynotecontent/ReadOnlyNoteContent"
@@ -119,7 +119,7 @@ const ExploreNoteDetailContent: FC<ExploreNoteDetailContentProps> = ({ note, t }
                 </div>
             </TwoColumnMain>
             <TwoColumnSidebar>
-                {note && <NoteDetailSidebar note={note} />}
+                {note && <NoteDetailMenu note={note} />}
             </TwoColumnSidebar>
         </>
     )

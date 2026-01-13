@@ -472,6 +472,8 @@ export default {
     createdAt: "建立時間",
     pinTo: "釘選到...",
     pinNoteToObject: "將筆記釘選到視圖物件",
+    noPinnedViews: "尚未釘選任何視圖",
+    pinToNewView: "釘選到新視圖",
     searchViews: "搜尋視圖...",
     noViewsFound: "找不到視圖",
     allObjectsLinked: "此視圖中的所有物件都已經與此筆記關聯",

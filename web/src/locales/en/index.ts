@@ -472,6 +472,8 @@ export default {
     createdAt: "Created At",
     pinTo: "Pin to...",
     pinNoteToObject: "Pin Note to View Object",
+    noPinnedViews: "No pinned views yet",
+    pinToNewView: "Pin to New View",
     searchViews: "Search views...",
     noViewsFound: "No views found",
     allObjectsLinked: "All objects in this view are already linked to this note",

@@ -1,132 +1,163 @@
+import { FC, useRef, useState, useEffect } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Building, Ellipsis, Globe, Info, Lock, Trash2 } from "lucide-react"
-import { DropdownMenu } from "radix-ui"
-import { useNavigate } from "react-router-dom"
 import { deleteNote, NoteData, updateNoteVisibility } from "@/api/note"
-import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import { useTranslation } from "react-i18next"
-import { toast } from '@/stores/toast';
-import { FC, ReactNode } from "react"
+import { Pin, Trash2, Ellipsis } from "lucide-react"
+import { useParams, useNavigate } from "react-router-dom"
+import { useToastStore } from "@/stores/toast"
 import { Visibility } from "@/types/visibility"
-import { useTwoColumn } from "@/components/twocolumn"
-import { twMerge } from "tailwind-merge"
+import VisibilitySelect from "@/components/visibilityselect/VisibilitySelect"
+import PinToViewObjectModal from "@/components/pintoviewobject/PinToViewObjectModal"
 
-interface Props {
+interface NoteDetailMenuProps {
     note: NoteData
 }
 
-const NoteDetailMenu: React.FC<Props> = ({ note }) => {
+const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
     const { t } = useTranslation()
-    const { isSidebarCollapsed, toggleSidebar } = useTwoColumn()
-    const currentWorkspaceId = useCurrentWorkspaceId()
+    const { workspaceId } = useParams<{ workspaceId?: string }>()
+    const { addToast } = useToastStore()
     const queryClient = useQueryClient()
     const navigate = useNavigate()
+    const [isMenuOpened, setIsMenuOpened] = useState(false)
+    const [isPinModalOpen, setIsPinModalOpen] = useState(false)
+    const menuRef = useRef<HTMLDivElement>(null)
+    const buttonRef = useRef<HTMLButtonElement>(null)
+
+    // Delete note mutation
     const deleteNoteMutation = useMutation({
-        mutationFn: () => deleteNote(currentWorkspaceId, note.id!),
+        mutationFn: () => {
+            if (!workspaceId || !note.id) throw new Error('Missing required parameters')
+            return deleteNote(workspaceId, note.id)
+        },
         onSuccess: async () => {
             try {
-                await queryClient.invalidateQueries({ queryKey: ['notes', currentWorkspaceId] })
-                navigate(`/workspaces/${currentWorkspaceId}`)
+                await queryClient.invalidateQueries({ queryKey: ['notes', workspaceId] })
+                navigate(`/workspaces/${workspaceId}/notes`)
+                addToast({ title: t('messages.noteDeleted'), type: 'success' })
             } catch (error) {
-                toast.error("failed to delete note")
+                addToast({ title: t('messages.deleteNoteFailed'), type: 'error' })
             }
         },
     })
-    const updateVisibiltyMutation = useMutation({
-        mutationFn: (visibility: Visibility) => updateNoteVisibility(currentWorkspaceId, note.id!, visibility),
+
+    // Update visibility mutation
+    const updateVisibilityMutation = useMutation({
+        mutationFn: (visibility: Visibility) => {
+            if (!workspaceId || !note.id) throw new Error('Missing required parameters')
+            return updateNoteVisibility(workspaceId, note.id, visibility)
+        },
         onSuccess: async () => {
             try {
-                await queryClient.invalidateQueries({ queryKey:  ['note', currentWorkspaceId, note.id!] })
+                await queryClient.invalidateQueries({ queryKey: ['note', workspaceId, note.id] })
+                addToast({ title: t('messages.visibilityUpdated'), type: 'success' })
             } catch (error) {
-                toast.error("failed to update note visibility")
+                addToast({ title: t('messages.updateVisibilityFailed'), type: 'error' })
             }
         },
     })
 
     const handleDelete = () => {
-        deleteNoteMutation.mutate()
-    }
-
-    const handleUpdateVisibility = (visibility: Visibility) =>{
-        if(confirm(`Make this note ${visibility}?`)){
-            updateVisibiltyMutation.mutate(visibility)
+        if (confirm(t('messages.confirmDelete'))) {
+            deleteNoteMutation.mutate()
+            setIsMenuOpened(false)
         }
     }
 
-    return <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-            <button
-                title="menu" className="p-3 rounded-full "
-            >
-                <Ellipsis size={20} />
-            </button>
-        </DropdownMenu.Trigger>
+    const handleUpdateVisibility = (visibility: Visibility) => {
+        if (visibility === note.visibility) {
+            return
+        }
+        updateVisibilityMutation.mutate(visibility)
+    }
 
-        <DropdownMenu.Portal>
-            <DropdownMenu.Content
-                className="rounded-md w-56 bg-white text-gray-900 dark:bg-neutral-800  p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform] data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade data-[side=right]:animate-slideLeftAndFade data-[side=top]:animate-slideDownAndFade"
-                align="end"
-            >
-                {
-                    <DropdownItem className="lg:hidden">
-                        <button
-                            onClick={toggleSidebar}
-                            className=" flex gap-3 p-3 items-center w-full"
-                            title={isSidebarCollapsed ? "Show Info" : "Hide Info"}
-                        >
-                            <Info size={18} />
-                            {t("actions.openNoteInfo")}
-                        </button>
-                    </DropdownItem>
-                }
-                {
-                    note.visibility != "public" && <DropdownItem>
-                        <button onClick={() => handleUpdateVisibility("public")} className="flex gap-3 p-3 items-center w-full" >
-                            <Globe size={20} />
-                            {t("actions.makePublic")}
-                        </button>
-                    </DropdownItem>
-                }
+    const handlePinClick = () => {
+        setIsPinModalOpen(true)
+        setIsMenuOpened(false)
+    }
 
-                {
-                    note.visibility != "workspace" && <DropdownItem>
-                        <button onClick={() => handleUpdateVisibility("workspace")} className="flex gap-3 p-3 items-center w-full" >
-                            <Building size={20} />
-                            {t("actions.makeWorkspace")}
-                        </button>
-                    </DropdownItem>
-                }
+    const handleOpenMenu = () => {
+        setIsMenuOpened(prev => !prev)
+    }
 
-                {
-                    note.visibility != "private" && <DropdownItem>
-                        <button onClick={() => handleUpdateVisibility("private")} className="flex gap-3 p-3 items-center w-full" >
-                            <Lock size={20} />
-                            {t("actions.makePrivate")}
-                        </button>
-                    </DropdownItem>
-                }
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node
+            const clickedInsideMenu = menuRef.current && menuRef.current.contains(target)
+            const clickedButton = buttonRef.current && buttonRef.current.contains(target)
 
-                <DropdownMenu.Item className=" text-red-600  select-none rounded-lg leading-none text-violet11 outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-red-100 dark:data-[highlighted]:text-red-900 ">
-                    <button onClick={handleDelete} className="flex gap-3 p-3 items-center w-full" >
-                        <Trash2 size={20} />
-                        {t("actions.delete")}
-                    </button>
-                </DropdownMenu.Item>
-            </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+            if (!clickedInsideMenu && !clickedButton) {
+                setIsMenuOpened(false)
+            }
+        }
+
+        if (isMenuOpened) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [isMenuOpened])
+
+    return (
+        <>
+            <div className="relative">
+                <button ref={buttonRef} className="p-2" onClick={handleOpenMenu}>
+                    <Ellipsis size={16} />
+                </button>
+                {isMenuOpened && (
+                    <div
+                        ref={menuRef}
+                        className="absolute top-full right-0 min-w-[240px] overflow-y-auto bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg z-50"
+                    >
+                        <div className="flex flex-col p-2">
+                            {workspaceId && (
+                                <>
+                                    <div className="px-3 py-2">
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                            {t('common.visibility')}
+                                        </div>
+                                        <VisibilitySelect
+                                            value={note.visibility}
+                                            onChange={handleUpdateVisibility}
+                                        />
+                                    </div>
+
+                                    <div className="border-t dark:border-neutral-700 my-1"></div>
+
+                                    <button
+                                        onClick={handlePinClick}
+                                        className="px-3 py-2 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors text-left"
+                                    >
+                                        <Pin size={16} />
+                                        <span>{t('views.pinTo')}</span>
+                                    </button>
+
+                                    <div className="border-t dark:border-neutral-700 my-1"></div>
+
+                                    <button
+                                        onClick={handleDelete}
+                                        className="px-3 py-2 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-left"
+                                    >
+                                        <Trash2 size={16} />
+                                        <span>{t('actions.delete')}</span>
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <PinToViewObjectModal
+                note={note}
+                isOpen={isPinModalOpen}
+                onClose={() => setIsPinModalOpen(false)}
+            />
+        </>
+    )
 }
-
-interface DropdownItemProps {
-    children: ReactNode
-    className?: string
-}
-
-const DropdownItem: FC<DropdownItemProps> = ({ children, className }) => {
-    return <DropdownMenu.Item className={twMerge("select-none dark:text-gray-100 rounded-lg leading-none outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-neutral-300 dark:data-[highlighted]:text-neutral-700", className)}>
-        {children}
-    </DropdownMenu.Item>
-}
-
 
 export default NoteDetailMenu

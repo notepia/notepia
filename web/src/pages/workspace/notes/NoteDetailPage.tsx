@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { useEffect, useState, FC } from "react"
+import { useEffect, useState } from "react"
 import { getNote, NoteData } from "@/api/note"
-import { useTranslation } from "react-i18next"
 import NoteDetailView from "@/components/notedetail/NoteDetailView"
 import { useNoteWebSocket } from "@/hooks/use-note-websocket"
+import NoteDetailMenu from "@/components/notedetailmenu/NoteDetailMenu"
 
 const NoteDetailPage = () => {
     const [note, setNote] = useState<NoteData | null>(null)
@@ -14,12 +14,10 @@ const NoteDetailPage = () => {
 
     // Connect to WebSocket for real-time collaboration
     const {
-        isConnected,
         noteData,
         hasYjsSnapshot,
         title: wsTitle,
         content: wsContent,
-        activeUsers,
         sendUpdateTitle,
         yDoc,
         yText
@@ -56,10 +54,9 @@ const NoteDetailPage = () => {
         <div className="overflow-auto bg-white dark:bg-neutral-800 fixed xl:static top-0 left-0 z-[100] w-screen xl:w-full h-dvh">
             <NoteDetailView
                 note={note}
+                menu={note ? <NoteDetailMenu note={note} /> : undefined}
                 wsTitle={wsTitle}
                 wsContent={wsContent}
-                activeUsers={activeUsers}
-                isConnected={isConnected}
                 onTitleChange={sendUpdateTitle}
                 yDoc={yDoc}
                 yText={yText}
