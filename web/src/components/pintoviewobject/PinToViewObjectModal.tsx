@@ -1,81 +1,54 @@
-import { FC, useMemo, useState } from "react"
+import { FC, useMemo, useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { deleteNote, NoteData, updateNoteVisibility } from "@/api/note"
+import { NoteData } from "@/api/note"
 import { getViewObjectsForNote, getPublicViewObjectsForNote, getViews, getViewObjects, addNoteToViewObject, createViewObject } from "@/api/view"
 import { useTranslation } from "react-i18next"
-import { ChevronRight, Calendar, MapPin, Pin, Search, Plus, Trash2, Calendar1Icon, LayoutGrid, X } from "lucide-react"
+import { ChevronRight, Calendar, MapPin, Search, Plus, X, Calendar1Icon, LayoutGrid } from "lucide-react"
 import { ViewObjectType } from "@/types/view"
-import { Link, useParams, useNavigate } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 import { useToastStore } from "@/stores/toast"
 import CreateViewObjectModal from "@/components/views/CreateViewObjectModal"
-import { Visibility } from "@/types/visibility"
-import VisibilitySelect from "@/components/visibilityselect/VisibilitySelect"
+import { BottomSheet } from "@/components/bottomsheet/BottomSheet"
 
-interface NoteDetailSidebarProps {
+interface PinToViewObjectModalProps {
     note: NoteData
+    isOpen: boolean
+    onClose: () => void
 }
 
-const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
+const PinToViewObjectModal: FC<PinToViewObjectModalProps> = ({ note, isOpen, onClose }) => {
     const { t } = useTranslation()
     const { workspaceId } = useParams<{ workspaceId?: string }>()
     const { addToast } = useToastStore()
     const queryClient = useQueryClient()
-    const navigate = useNavigate()
     const [isPinning, setIsPinning] = useState(false)
     const [selectedViewId, setSelectedViewId] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
     const [isCreatingObject, setIsCreatingObject] = useState(false)
     const [newObjectName, setNewObjectName] = useState("")
     const [newObjectData, setNewObjectData] = useState("")
+    const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 640)
 
-    // Delete note mutation
-    const deleteNoteMutation = useMutation({
-        mutationFn: () => {
-            if (!workspaceId || !note.id) throw new Error('Missing required parameters')
-            return deleteNote(workspaceId, note.id)
-        },
-        onSuccess: async () => {
-            try {
-                await queryClient.invalidateQueries({ queryKey: ['notes', workspaceId] })
-                navigate(`/workspaces/${workspaceId}/notes`)
-            } catch (error) {
-                addToast({ title: t('messages.deleteNoteFailed') || 'Failed to delete note', type: 'error' })
-            }
-        },
-    })
+    // Update isDesktop on resize
+    useEffect(() => {
+        const handleResize = () => setIsDesktop(window.innerWidth >= 640)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
-    // Update visibility mutation
-    const updateVisibilityMutation = useMutation({
-        mutationFn: (visibility: Visibility) => {
-            if (!workspaceId || !note.id) throw new Error('Missing required parameters')
-            return updateNoteVisibility(workspaceId, note.id, visibility)
-        },
-        onSuccess: async () => {
-            try {
-                await queryClient.invalidateQueries({ queryKey: ['note', workspaceId, note.id] })
-            } catch (error) {
-                addToast({ title: t('messages.updateVisibilityFailed') || 'Failed to update visibility', type: 'error' })
-            }
-        },
-    })
-
-    const handleDelete = () => {
-        if (confirm(t('messages.confirmDelete') || 'Are you sure you want to delete this note?')) {
-            deleteNoteMutation.mutate()
+    // Reset state when modal closes
+    useEffect(() => {
+        if (!isOpen) {
+            setIsPinning(false)
+            setSelectedViewId(null)
+            setSearchQuery("")
+            setIsCreatingObject(false)
+            setNewObjectName("")
+            setNewObjectData("")
         }
-    }
-
-    const handleUpdateVisibility = (visibility: Visibility) => {
-        // Don't update if it's the same visibility
-        if (visibility === note.visibility) {
-            return
-        }
-
-        updateVisibilityMutation.mutate(visibility)
-    }
+    }, [isOpen])
 
     // Use public endpoint when viewing from explore page (no workspaceId in URL)
-    // Use workspace endpoint when viewing from workspace context
     const { data: viewObjects = [], refetch: refetchViewObjects } = useQuery({
         queryKey: workspaceId
             ? ['note-view-objects', workspaceId, note.id]
@@ -88,21 +61,21 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
             }
             return Promise.resolve([])
         },
-        enabled: !!note.id,
+        enabled: !!note.id && isOpen,
     })
 
     // Fetch all views when pin dialog is open
     const { data: allViews = [] } = useQuery({
         queryKey: ['views', workspaceId],
         queryFn: () => workspaceId ? getViews(workspaceId, 1, 100) : Promise.resolve([]),
-        enabled: isPinning && !!workspaceId
+        enabled: isPinning && !!workspaceId && isOpen
     })
 
     // Fetch view objects for selected view
     const { data: selectedViewObjects = [] } = useQuery({
         queryKey: ['view-objects', workspaceId, selectedViewId],
         queryFn: () => workspaceId && selectedViewId ? getViewObjects(workspaceId, selectedViewId, 1, 100) : Promise.resolve([]),
-        enabled: !!selectedViewId && !!workspaceId
+        enabled: !!selectedViewId && !!workspaceId && isOpen
     })
 
     // Add note to view object mutation
@@ -133,20 +106,18 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
         if (selectedView?.type === 'calendar') return 'calendar_slot'
         if (selectedView?.type === 'map') return 'map_marker'
         if (selectedView?.type === 'kanban') return 'kanban_column'
-        return 'calendar_slot' // default
+        return 'calendar_slot'
     }
 
     // Create view object and link to note mutation
     const createAndLinkMutation = useMutation({
         mutationFn: async (data: { name: string; data: string }) => {
             if (!workspaceId || !selectedViewId || !note.id) throw new Error('Missing required parameters')
-            // First create the view object
             const newObject = await createViewObject(workspaceId, selectedViewId, {
                 name: data.name,
                 type: getObjectType(),
                 data: data.data
             })
-            // Then link it to the note
             await addNoteToViewObject(workspaceId, selectedViewId, newObject.id, note.id)
             return newObject
         },
@@ -160,6 +131,7 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
             setIsPinning(false)
             setSelectedViewId(null)
             setSearchQuery("")
+            addToast({ title: t('views.objectCreated'), type: 'success' })
         },
         onError: () => {
             addToast({ title: t('views.objectCreatedError'), type: 'error' })
@@ -175,14 +147,10 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
     // Group view objects by view and filter out private views
     const groupedByView = useMemo(() => {
         const grouped = new Map()
-
         viewObjects.forEach(item => {
-            // Only include views that are public or workspace-visible
-            // Skip private views when viewing from explore page (no workspace context)
             if (!workspaceId && item.view.visibility === 'private') {
                 return
             }
-
             const viewId = item.view.id
             if (!grouped.has(viewId)) {
                 grouped.set(viewId, {
@@ -192,7 +160,6 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
             }
             grouped.get(viewId).viewObjects.push(item.view_object)
         })
-
         return Array.from(grouped.values())
     }, [viewObjects, workspaceId])
 
@@ -214,134 +181,113 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
         )
     }, [allViews, searchQuery])
 
-    return (
-        <div className="w-full h-full overflow-y-auto bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100">
-            <div className="flex flex-col">
-                {!isPinning ? (
-                    <>
-                        {workspaceId && (
-                            <div className="flex flex-col gap-2 flex-wrap p-4 pb-0">
-                                <VisibilitySelect
-                                    value={note.visibility}
-                                    onChange={handleUpdateVisibility}
-                                />
-                                <button
-                                    onClick={() => setIsPinning(true)}
-                                    disabled={!workspaceId}
-                                    className="px-2 py-1 inline-flex items-center justify-center gap-2 rounded-lg"
-                                >
-                                    <Pin size={16} />
-                                    <div className="flex-1 text-left px-4">
-                                        {t('views.pinTo') || 'Pin to...'}
-                                    </div>
-                                </button>
-                                <button onClick={handleDelete} className="px-2 py-1 text-red-500 rounded-lg inline-flex items-center justify-center gap-2">
-                                    <Trash2 size={16} />
-                                    <div className="flex-1 text-left px-4">
-                                        {t("actions.delete")}
-                                    </div>
-                                </button>
-                            </div>
-                        )}
+    const content = (
+        <div className="flex flex-col h-full">
+            {!isPinning ? (
+                // Show pinned items
+                <div className="flex flex-col p-4">
+                    {groupedByView.length > 0 && (
+                        <div className="font-bold text-gray-400 p-2 mb-2">
+                            {t("common.pinned")}
+                        </div>
+                    )}
+                    {groupedByView.length > 0 ? (
+                        groupedByView.map((viewGroup) => (
+                            <div key={viewGroup.view.id}>
+                                {viewGroup.viewObjects.map((vo: any) => {
+                                    const getObjectUrl = () => {
+                                        const viewType = viewGroup.view.type
+                                        const viewId = viewGroup.view.id
+                                        const objectId = vo.id
 
-                        <div className="flex flex-col p-4">
-                            {groupedByView.length > 0 && (
-                                <div className="font-bold text-gray-400 p-2">
-                                    {t("common.pinned")}
-                                </div>
-                            )}
-                            {groupedByView.length > 0 &&
-                                groupedByView.map((viewGroup) => (
-                                    <div key={viewGroup.view.id}>
-                                        {viewGroup.viewObjects.map((vo: any) => {
-                                            // Determine the URL based on view type and object type
-                                            const getObjectUrl = () => {
-                                                const viewType = viewGroup.view.type
-                                                const viewId = viewGroup.view.id
-                                                const objectId = vo.id
-
-                                                if (workspaceId) {
-                                                    if (viewType === 'calendar') {
-                                                        return `/workspaces/${workspaceId}/calendar/${viewId}/slot/${objectId}`
-                                                    } else if (viewType === 'map') {
-                                                        return `/workspaces/${workspaceId}/map/${viewId}/marker/${objectId}`
-                                                    } else if (viewType === 'kanban') {
-                                                        // Kanban doesn't have object detail pages
-                                                        return `/workspaces/${workspaceId}/kanban/${viewId}`
-                                                    }
-                                                } else {
-                                                    if (viewType === 'calendar') {
-                                                        return `/explore/calendar/${viewId}/slot/${objectId}`
-                                                    } else if (viewType === 'map') {
-                                                        return `/explore/map/${viewId}/marker/${objectId}`
-                                                    } else if (viewType === 'kanban') {
-                                                        return `/explore/kanban/${viewId}`
-                                                    }
-                                                }
-                                                return '#'
+                                        if (workspaceId) {
+                                            if (viewType === 'calendar') {
+                                                return `/workspaces/${workspaceId}/calendar/${viewId}/slot/${objectId}`
+                                            } else if (viewType === 'map') {
+                                                return `/workspaces/${workspaceId}/map/${viewId}/marker/${objectId}`
+                                            } else if (viewType === 'kanban') {
+                                                return `/workspaces/${workspaceId}/kanban/${viewId}`
                                             }
+                                        } else {
+                                            if (viewType === 'calendar') {
+                                                return `/explore/calendar/${viewId}/slot/${objectId}`
+                                            } else if (viewType === 'map') {
+                                                return `/explore/map/${viewId}/marker/${objectId}`
+                                            } else if (viewType === 'kanban') {
+                                                return `/explore/kanban/${viewId}`
+                                            }
+                                        }
+                                        return '#'
+                                    }
 
-                                            return (
-                                                <Link
-                                                    key={vo.id}
-                                                    to={getObjectUrl()}
-                                                >
-                                                    <div className="flex items-center gap-2 text-gray-600 px-2 py-1">
-                                                        <div>
-                                                            {vo.type === "map_marker" ? (
-                                                                <MapPin size={16} />
-                                                            ) : vo.type === "kanban_column" ? (
-                                                                <LayoutGrid size={16} />
-                                                            ) : (
-                                                                <Calendar1Icon size={16} />
-                                                            )}
-                                                        </div>
-                                                        <div className="flex-1 px-2">
-                                                            {vo.name}
-                                                        </div>
-                                                    </div>
-                                                </Link>
-                                            )
-                                        })}
-                                    </div>
-                                ))}
-                        </div>
-                    </>
-                ) : (
-                    /* Pin to View Object Interface */
-                    <div className="flex flex-col p-4">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="text-lg font-semibold">
-                                {t('views.pinNoteToObject') || 'Pin Note to View Object'}
+                                    return (
+                                        <Link key={vo.id} to={getObjectUrl()}>
+                                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 px-2 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">
+                                                <div>
+                                                    {vo.type === "map_marker" ? (
+                                                        <MapPin size={16} />
+                                                    ) : vo.type === "kanban_column" ? (
+                                                        <LayoutGrid size={16} />
+                                                    ) : (
+                                                        <Calendar1Icon size={16} />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 px-2">{vo.name}</div>
+                                            </div>
+                                        </Link>
+                                    )
+                                })}
                             </div>
-                            <button
-                                onClick={() => {
-                                    setIsPinning(false)
-                                    setSelectedViewId(null)
-                                    setSearchQuery("")
-                                }}
-                                className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded"
-                            >
-                                <X size={20} />
-                            </button>
+                        ))
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            {t('views.noPinnedViews')}
                         </div>
+                    )}
 
-                        {/* Search */}
-                        <div className="mb-4">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder={t('views.searchViews') || 'Search views...'}
-                                    className="w-full pl-10 pr-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
-                                />
-                            </div>
+                    {workspaceId && (
+                        <button
+                            onClick={() => setIsPinning(true)}
+                            className="mt-4 px-4 py-2 bg-black text-white dark:bg-neutral-700 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-600 transition-colors"
+                        >
+                            {t('views.pinToNewView')}
+                        </button>
+                    )}
+                </div>
+            ) : (
+                // Pin interface
+                <div className="flex flex-col p-4 h-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="text-lg font-semibold">
+                            {t('views.pinNoteToObject')}
                         </div>
+                        <button
+                            onClick={() => {
+                                setIsPinning(false)
+                                setSelectedViewId(null)
+                                setSearchQuery("")
+                            }}
+                            className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
 
+                    <div className="mb-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder={t('views.searchViews')}
+                                className="w-full pl-10 pr-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto">
                         {!selectedViewId ? (
-                            /* Views List */
                             <div className="space-y-2">
                                 {filteredViews.length > 0 ? (
                                     filteredViews.map((view) => (
@@ -365,32 +311,30 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
                                     ))
                                 ) : (
                                     <p className="text-center text-gray-500 py-8">
-                                        {searchQuery ? (t('views.noViewsFound') || 'No views found') : (t('views.noViews') || 'No views available')}
+                                        {searchQuery ? t('views.noViewsFound') : t('views.noViews')}
                                     </p>
                                 )}
                             </div>
                         ) : (
-                            /* View Objects List */
                             <div className="space-y-2">
                                 <button
                                     onClick={() => setSelectedViewId(null)}
                                     className="mb-4 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
                                 >
                                     <ChevronRight size={16} className="rotate-180" />
-                                    {t('common.back') || 'Back'}
+                                    {t('common.back')}
                                 </button>
 
-                                {/* Create New Object Button */}
                                 <button
                                     onClick={() => setIsCreatingObject(true)}
                                     className="w-full mb-4 px-4 py-3 bg-black text-white dark:bg-neutral-700 rounded-lg flex items-center justify-center gap-2 hover:bg-neutral-800 dark:hover:bg-neutral-600 transition-colors"
                                 >
                                     <Plus size={18} />
                                     {selectedView?.type === 'calendar'
-                                        ? (t('views.newSlot') || 'New Slot')
+                                        ? t('views.newSlot')
                                         : selectedView?.type === 'kanban'
-                                            ? (t('views.newColumn') || 'New Column')
-                                            : (t('views.newMarker') || 'New Marker')}
+                                            ? t('views.newColumn')
+                                            : t('views.newMarker')}
                                 </button>
 
                                 {availableViewObjects.length > 0 ? (
@@ -446,16 +390,15 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
                                     ))
                                 ) : (
                                     <p className="text-center text-gray-500 py-8 text-sm">
-                                        {t('views.allObjectsLinked') || 'All objects in this view are already linked to this note'}
+                                        {t('views.allObjectsLinked')}
                                     </p>
                                 )}
                             </div>
                         )}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
-            {/* Create View Object Modal */}
             {selectedView && (
                 <CreateViewObjectModal
                     open={isCreatingObject}
@@ -471,6 +414,32 @@ const NoteDetailSidebar: FC<NoteDetailSidebarProps> = ({ note }) => {
             )}
         </div>
     )
+
+    // Desktop: Modal
+    if (isDesktop) {
+        return (
+            <>
+                {isOpen && (
+                    <>
+                        <div
+                            className="fixed inset-0 bg-black/50 z-50"
+                            onClick={onClose}
+                        />
+                        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg max-h-[80vh] bg-white dark:bg-neutral-900 rounded-lg shadow-xl z-50 overflow-hidden">
+                            {content}
+                        </div>
+                    </>
+                )}
+            </>
+        )
+    }
+
+    // Mobile: Bottom Sheet
+    return (
+        <BottomSheet isOpen={isOpen} onClose={onClose} breakpoint={640}>
+            {content}
+        </BottomSheet>
+    )
 }
 
-export default NoteDetailSidebar
+export default PinToViewObjectModal

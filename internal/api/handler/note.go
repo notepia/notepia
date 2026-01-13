@@ -103,7 +103,7 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 		}
 	}
 
-	var res []GetNoteResponse
+	res := make([]GetNoteResponse, 0)
 
 	for _, b := range notes {
 		switch b.Visibility {
@@ -230,7 +230,8 @@ func (h Handler) GetNotes(c echo.Context) error {
 	}
 
 	user := c.Get("user").(model.User)
-	var res []GetNoteResponse
+
+	res := make([]GetNoteResponse, 0)
 
 	for _, b := range notes {
 		switch b.Visibility {

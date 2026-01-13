@@ -79,8 +79,9 @@ function App() {
     <>
       <Routes location={location}>
         <Route path='/explore' element={<PublicLayout />}>
-          <Route path='notes' element={<ExploreNotesPage />} />
-          <Route path='notes/:noteId' element={<ExploreNoteDetailPage />} />
+          <Route path='notes' element={<ExploreNotesPage />}>
+            <Route path=':noteId' element={<ExploreNoteDetailPage />} />
+          </Route>
           <Route path='calendar' element={<ExploreCalendarListPage />} />
           <Route path='calendar/:calendarId' element={<ExploreCalendarPage />}>
             <Route path='slot/:slotId' element={<ExploreCalendarSlotDetailPage />} />
@@ -103,8 +104,9 @@ function App() {
           <Route path='/workspace-setup' element={<Setup />} />
           <Route path='workspaces' element={<WorkspaceLoader />} />
           <Route path='workspaces/:workspaceId' element={<WorkspaceLayout />}>
-            <Route path='notes/:noteId' element={<NoteDetailPage />} ></Route>
-            <Route path='notes' element={<NotesPage />}></Route>
+            <Route path='notes' element={<NotesPage />}>
+              <Route path=':noteId' element={<NoteDetailPage />} ></Route>
+            </Route>
             <Route path='files' element={<FilesPage />}></Route>
             <Route path='calendar' element={<CalendarListPage />}></Route>
             <Route path='calendar/:calendarId' element={<CalendarPage />}>
