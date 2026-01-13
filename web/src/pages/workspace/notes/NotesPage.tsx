@@ -7,7 +7,6 @@ import { Outlet, useNavigate } from "react-router-dom"
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query"
 import { useRef, useCallback, useState, useEffect } from "react"
 import { Tooltip } from "radix-ui"
-import NoteMasonrySkeleton from "@/components/notecard/NoteMasonrySkeleton"
 import { toast } from "@/stores/toast"
 import NoteListSkeleton from "@/components/notecard/NoteListSkeleton"
 import NoteList from "@/components/notecard/NoteList"
@@ -175,7 +174,7 @@ const NotesPage = () => {
                         <NoteList notes={notes} maxNodes={3} getLinkTo={(note) => `${note.id}`} />
 
                         <div ref={loadMoreRef} className="h-4" ></div>
-                        {isFetchingNextPage && <NoteMasonrySkeleton count={3} />}
+                        {isFetchingNextPage && <NoteListSkeleton count={3} />}
                         {!isLoading && !hasNextPage && notes.length > 0 && (
                             <div className="text-center py-4 text-gray-400">{t("messages.noMoreNotes")}</div>
                         )}

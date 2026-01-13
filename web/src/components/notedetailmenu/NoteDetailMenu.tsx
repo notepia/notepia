@@ -2,12 +2,11 @@ import { FC, useRef, useState, useEffect } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { deleteNote, NoteData, updateNoteVisibility } from "@/api/note"
 import { useTranslation } from "react-i18next"
-import { Pin, Trash2, Ellipsis } from "lucide-react"
+import { Trash2, Ellipsis } from "lucide-react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useToastStore } from "@/stores/toast"
 import { Visibility } from "@/types/visibility"
 import VisibilitySelect from "@/components/visibilityselect/VisibilitySelect"
-import PinToViewObjectModal from "@/components/pintoviewobject/PinToViewObjectModal"
 
 interface NoteDetailMenuProps {
     note: NoteData
@@ -20,7 +19,6 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
     const queryClient = useQueryClient()
     const navigate = useNavigate()
     const [isMenuOpened, setIsMenuOpened] = useState(false)
-    const [isPinModalOpen, setIsPinModalOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -71,11 +69,6 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
         updateVisibilityMutation.mutate(visibility)
     }
 
-    const handlePinClick = () => {
-        setIsPinModalOpen(true)
-        setIsMenuOpened(false)
-    }
-
     const handleOpenMenu = () => {
         setIsMenuOpened(prev => !prev)
     }
@@ -124,19 +117,6 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
                                             onChange={handleUpdateVisibility}
                                         />
                                     </div>
-
-                                    <div className="border-t dark:border-neutral-700 my-1"></div>
-
-                                    <button
-                                        onClick={handlePinClick}
-                                        className="px-3 py-2 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors text-left"
-                                    >
-                                        <Pin size={16} />
-                                        <span>{t('views.pinTo')}</span>
-                                    </button>
-
-                                    <div className="border-t dark:border-neutral-700 my-1"></div>
-
                                     <button
                                         onClick={handleDelete}
                                         className="px-3 py-2 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-left"
@@ -150,12 +130,6 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
                     </div>
                 )}
             </div>
-
-            <PinToViewObjectModal
-                note={note}
-                isOpen={isPinModalOpen}
-                onClose={() => setIsPinModalOpen(false)}
-            />
         </>
     )
 }

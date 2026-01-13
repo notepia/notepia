@@ -79,8 +79,9 @@ function App() {
     <>
       <Routes location={location}>
         <Route path='/explore' element={<PublicLayout />}>
-          <Route path='notes' element={<ExploreNotesPage />} />
-          <Route path='notes/:noteId' element={<ExploreNoteDetailPage />} />
+          <Route path='notes' element={<ExploreNotesPage />}>
+            <Route path=':noteId' element={<ExploreNoteDetailPage />} />
+          </Route>
           <Route path='calendar' element={<ExploreCalendarListPage />} />
           <Route path='calendar/:calendarId' element={<ExploreCalendarPage />}>
             <Route path='slot/:slotId' element={<ExploreCalendarSlotDetailPage />} />

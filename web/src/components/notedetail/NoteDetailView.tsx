@@ -69,7 +69,7 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                             <button
                                 onClick={() => navigate(-1)}
                                 aria-label="back"
-                                className="inline-flex xl:hidden p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
+                                className="inline-flex p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
                             >
                                 <ArrowLeft size={20} />
                             </button>
