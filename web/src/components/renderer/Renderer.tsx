@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { PhotoView, PhotoProvider } from 'react-photo-view'
 import ShikiHighlighter from "react-shiki"
+import { useTranslation } from 'react-i18next'
 
 interface Node {
     type: string
@@ -12,9 +13,13 @@ interface Node {
 
 interface RendererProps {
     content: string
+    maxNodes?: number
 }
 
-const Renderer: React.FC<RendererProps> = ({ content }) => {
+const Renderer: React.FC<RendererProps> = ({ content, maxNodes }) => {
+    const { t } = useTranslation()
+    const [isExpanded, setIsExpanded] = useState(false)
+
     let json: Node
     try {
         json = JSON.parse(content)
@@ -129,10 +134,33 @@ const Renderer: React.FC<RendererProps> = ({ content }) => {
         }
     }
 
+    const allNodes = json.content || []
+    const hasLimit = maxNodes && maxNodes > 0
+    const shouldLimit = hasLimit && !isExpanded
+    const nodesToRender = shouldLimit ? allNodes.slice(0, maxNodes) : allNodes
+    const hasHiddenNodes = shouldLimit && allNodes.length > maxNodes
+    const showCollapseButton = isExpanded && hasLimit
+
     return (
         <PhotoProvider>
             <div className='prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl max-w-full overflow-x-auto text-neutral-800 dark:text-gray-400'>
-                {(json.content || []).map((node, idx) => renderNode(node, idx))}
+                {nodesToRender.map((node, idx) => renderNode(node, idx))}
+                {hasHiddenNodes && (
+                    <button
+                        onClick={() => setIsExpanded(true)}
+                        className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                    >
+                        {t('actions.showMore')}
+                    </button>
+                )}
+                {showCollapseButton && (
+                    <button
+                        onClick={() => setIsExpanded(false)}
+                        className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                    >
+                        {t('actions.showLess')}
+                    </button>
+                )}
             </div>
         </PhotoProvider>
     )

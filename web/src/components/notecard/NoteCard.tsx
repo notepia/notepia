@@ -9,9 +9,10 @@ interface NoteCardProps {
     note: NoteData
     linkTo?: string
     showLink?: boolean
+    maxNodes?: number
 }
 
-const NoteCard: FC<NoteCardProps> = ({ note, linkTo }) => {
+const NoteCard: FC<NoteCardProps> = ({ note, linkTo, maxNodes }) => {
 
     return (
         <div className="bg-white dark:bg-neutral-800 border sm:shadow-sm dark:border-none rounded-lg overflow-auto flex flex-col gap-2 p-4">
@@ -32,7 +33,7 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo }) => {
                             {note.title}
                         </div>
                     ) : (
-                        <Renderer content={note?.content || ''} />
+                        <Renderer content={note?.content || ''} maxNodes={maxNodes} />
                     )}
                 </div>
             </>

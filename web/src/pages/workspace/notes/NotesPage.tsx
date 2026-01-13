@@ -103,7 +103,7 @@ const NotesPage = () => {
 
     return <>
         <div className="flex h-screen">
-            <div className="w-full xl:w-[360px] h-full overflow-auto shrink-0 bg-gray-200 shadow-inner">
+            <div className="w-full xl:w-[360px] h-full overflow-auto shrink-0 bg-neutral-200 shadow-inner">
                 <div className="px-4 pt-4 flex gap-2">
                     <SidebarButton />
                     <div className="flex gap-2 items-center max-w-[calc(100vw-165px)] overflow-x-auto whitespace-nowrap sm:text-xl font-semibold hide-scrollbar">
@@ -113,7 +113,7 @@ const NotesPage = () => {
                 {isLoading ? (
                     <NoteListSkeleton />
                 ) : (
-                    <NoteList notes={notes} getLinkTo={(note) => `${note.id}`} />
+                    <NoteList notes={notes} maxNodes={3} getLinkTo={(note) => `${note.id}`} />
                 )}
             </div>
             <div className="xl:flex-1">
