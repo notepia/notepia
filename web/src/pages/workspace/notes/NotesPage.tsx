@@ -64,7 +64,6 @@ const NotesPage = () => {
         fetchNextPage,
         hasNextPage,
         isFetchingNextPage,
-        refetch
     } = useInfiniteQuery({
         queryKey: ['notes', currentWorkspaceId, debouncedQuery],
         queryFn: async ({ pageParam = 1 }: { pageParam?: unknown }) => {
@@ -175,7 +174,7 @@ const NotesPage = () => {
 
                         <div ref={loadMoreRef} className="h-4" ></div>
                         {isFetchingNextPage && <NoteListSkeleton count={3} />}
-                        {!isLoading && !hasNextPage && notes.length > 0 && (
+                        {!isLoading && !hasNextPage && (
                             <div className="text-center py-4 text-gray-400">{t("messages.noMoreNotes")}</div>
                         )}
                     </>
