@@ -106,7 +106,7 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
                         <div className="flex flex-col p-2">
                             {workspaceId && (
                                 <>
-                                    <div className="px-3 py-2">
+                                    <div className="px-3 py-2" onMouseDown={(e) => e.stopPropagation()}>
                                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                                             {t('common.visibility')}
                                         </div>
