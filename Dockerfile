@@ -69,6 +69,3 @@ COPY --from=backend /out/cli ./cli
 
 RUN mkdir -p ./bin
 VOLUME /usr/local/app/bin
-
-# Default to web service, but can be overridden
-ENTRYPOINT ["./web"]
