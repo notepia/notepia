@@ -106,46 +106,47 @@ export const renderNoteOrView = (
     isSelected: boolean,
     viewport: { x: number; y: number; zoom: number }
 ) => {
-    const width = data.width || 250;
+    const width = data.width || 768;
     const height = data.height || 200;
 
-    // Background
-    ctx.fillStyle = obj.type === 'whiteboard_note' ? '#fef9c3' : '#ffffff';
-    ctx.fillRect(data.position.x, data.position.y, width, height);
+    // Skip rendering background for whiteboard_note (NoteOverlay handles it)
+    if (obj.type !== 'whiteboard_note') {
+        // Background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(data.position.x, data.position.y, width, height);
 
-    // Border
-    ctx.strokeStyle = obj.type === 'whiteboard_note' ? '#eab308' : '#e0e0e0';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(data.position.x, data.position.y, width, height);
+        // Border
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(data.position.x, data.position.y, width, height);
+    }
 
-    // Selection highlight
-    if (isSelected) {
+    // Selection highlight (only for whiteboard_view since whiteboard_note has auto height)
+    if (isSelected && obj.type === 'whiteboard_view') {
         ctx.strokeStyle = '#3b82f6';
         ctx.lineWidth = 3 / viewport.zoom;
         ctx.setLineDash([5 / viewport.zoom, 5 / viewport.zoom]);
         ctx.strokeRect(data.position.x - 5, data.position.y - 5, width + 10, height + 10);
         ctx.setLineDash([]);
 
-        // Draw resize handles for notes and views
-        if (obj.type === 'whiteboard_note' || obj.type === 'whiteboard_view') {
-            const handleSize = 8 / viewport.zoom;
-            ctx.fillStyle = '#3b82f6';
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2 / viewport.zoom;
+        // Draw resize handles for views only
+        const handleSize = 8 / viewport.zoom;
+        ctx.fillStyle = '#3b82f6';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2 / viewport.zoom;
 
-            // Four corner handles
-            const corners = [
-                { x: data.position.x, y: data.position.y }, // Northwest
-                { x: data.position.x + width, y: data.position.y }, // Northeast
-                { x: data.position.x, y: data.position.y + height }, // Southwest
-                { x: data.position.x + width, y: data.position.y + height }, // Southeast
-            ];
+        // Four corner handles
+        const corners = [
+            { x: data.position.x, y: data.position.y }, // Northwest
+            { x: data.position.x + width, y: data.position.y }, // Northeast
+            { x: data.position.x, y: data.position.y + height }, // Southwest
+            { x: data.position.x + width, y: data.position.y + height }, // Southeast
+        ];
 
-            corners.forEach(corner => {
-                ctx.fillRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
-                ctx.strokeRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
-            });
-        }
+        corners.forEach(corner => {
+            ctx.fillRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
+            ctx.strokeRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
+        });
     }
 };
 

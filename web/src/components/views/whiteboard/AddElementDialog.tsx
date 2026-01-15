@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
-import { createViewObject } from '@/api/view';
+import { createViewObject, addNoteToViewObject } from '@/api/view';
 import { getNotes } from '@/api/note';
-import { getViews } from '@/api/view';
 import { useToastStore } from '@/stores/toast';
 import * as Dialog from '@radix-ui/react-dialog';
-import { WhiteboardNoteData, WhiteboardViewRefData } from '@/types/view';
+import { WhiteboardNoteData } from '@/types/view';
 import { extractTextFromTipTapJSON } from '@/utils/tiptap';
 
 interface AddElementDialogProps {
@@ -15,7 +14,6 @@ interface AddElementDialogProps {
     viewId: string;
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    elementType: 'note' | 'view';
     onElementAdded?: (element: any) => void;
 }
 
@@ -24,7 +22,6 @@ const AddElementDialog = ({
     viewId,
     isOpen,
     onOpenChange,
-    elementType,
     onElementAdded
 }: AddElementDialogProps) => {
     const { t } = useTranslation();
@@ -32,56 +29,36 @@ const AddElementDialog = ({
     const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Fetch notes or views based on element type
+    // Fetch notes
     const { data: notes = [] } = useQuery({
         queryKey: ['notes', workspaceId, searchQuery],
         queryFn: () => getNotes(workspaceId, 1, 100, searchQuery),
-        enabled: isOpen && elementType === 'note'
+        enabled: isOpen
     });
-
-    const { data: views = [] } = useQuery({
-        queryKey: ['views', workspaceId],
-        queryFn: () => getViews(workspaceId, 1, 100),
-        enabled: isOpen && elementType === 'view'
-    });
-
-    const filteredViews = searchQuery
-        ? views.filter((v: any) => v.name.toLowerCase().includes(searchQuery.toLowerCase()))
-        : views;
 
     const addElementMutation = useMutation({
-        mutationFn: async (id: string) => {
+        mutationFn: async (noteId: string) => {
             const position = { x: 100, y: 100 };
 
-            if (elementType === 'note') {
-                // Find the selected note to get its title
-                const selectedNote = notes.find((n: any) => n.id === id);
-                const noteTitle = selectedNote?.title || extractTextFromTipTapJSON(selectedNote?.content || '').substring(0, 50) || t('notes.untitled') || 'Untitled';
+            // Find the selected note to get its title
+            const selectedNote = notes.find((n: any) => n.id === noteId);
+            const noteTitle = selectedNote?.title || extractTextFromTipTapJSON(selectedNote?.content || '').substring(0, 50) || t('notes.untitled') || 'Untitled';
 
-                const noteData: WhiteboardNoteData = {
-                    position,
-                    noteId: id,
-                    width: 250,
-                    height: 200
-                };
-                return createViewObject(workspaceId, viewId, {
-                    name: noteTitle,
-                    type: 'whiteboard_note',
-                    data: JSON.stringify(noteData)
-                });
-            } else {
-                const viewData: WhiteboardViewRefData = {
-                    position,
-                    viewId: id,
-                    width: 250,
-                    height: 200
-                };
-                return createViewObject(workspaceId, viewId, {
-                    name: `View`,
-                    type: 'whiteboard_view',
-                    data: JSON.stringify(viewData)
-                });
-            }
+            // Create view object without noteId in data
+            const noteData: WhiteboardNoteData = {
+                position,
+                width: 768
+            };
+            const viewObject = await createViewObject(workspaceId, viewId, {
+                name: noteTitle,
+                type: 'whiteboard_note',
+                data: JSON.stringify(noteData)
+            });
+
+            // Link note to view object via view_object_notes
+            await addNoteToViewObject(workspaceId, viewId, viewObject.id, noteId);
+
+            return viewObject;
         },
         onSuccess: (newObject) => {
             queryClient.invalidateQueries({ queryKey: ['view-objects', workspaceId, viewId] });
@@ -104,17 +81,13 @@ const AddElementDialog = ({
         }
     });
 
-    const items = elementType === 'note' ? notes : filteredViews;
-
     return (
         <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
                 <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[500px] max-h-[80vh] overflow-y-auto z-50">
                     <Dialog.Title className="text-xl font-semibold mb-4">
-                        {elementType === 'note'
-                            ? (t('whiteboard.addNote') || 'Add Note')
-                            : (t('whiteboard.addView') || 'Add View')}
+                        {t('whiteboard.addNote') || 'Add Note'}
                     </Dialog.Title>
 
                     {/* Search */}
@@ -125,54 +98,35 @@ const AddElementDialog = ({
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={
-                                    elementType === 'note'
-                                        ? (t('whiteboard.searchNotes') || 'Search notes')
-                                        : (t('whiteboard.searchViews') || 'Search views')
-                                }
+                                placeholder={t('whiteboard.searchNotes') || 'Search notes'}
                                 className="w-full pl-10 pr-4 py-2 rounded-lg border dark:border-neutral-600 bg-white dark:bg-neutral-800"
                             />
                         </div>
                     </div>
 
-                    {/* Items List */}
+                    {/* Notes List */}
                     <div className="space-y-2">
-                        {items.length > 0 ? (
-                            items.map((item: any) => (
+                        {notes.length > 0 ? (
+                            notes.map((note: any) => (
                                 <button
-                                    key={item.id}
-                                    onClick={() => addElementMutation.mutate(item.id)}
+                                    key={note.id}
+                                    onClick={() => addElementMutation.mutate(note.id)}
                                     disabled={addElementMutation.isPending}
                                     className="w-full text-left p-3 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 disabled:opacity-50 transition-colors"
                                 >
-                                    {elementType === 'note' ? (
-                                        <div>
-                                            <div className="font-medium truncate">
-                                                {item.title || t('notes.untitled') || 'Untitled'}
-                                            </div>
-                                            <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-                                                {item.content ? extractTextFromTipTapJSON(item.content).substring(0, 100) : t('notes.emptyNote') || 'Empty note'}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div>
-                                            <div className="font-medium truncate">
-                                                {item.name}
-                                            </div>
-                                            <div className="text-xs text-gray-500 mt-1">
-                                                {item.type}
-                                            </div>
-                                        </div>
-                                    )}
+                                    <div className="font-medium truncate">
+                                        {note.title || t('notes.untitled') || 'Untitled'}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                        {note.content ? extractTextFromTipTapJSON(note.content).substring(0, 100) : t('notes.emptyNote') || 'Empty note'}
+                                    </div>
                                 </button>
                             ))
                         ) : (
                             <p className="text-center text-gray-500 py-8">
                                 {searchQuery
                                     ? (t('whiteboard.noResultsFound') || 'No results found')
-                                    : elementType === 'note'
-                                        ? (t('whiteboard.noNotes') || 'No notes available')
-                                        : (t('whiteboard.noViews') || 'No views available')}
+                                    : (t('whiteboard.noNotes') || 'No notes available')}
                             </p>
                         )}
                     </div>
