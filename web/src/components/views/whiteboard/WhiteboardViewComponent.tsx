@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, WhiteboardNoteData, ViewObjectType } from '../../../types/view';
 import { useTranslation } from 'react-i18next';
 import WhiteboardToolbar, { Tool } from './WhiteboardToolbar';
+import WhiteboardToolProperties from './WhiteboardToolProperties';
 import AddElementDialog from './AddElementDialog';
 import { useWhiteboardWebSocket } from '../../../hooks/use-whiteboard-websocket';
 import NoteOverlay from './NoteOverlay';
@@ -88,7 +89,6 @@ const WhiteboardViewComponent = ({
 
     // Dialog state
     const [isAddingNote, setIsAddingNote] = useState(false);
-    const [isAddingView, setIsAddingView] = useState(false);
 
     // Canvas size
     const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
@@ -391,8 +391,6 @@ const WhiteboardViewComponent = ({
             }
         } else if (currentTool === 'note') {
             setIsAddingNote(true);
-        } else if (currentTool === 'view') {
-            setIsAddingView(true);
         }
     };
 
@@ -964,12 +962,12 @@ const WhiteboardViewComponent = ({
                         return (
                             <NoteOverlay
                                 key={objId}
-                                noteId={noteData.noteId}
+                                viewObjectId={objId}
                                 position={noteData.position}
-                                width={noteData.width || 250}
-                                height={noteData.height || 200}
+                                width={noteData.width || 768}
                                 viewport={viewport}
-                                workspaceId={workspaceId}
+                                workspaceId={workspaceId!}
+                                viewId={viewId!}
                             />
                         );
                     }
@@ -1020,6 +1018,11 @@ const WhiteboardViewComponent = ({
                 <WhiteboardToolbar
                     currentTool={currentTool}
                     setCurrentTool={setCurrentTool}
+                    isPublic={isPublic}
+                />
+
+                <WhiteboardToolProperties
+                    currentTool={currentTool}
                     currentColor={currentColor}
                     setCurrentColor={setCurrentColor}
                     currentStrokeWidth={currentStrokeWidth}
@@ -1038,24 +1041,13 @@ const WhiteboardViewComponent = ({
             </div>
 
             {!isPublic && workspaceId && viewId && (
-                <>
-                    <AddElementDialog
-                        workspaceId={workspaceId}
-                        viewId={viewId}
-                        isOpen={isAddingNote}
-                        onOpenChange={setIsAddingNote}
-                        elementType="note"
-                        onElementAdded={handleElementAdded}
-                    />
-                    <AddElementDialog
-                        workspaceId={workspaceId}
-                        viewId={viewId}
-                        isOpen={isAddingView}
-                        onOpenChange={setIsAddingView}
-                        elementType="view"
-                        onElementAdded={handleElementAdded}
-                    />
-                </>
+                <AddElementDialog
+                    workspaceId={workspaceId}
+                    viewId={viewId}
+                    isOpen={isAddingNote}
+                    onOpenChange={setIsAddingNote}
+                    onElementAdded={handleElementAdded}
+                />
             )}
         </>
     );

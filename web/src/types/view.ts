@@ -170,7 +170,6 @@ export interface WhiteboardTextData {
 
 export interface WhiteboardNoteData {
   position: { x: number; y: number };
-  noteId: string;                       // 連結的 note ID
   width?: number;
   height?: number;
 }

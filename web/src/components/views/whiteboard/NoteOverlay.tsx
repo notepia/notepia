@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getNote } from '../../../api/note';
+import { getNotesForViewObject } from '../../../api/view';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
@@ -9,20 +9,24 @@ import { Attachment } from '../../editor/extensions/attachment/Attachment';
 import { ImageNode } from '../../editor/extensions/imagenode/ImageNode';
 
 interface NoteOverlayProps {
-    noteId: string;
+    viewObjectId: string;
     position: { x: number; y: number };
     width: number;
-    height: number;
     viewport: { x: number; y: number; zoom: number };
-    workspaceId?: string;
+    workspaceId: string;
+    viewId: string;
 }
 
-const NoteOverlay: React.FC<NoteOverlayProps> = ({ noteId, position, width, height, viewport, workspaceId }) => {
-    const { data: note } = useQuery({
-        queryKey: ['note', workspaceId, noteId],
-        queryFn: () => getNote(workspaceId!, noteId),
-        enabled: !!workspaceId && !!noteId,
+const NoteOverlay: React.FC<NoteOverlayProps> = ({ viewObjectId, position, width, viewport, workspaceId, viewId }) => {
+    // Fetch linked notes via view_object_notes
+    const { data: linkedNotes = [] } = useQuery({
+        queryKey: ['view-object-notes', workspaceId, viewId, viewObjectId],
+        queryFn: () => getNotesForViewObject(workspaceId, viewId, viewObjectId),
+        enabled: !!workspaceId && !!viewId && !!viewObjectId,
     });
+
+    // Get the first linked note (whiteboard_note should have exactly one linked note)
+    const note = linkedNotes[0];
 
     const editor = useEditor({
         extensions: [
@@ -62,7 +66,7 @@ const NoteOverlay: React.FC<NoteOverlayProps> = ({ noteId, position, width, heig
         ],
         editorProps: {
             attributes: {
-                class: 'prose prose-xs focus:outline-none max-w-none',
+                class: 'prose prose-sm focus:outline-none max-w-none',
             },
         },
         content: note?.content ? JSON.parse(note.content) : null,
@@ -74,30 +78,20 @@ const NoteOverlay: React.FC<NoteOverlayProps> = ({ noteId, position, width, heig
     // Calculate transformed position based on viewport
     const transformedX = position.x * viewport.zoom + viewport.x;
     const transformedY = position.y * viewport.zoom + viewport.y;
-    const transformedWidth = width * viewport.zoom;
-    const transformedHeight = height * viewport.zoom;
-
-    // Calculate font size based on zoom
-    const fontSize = Math.max(8, Math.min(12, 10 * viewport.zoom));
-    const scaleFactor = fontSize / 10;
 
     return (
         <div
-            className="absolute pointer-events-none overflow-hidden"
+            className="absolute pointer-events-none origin-top-left"
             style={{
                 left: `${transformedX}px`,
-                top: `${transformedY + 5 * viewport.zoom}px`,
-                width: `${transformedWidth}px`,
-                height: `${transformedHeight - 35 * viewport.zoom}px`,
+                top: `${transformedY}px`,
+                transform: `scale(${viewport.zoom})`,
             }}
         >
             <div
-                className="p-2 overflow-hidden select-text"
+                className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg shadow-md p-4 select-text"
                 style={{
-                    transform: `scale(${scaleFactor})`,
-                    transformOrigin: 'top left',
-                    width: `${100 / scaleFactor}%`,
-                    height: `${100 / scaleFactor}%`,
+                    width: `${width}px`,
                 }}
             >
                 <EditorContent editor={editor} />
