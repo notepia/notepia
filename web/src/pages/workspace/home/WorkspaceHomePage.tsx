@@ -345,7 +345,7 @@ const WorkspaceHomePage = () => {
                 aria-label="toggle edit mode"
                 onClick={() => setIsEditMode(!isEditMode)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${isEditMode
-                  ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400'
+                  ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                   : 'hover:bg-neutral-200 dark:hover:bg-neutral-800'
                   }`}
               >
