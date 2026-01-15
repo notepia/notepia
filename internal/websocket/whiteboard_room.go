@@ -276,6 +276,11 @@ func (r *WhiteboardRoom) handleMessage(msg *Message) {
 		if err := r.cache.ClearViewObjects(r.ctx, r.viewID); err != nil {
 			log.Printf("Error clearing view objects: %v", err)
 		}
+		// Re-mark as initialized so new clients don't reload from DB
+		if err := r.cache.MarkWhiteboardInitialized(r.ctx, r.viewID); err != nil {
+			log.Printf("Error re-marking whiteboard as initialized: %v", err)
+		}
+		log.Printf("Cleared all objects from whiteboard %s", r.viewID)
 	}
 
 	// Broadcast to all clients except sender

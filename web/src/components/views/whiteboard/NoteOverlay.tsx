@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getNotesForViewObject } from '../../../api/view';
+import { getNotesForViewObject, getPublicNotesForViewObject } from '../../../api/view';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
@@ -13,17 +13,22 @@ interface NoteOverlayProps {
     position: { x: number; y: number };
     width: number;
     viewport: { x: number; y: number; zoom: number };
-    workspaceId: string;
+    workspaceId?: string;
     viewId: string;
     isSelected?: boolean;
+    isPublic?: boolean;
 }
 
-const NoteOverlay: React.FC<NoteOverlayProps> = ({ viewObjectId, position, width, viewport, workspaceId, viewId, isSelected = false }) => {
-    // Fetch linked notes via view_object_notes
+const NoteOverlay: React.FC<NoteOverlayProps> = ({ viewObjectId, position, width, viewport, workspaceId, viewId, isSelected = false, isPublic = false }) => {
+    // Fetch linked notes via view_object_notes (use public API for explore mode)
     const { data: linkedNotes = [] } = useQuery({
-        queryKey: ['view-object-notes', workspaceId, viewId, viewObjectId],
-        queryFn: () => getNotesForViewObject(workspaceId, viewId, viewObjectId),
-        enabled: !!workspaceId && !!viewId && !!viewObjectId,
+        queryKey: isPublic
+            ? ['public-view-object-notes', viewId, viewObjectId]
+            : ['view-object-notes', workspaceId, viewId, viewObjectId],
+        queryFn: () => isPublic
+            ? getPublicNotesForViewObject(viewId, viewObjectId)
+            : getNotesForViewObject(workspaceId!, viewId, viewObjectId),
+        enabled: !!viewId && !!viewObjectId && (isPublic || !!workspaceId),
     });
 
     // Get the first linked note (whiteboard_note should have exactly one linked note)

@@ -115,16 +115,47 @@ func (p *WhiteboardPersister) PersistWhiteboard(ctx context.Context, viewID stri
 	}
 
 	// Marshal canvas objects to JSON and store in view.data
-	if len(canvasObjects) > 0 {
-		canvasData, err := json.Marshal(canvasObjects)
-		if err != nil {
-			return err
-		}
-		view.Data = string(canvasData)
+	// Also clear view.data if there are no canvas objects (clear_all case)
+	canvasData, err := json.Marshal(canvasObjects)
+	if err != nil {
+		return err
+	}
+	view.Data = string(canvasData)
 
-		// Update view in database
-		if err := p.db.UpdateView(view); err != nil {
-			return err
+	// Update view in database
+	if err := p.db.UpdateView(view); err != nil {
+		return err
+	}
+
+	// Build a set of Redis view object IDs for quick lookup
+	redisObjectIDs := make(map[string]bool)
+	for _, obj := range viewObjects {
+		redisObjectIDs[obj.ID] = true
+	}
+
+	// Get existing view objects from database
+	dbViewObjects, err := p.db.FindViewObjects(model.ViewObjectFilter{
+		ViewID:     viewID,
+		PageNumber: 1,
+		PageSize:   10000, // Large number to get all objects
+	})
+	if err != nil {
+		log.Printf("Warning: failed to get existing view objects for %s: %v", viewID, err)
+	} else {
+		// Delete view objects that exist in DB but not in Redis (cleared objects)
+		// This also deletes associated view_object_notes due to ON DELETE CASCADE
+		deletedCount := 0
+		for _, dbObj := range dbViewObjects {
+			if !redisObjectIDs[dbObj.ID] {
+				if err := p.db.DeleteViewObject(model.ViewObject{ID: dbObj.ID, ViewID: viewID}); err != nil {
+					log.Printf("Warning: failed to delete view object %s: %v", dbObj.ID, err)
+				} else {
+					deletedCount++
+				}
+			}
+		}
+		if deletedCount > 0 {
+			log.Printf("Deleted %d stale view objects from whiteboard %s", deletedCount, viewID)
 		}
 	}
 

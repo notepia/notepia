@@ -979,9 +979,10 @@ const WhiteboardViewComponent = ({
                                 position={noteData.position}
                                 width={noteData.width || 768}
                                 viewport={viewport}
-                                workspaceId={workspaceId!}
+                                workspaceId={workspaceId}
                                 viewId={viewId!}
                                 isSelected={selectedObjectId === objId}
+                                isPublic={isPublic}
                             />
                         );
                     }
