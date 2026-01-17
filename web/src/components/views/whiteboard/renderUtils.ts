@@ -6,27 +6,42 @@ export const renderStroke = (
     isSelected: boolean,
     viewport: { x: number; y: number; zoom: number }
 ) => {
-    if (!data.points || data.points.length === 0) return;
+    // Null checks
+    if (!data || !data.points || data.points.length === 0) return;
+    if (!viewport) return;
 
-    ctx.strokeStyle = data.color;
-    ctx.lineWidth = data.width;
+    const color = data.color || '#000000';
+    const width = data.width || 2;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
-    ctx.moveTo(data.points[0].x, data.points[0].y);
+
+    const firstPoint = data.points[0];
+    if (!firstPoint || typeof firstPoint.x !== 'number' || typeof firstPoint.y !== 'number') return;
+
+    ctx.moveTo(firstPoint.x, firstPoint.y);
     for (let i = 1; i < data.points.length; i++) {
-        ctx.lineTo(data.points[i].x, data.points[i].y);
+        const point = data.points[i];
+        if (point && typeof point.x === 'number' && typeof point.y === 'number') {
+            ctx.lineTo(point.x, point.y);
+        }
     }
     ctx.stroke();
 
     if (isSelected) {
-        const minX = Math.min(...data.points.map(p => p.x));
-        const maxX = Math.max(...data.points.map(p => p.x));
-        const minY = Math.min(...data.points.map(p => p.y));
-        const maxY = Math.max(...data.points.map(p => p.y));
+        const validPoints = data.points.filter(p => p && typeof p.x === 'number' && typeof p.y === 'number');
+        if (validPoints.length === 0) return;
+
+        const minX = Math.min(...validPoints.map(p => p.x));
+        const maxX = Math.max(...validPoints.map(p => p.x));
+        const minY = Math.min(...validPoints.map(p => p.y));
+        const maxY = Math.max(...validPoints.map(p => p.y));
         ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2 / viewport.zoom;
-        ctx.setLineDash([5 / viewport.zoom, 5 / viewport.zoom]);
+        ctx.lineWidth = 2 / (viewport.zoom || 1);
+        ctx.setLineDash([5 / (viewport.zoom || 1), 5 / (viewport.zoom || 1)]);
         ctx.strokeRect(minX - 5, minY - 5, maxX - minX + 10, maxY - minY + 10);
         ctx.setLineDash([]);
     }
@@ -38,12 +53,22 @@ export const renderShape = (
     isSelected: boolean,
     viewport: { x: number; y: number; zoom: number }
 ) => {
-    ctx.strokeStyle = data.color;
-    ctx.lineWidth = data.strokeWidth;
+    // Null checks
+    if (!data || !data.position || !data.dimensions) return;
+    if (!viewport) return;
+    if (typeof data.position.x !== 'number' || typeof data.position.y !== 'number') return;
+    if (typeof data.dimensions.width !== 'number' || typeof data.dimensions.height !== 'number') return;
+
+    const color = data.color || '#000000';
+    const strokeWidth = data.strokeWidth || 2;
+    const zoom = viewport.zoom || 1;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = strokeWidth;
 
     if (data.type === 'rectangle') {
         if (data.filled) {
-            ctx.fillStyle = data.color;
+            ctx.fillStyle = color;
             ctx.fillRect(data.position.x, data.position.y, data.dimensions.width, data.dimensions.height);
         }
         ctx.strokeRect(data.position.x, data.position.y, data.dimensions.width, data.dimensions.height);
@@ -52,7 +77,7 @@ export const renderShape = (
         ctx.beginPath();
         ctx.arc(data.position.x, data.position.y, radius, 0, 2 * Math.PI);
         if (data.filled) {
-            ctx.fillStyle = data.color;
+            ctx.fillStyle = color;
             ctx.fill();
         }
         ctx.stroke();
@@ -65,8 +90,8 @@ export const renderShape = (
 
     if (isSelected) {
         ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2 / viewport.zoom;
-        ctx.setLineDash([5 / viewport.zoom, 5 / viewport.zoom]);
+        ctx.lineWidth = 2 / zoom;
+        ctx.setLineDash([5 / zoom, 5 / zoom]);
         if (data.type === 'rectangle') {
             ctx.strokeRect(data.position.x - 5, data.position.y - 5, data.dimensions.width + 10, data.dimensions.height + 10);
         } else if (data.type === 'circle') {
@@ -85,16 +110,26 @@ export const renderText = (
     isSelected: boolean,
     viewport: { x: number; y: number; zoom: number }
 ) => {
-    ctx.fillStyle = data.color;
-    ctx.font = `${data.fontSize}px sans-serif`;
+    // Null checks
+    if (!data || !data.position) return;
+    if (!viewport) return;
+    if (typeof data.position.x !== 'number' || typeof data.position.y !== 'number') return;
+    if (!data.text) return;
+
+    const color = data.color || '#000000';
+    const fontSize = data.fontSize || 16;
+    const zoom = viewport.zoom || 1;
+
+    ctx.fillStyle = color;
+    ctx.font = `${fontSize}px sans-serif`;
     ctx.fillText(data.text, data.position.x, data.position.y);
 
     if (isSelected) {
         const metrics = ctx.measureText(data.text);
         ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2 / viewport.zoom;
-        ctx.setLineDash([5 / viewport.zoom, 5 / viewport.zoom]);
-        ctx.strokeRect(data.position.x - 5, data.position.y - data.fontSize - 5, metrics.width + 10, data.fontSize + 10);
+        ctx.lineWidth = 2 / zoom;
+        ctx.setLineDash([5 / zoom, 5 / zoom]);
+        ctx.strokeRect(data.position.x - 5, data.position.y - fontSize - 5, metrics.width + 10, fontSize + 10);
         ctx.setLineDash([]);
     }
 };
@@ -106,8 +141,15 @@ export const renderNoteOrView = (
     isSelected: boolean,
     viewport: { x: number; y: number; zoom: number }
 ) => {
+    // Null checks
+    if (!data || !data.position) return;
+    if (!obj) return;
+    if (!viewport) return;
+    if (typeof data.position.x !== 'number' || typeof data.position.y !== 'number') return;
+
     const width = data.width || 768;
     const height = data.height || 200;
+    const zoom = viewport.zoom || 1;
 
     // Skip rendering background for whiteboard_note (NoteOverlay handles it)
     if (obj.type !== 'whiteboard_note') {
@@ -124,16 +166,16 @@ export const renderNoteOrView = (
     // Selection highlight (only for whiteboard_view since whiteboard_note has auto height)
     if (isSelected && obj.type === 'whiteboard_view') {
         ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 3 / viewport.zoom;
-        ctx.setLineDash([5 / viewport.zoom, 5 / viewport.zoom]);
+        ctx.lineWidth = 3 / zoom;
+        ctx.setLineDash([5 / zoom, 5 / zoom]);
         ctx.strokeRect(data.position.x - 5, data.position.y - 5, width + 10, height + 10);
         ctx.setLineDash([]);
 
         // Draw resize handles for views only
-        const handleSize = 8 / viewport.zoom;
+        const handleSize = 8 / zoom;
         ctx.fillStyle = '#3b82f6';
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2 / viewport.zoom;
+        ctx.lineWidth = 2 / zoom;
 
         // Four corner handles
         const corners = [
@@ -144,8 +186,10 @@ export const renderNoteOrView = (
         ];
 
         corners.forEach(corner => {
-            ctx.fillRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
-            ctx.strokeRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
+            if (corner && typeof corner.x === 'number' && typeof corner.y === 'number') {
+                ctx.fillRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
+                ctx.strokeRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
+            }
         });
     }
 };
@@ -155,13 +199,19 @@ export const renderGrid = (
     canvas: HTMLCanvasElement,
     viewport: { x: number; y: number; zoom: number }
 ) => {
+    // Null checks
+    if (!canvas || !viewport) return;
+    if (typeof viewport.x !== 'number' || typeof viewport.y !== 'number') return;
+
+    const zoom = viewport.zoom || 1;
+
     ctx.strokeStyle = '#e0e0e0';
-    ctx.lineWidth = 1 / viewport.zoom;
+    ctx.lineWidth = 1 / zoom;
     const gridSize = 50;
-    const startX = Math.floor(-viewport.x / viewport.zoom / gridSize) * gridSize;
-    const startY = Math.floor(-viewport.y / viewport.zoom / gridSize) * gridSize;
-    const endX = Math.ceil((canvas.width - viewport.x) / viewport.zoom / gridSize) * gridSize;
-    const endY = Math.ceil((canvas.height - viewport.y) / viewport.zoom / gridSize) * gridSize;
+    const startX = Math.floor(-viewport.x / zoom / gridSize) * gridSize;
+    const startY = Math.floor(-viewport.y / zoom / gridSize) * gridSize;
+    const endX = Math.ceil((canvas.width - viewport.x) / zoom / gridSize) * gridSize;
+    const endY = Math.ceil((canvas.height - viewport.y) / zoom / gridSize) * gridSize;
 
     for (let x = startX; x <= endX; x += gridSize) {
         ctx.beginPath();

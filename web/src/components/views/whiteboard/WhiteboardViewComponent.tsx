@@ -46,7 +46,8 @@ const WhiteboardViewComponent = ({
         sendUpdate,
         isConnected,
         canvasObjects: remoteCanvasObjects,
-        viewObjects: remoteViewObjects
+        viewObjects: remoteViewObjects,
+        isInitialized
     } = useWhiteboardWebSocket({
         viewId: viewId || '',
         workspaceId: workspaceId || '',
@@ -952,6 +953,24 @@ const WhiteboardViewComponent = ({
             window.removeEventListener('keyup', handleKeyUp);
         };
     }, [selectedObjectId, isDrawing, isDraggingObject, isPanning]);
+
+    // Determine if we should show loading state
+    // For public mode with initial data, skip loading
+    // For non-public mode, wait for WebSocket initialization
+    const shouldShowLoading = !disableWebSocket && !isInitialized && !(isPublic && initialCanvasObjects && initialViewObjects);
+
+    if (shouldShowLoading) {
+        return (
+            <div className="relative w-full h-full bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-2 border-neutral-300 border-t-primary rounded-full animate-spin" />
+                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                        {t('whiteboard.loading') || 'Loading whiteboard...'}
+                    </span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>
