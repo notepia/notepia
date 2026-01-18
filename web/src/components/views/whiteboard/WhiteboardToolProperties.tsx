@@ -39,9 +39,6 @@ const WhiteboardToolProperties = ({
                 {/* Color picker */}
                 {showColorPicker && (
                     <div className="flex flex-col gap-1">
-                        <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
-                            {t('whiteboard.color') || 'Color'}
-                        </div>
                         <div className="flex flex-col gap-1">
                             {commonColors.map((color) => (
                                 <button
