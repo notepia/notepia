@@ -1,7 +1,7 @@
 import { Bold, Italic, Underline } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Tool } from './WhiteboardToolbar';
-import { WhiteboardTextData } from '../../../types/view';
+import { Tool } from './tools/types';
+import { WhiteboardTextData, WhiteboardEdgeData } from '../../../types/view';
 
 interface WhiteboardToolPropertiesProps {
     currentTool: Tool;
@@ -13,6 +13,9 @@ interface WhiteboardToolPropertiesProps {
     // Text properties
     selectedTextData?: WhiteboardTextData | null;
     onTextUpdate?: (updates: Partial<WhiteboardTextData>) => void;
+    // Edge properties
+    selectedEdgeData?: WhiteboardEdgeData | null;
+    onEdgeUpdate?: (updates: Partial<WhiteboardEdgeData>) => void;
 }
 
 const WhiteboardToolProperties = ({
@@ -23,7 +26,9 @@ const WhiteboardToolProperties = ({
     setCurrentStrokeWidth,
     isPublic = false,
     selectedTextData,
-    onTextUpdate
+    onTextUpdate,
+    selectedEdgeData,
+    onEdgeUpdate
 }: WhiteboardToolPropertiesProps) => {
     const { t } = useTranslation();
 
@@ -36,11 +41,31 @@ const WhiteboardToolProperties = ({
     ];
     const fontSizes = [12, 16, 20, 24, 32, 48, 64];
 
-    const showColorPicker = currentTool === 'pen' || currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line' || currentTool === 'text';
-    const showStrokeWidth = currentTool === 'pen' || currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line';
-    const showTextProperties = selectedTextData && onTextUpdate;
+    const curveTypes: { value: 'straight' | 'bezier' | 'elbow'; label: string }[] = [
+        { value: 'straight', label: t('whiteboard.straight') || 'Straight' },
+        { value: 'bezier', label: t('whiteboard.bezier') || 'Bezier' },
+        { value: 'elbow', label: t('whiteboard.elbow') || 'Elbow' },
+    ];
 
-    if (isPublic || (!showColorPicker && !showStrokeWidth && !showTextProperties)) {
+    const arrowTypes: { value: 'none' | 'end' | 'start' | 'both'; label: string }[] = [
+        { value: 'none', label: t('whiteboard.arrowNone') || 'None' },
+        { value: 'end', label: t('whiteboard.arrowEnd') || 'End' },
+        { value: 'start', label: t('whiteboard.arrowStart') || 'Start' },
+        { value: 'both', label: t('whiteboard.arrowBoth') || 'Both' },
+    ];
+
+    const lineStyles: { value: 'solid' | 'dashed' | 'dotted'; label: string }[] = [
+        { value: 'solid', label: t('whiteboard.solid') || 'Solid' },
+        { value: 'dashed', label: t('whiteboard.dashed') || 'Dashed' },
+        { value: 'dotted', label: t('whiteboard.dotted') || 'Dotted' },
+    ];
+
+    const showColorPicker = currentTool === 'pen' || currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line' || currentTool === 'text' || currentTool === 'edge';
+    const showStrokeWidth = currentTool === 'pen' || currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line' || currentTool === 'edge';
+    const showTextProperties = selectedTextData && onTextUpdate;
+    const showEdgeProperties = selectedEdgeData && onEdgeUpdate;
+
+    if (isPublic || (!showColorPicker && !showStrokeWidth && !showTextProperties && !showEdgeProperties)) {
         return null;
     }
 
@@ -152,8 +177,123 @@ const WhiteboardToolProperties = ({
                     </>
                 )}
 
+                {/* Edge properties - show when edge is selected */}
+                {showEdgeProperties && (
+                    <>
+                        <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">
+                            {t('whiteboard.edgeProperties') || 'Edge Properties'}
+                        </div>
+
+                        {/* Curve Type */}
+                        <div className="flex flex-col gap-1">
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                                {t('whiteboard.curveType') || 'Curve Type'}
+                            </div>
+                            <div className="flex gap-1">
+                                {curveTypes.map((type) => (
+                                    <button
+                                        key={type.value}
+                                        onClick={() => onEdgeUpdate({ curveType: type.value })}
+                                        className={`px-2 py-1 text-xs rounded transition-colors ${selectedEdgeData.curveType === type.value
+                                            ? 'bg-primary text-white'
+                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                            }`}
+                                    >
+                                        {type.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Arrow Type */}
+                        <div className="flex flex-col gap-1">
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                                {t('whiteboard.arrowType') || 'Arrow Type'}
+                            </div>
+                            <div className="flex gap-1">
+                                {arrowTypes.map((type) => (
+                                    <button
+                                        key={type.value}
+                                        onClick={() => onEdgeUpdate({ arrowType: type.value })}
+                                        className={`px-2 py-1 text-xs rounded transition-colors ${selectedEdgeData.arrowType === type.value
+                                            ? 'bg-primary text-white'
+                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                            }`}
+                                    >
+                                        {type.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Line Style */}
+                        <div className="flex flex-col gap-1">
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                                {t('whiteboard.lineStyle') || 'Line Style'}
+                            </div>
+                            <div className="flex gap-1">
+                                {lineStyles.map((style) => (
+                                    <button
+                                        key={style.value}
+                                        onClick={() => onEdgeUpdate({ lineStyle: style.value })}
+                                        className={`px-2 py-1 text-xs rounded transition-colors ${selectedEdgeData.lineStyle === style.value
+                                            ? 'bg-primary text-white'
+                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                            }`}
+                                    >
+                                        {style.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Edge Color */}
+                        <div className="flex flex-wrap gap-1">
+                            {commonColors.map((color) => (
+                                <button
+                                    key={color}
+                                    onClick={() => onEdgeUpdate({ color })}
+                                    className={`w-6 h-6 rounded border-2 transition-all ${selectedEdgeData.color === color
+                                        ? 'border-primary scale-110'
+                                        : 'border-neutral-300 dark:border-neutral-600 hover:scale-105'
+                                        }`}
+                                    style={{ backgroundColor: color }}
+                                    title={color}
+                                />
+                            ))}
+                            <input
+                                type="color"
+                                value={selectedEdgeData.color || '#000000'}
+                                onChange={(e) => onEdgeUpdate({ color: e.target.value })}
+                                className="w-6 h-6 rounded border-2 border-neutral-300 dark:border-neutral-600 cursor-pointer"
+                                title={t('whiteboard.customColor') || 'Custom Color'}
+                            />
+                        </div>
+
+                        {/* Edge Stroke Width */}
+                        <div className="flex flex-wrap gap-1">
+                            {strokeWidths.map((width) => (
+                                <button
+                                    key={width}
+                                    onClick={() => onEdgeUpdate({ strokeWidth: width })}
+                                    className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${selectedEdgeData.strokeWidth === width
+                                        ? 'bg-primary text-white'
+                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                        }`}
+                                    title={`${width}px`}
+                                >
+                                    <div
+                                        className="rounded-full bg-current"
+                                        style={{ width: `${width * 2}px`, height: `${width * 2}px` }}
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    </>
+                )}
+
                 {/* Color picker - for drawing tools */}
-                {showColorPicker && !showTextProperties && (
+                {showColorPicker && !showTextProperties && !showEdgeProperties && (
                     <div className="flex flex-col gap-1">
                         <div className="flex flex-col gap-1">
                             {commonColors.map((color) => (
@@ -180,7 +320,7 @@ const WhiteboardToolProperties = ({
                 )}
 
                 {/* Stroke width */}
-                {showStrokeWidth && (
+                {showStrokeWidth && !showEdgeProperties && (
                     <div className="flex flex-col gap-1">
                         <div className="flex flex-col gap-1">
                             {strokeWidths.map((width) => (

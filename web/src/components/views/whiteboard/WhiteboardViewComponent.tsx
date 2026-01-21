@@ -1,13 +1,31 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, WhiteboardNoteData, ViewObjectType } from '../../../types/view';
+import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, WhiteboardNoteData, WhiteboardEdgeData, ViewObjectType, ConnectionPointType } from '../../../types/view';
 import { useTranslation } from 'react-i18next';
-import WhiteboardToolbar, { Tool } from './WhiteboardToolbar';
+import WhiteboardToolbar from './WhiteboardToolbar';
 import WhiteboardToolProperties from './WhiteboardToolProperties';
 import AddElementDialog from './AddElementDialog';
 import { useWhiteboardWebSocket } from '../../../hooks/use-whiteboard-websocket';
 import NoteOverlay from './NoteOverlay';
-import { renderStroke, renderShape, renderText, renderNoteOrView, renderGrid } from './renderUtils';
+import { renderStroke, renderShape, renderText, renderNoteOrView, renderGrid, renderEdge } from './renderUtils';
 import { Lock, Unlock } from 'lucide-react';
+
+// Import modular tools and utilities
+import {
+    Tool,
+    CanvasObject,
+    WhiteboardObject,
+    Point,
+    generateId
+} from './tools/types';
+import { useViewport } from './hooks/useViewport';
+import { usePenTool } from './tools/usePenTool';
+import { useShapeTool } from './tools/useShapeTool';
+import { useEdgeTool } from './tools/useEdgeTool';
+import { useTextTool } from './tools/useTextTool';
+import { useEraserTool } from './tools/useEraserTool';
+import { useSelectTool } from './tools/useSelectTool';
+import { findObjectAtPosition, HitResult } from './objects/hitDetection';
+import { getObjectBounds, checkResizeHandle, checkConnectionPoint, getConnectionPointPosition, updateConnectedEdges, findNearestConnectionPoint } from './objects/bounds';
 
 interface WhiteboardViewComponentProps {
     view?: any;
@@ -17,19 +35,6 @@ interface WhiteboardViewComponentProps {
     initialCanvasObjects?: Record<string, any>;
     initialViewObjects?: Record<string, any>;
     disableWebSocket?: boolean;
-}
-
-interface CanvasObject {
-    id: string;
-    type: 'stroke' | 'shape';
-    data: WhiteboardStrokeData | WhiteboardShapeData;
-}
-
-interface WhiteboardObject {
-    id: string;
-    type: ViewObjectType;
-    name: string;
-    data: WhiteboardTextData | any;
 }
 
 const WhiteboardViewComponent = ({
@@ -42,7 +47,7 @@ const WhiteboardViewComponent = ({
 }: WhiteboardViewComponentProps) => {
     const { t } = useTranslation();
 
-    // WebSocket integration for real-time sync (disabled for public explore mode)
+    // WebSocket integration for real-time sync
     const {
         sendUpdate,
         isConnected,
@@ -57,47 +62,110 @@ const WhiteboardViewComponent = ({
         skipInitialFetch: isPublic && !!(initialCanvasObjects && initialViewObjects),
     });
 
-    // Canvas ref
+    // Canvas refs
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Canvas state (strokes and shapes)
+    // Canvas state
     const [canvasObjects, setCanvasObjects] = useState<Map<string, CanvasObject>>(new Map());
-
-    // View objects state (text, notes, views)
     const [viewObjects, setViewObjects] = useState<Map<string, WhiteboardObject>>(new Map());
 
-    // Drawing state
+    // Tool state
     const [currentTool, setCurrentTool] = useState<Tool>('select');
     const [currentColor, setCurrentColor] = useState('#000000');
     const [currentStrokeWidth, setCurrentStrokeWidth] = useState(2);
-    const [isDrawing, setIsDrawing] = useState(false);
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
-    const [isDraggingObject, setIsDraggingObject] = useState(false);
-    const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
-    const [isResizing, setIsResizing] = useState(false);
-    const [resizeHandle, setResizeHandle] = useState<'se' | 'sw' | 'ne' | 'nw' | null>(null);
-    const [resizeStartSize, setResizeStartSize] = useState<{ width: number; height: number } | null>(null);
 
-    // Current drawing data
-    const [currentPoints, setCurrentPoints] = useState<{ x: number; y: number }[]>([]);
-    const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
-
-    // Viewport state
-    const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
-    const [isPanning, setIsPanning] = useState(false);
-    const [lastPanPoint, setLastPanPoint] = useState<{ x: number; y: number } | null>(null);
-    const [isSpacePressed, setIsSpacePressed] = useState(false);
-
-    // Lock state - when locked, only pan and zoom are allowed
+    // Lock state
     const [isLocked, setIsLocked] = useState(false);
 
     // Dialog state
     const [isAddingNote, setIsAddingNote] = useState(false);
 
-
-    // Canvas size - start with 0 to let useEffect set correct container size
+    // Canvas size
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+
+    // Viewport hook
+    const {
+        viewport,
+        setViewport,
+        isPanning,
+        setIsPanning,
+        lastPanPoint,
+        setLastPanPoint,
+        isSpacePressed,
+        setIsSpacePressed,
+        handleZoomIn,
+        handleZoomOut,
+        handleResetZoom,
+        handlePanMove,
+        handleWheelZoom
+    } = useViewport();
+
+    // Get canvas context
+    const getCtx = useCallback(() => {
+        return canvasRef.current?.getContext('2d') || null;
+    }, []);
+
+    // Screen to canvas coordinate conversion
+    const screenToCanvas = useCallback((screenX: number, screenY: number): Point => {
+        if (!canvasRef.current) return { x: 0, y: 0 };
+        const rect = canvasRef.current.getBoundingClientRect();
+        return {
+            x: (screenX - rect.left - viewport.x) / viewport.zoom,
+            y: (screenY - rect.top - viewport.y) / viewport.zoom
+        };
+    }, [viewport]);
+
+    // Tool hooks
+    const penTool = usePenTool({
+        currentColor,
+        currentStrokeWidth,
+        setCanvasObjects,
+        sendUpdate
+    });
+
+    const shapeTool = useShapeTool({
+        currentColor,
+        currentStrokeWidth,
+        setCanvasObjects,
+        sendUpdate
+    });
+
+    const edgeTool = useEdgeTool({
+        currentColor,
+        currentStrokeWidth,
+        setViewObjects,
+        setSelectedObjectId,
+        sendUpdate
+    });
+
+    const textTool = useTextTool({
+        currentColor,
+        defaultText: t('whiteboard.defaultText') || 'Text',
+        setViewObjects,
+        setSelectedObjectId,
+        sendUpdate
+    });
+
+    const eraserTool = useEraserTool({
+        canvasObjects,
+        setCanvasObjects,
+        viewObjects,
+        setViewObjects,
+        sendUpdate
+    });
+
+    const selectTool = useSelectTool({
+        canvasObjects,
+        setCanvasObjects,
+        viewObjects,
+        setViewObjects,
+        selectedObjectId,
+        setSelectedObjectId,
+        sendUpdate,
+        ctx: getCtx()
+    });
 
     // Initialize with API data for public mode
     useEffect(() => {
@@ -112,7 +180,7 @@ const WhiteboardViewComponent = ({
         }
     }, [isPublic, initialViewObjects]);
 
-    // Sync remote updates to local state (for non-public or real-time updates)
+    // Sync remote updates to local state
     useEffect(() => {
         if (remoteCanvasObjects) {
             setCanvasObjects(new Map(remoteCanvasObjects));
@@ -121,7 +189,6 @@ const WhiteboardViewComponent = ({
 
     useEffect(() => {
         if (remoteViewObjects) {
-            // Convert ViewObject map to WhiteboardObject map
             const convertedMap = new Map<string, WhiteboardObject>();
             remoteViewObjects.forEach((obj, key) => {
                 convertedMap.set(key, {
@@ -135,8 +202,7 @@ const WhiteboardViewComponent = ({
         }
     }, [remoteViewObjects]);
 
-    // Resize canvas to fit container using ResizeObserver
-    // Re-run when isInitialized changes because container is not rendered during loading
+    // Resize canvas to fit container
     useLayoutEffect(() => {
         const container = containerRef.current;
         if (!container) return;
@@ -152,7 +218,6 @@ const WhiteboardViewComponent = ({
 
         resizeObserver.observe(container);
 
-        // Initial size check
         const { width, height } = container.getBoundingClientRect();
         if (width > 0 && height > 0) {
             setCanvasSize({ width, height });
@@ -161,26 +226,14 @@ const WhiteboardViewComponent = ({
         return () => resizeObserver.disconnect();
     }, [isInitialized]);
 
-    // Convert screen coordinates to canvas coordinates
-    const screenToCanvas = useCallback((screenX: number, screenY: number) => {
-        if (!canvasRef.current) return { x: 0, y: 0 };
-        const rect = canvasRef.current.getBoundingClientRect();
-        return {
-            x: (screenX - rect.left - viewport.x) / viewport.zoom,
-            y: (screenY - rect.top - viewport.y) / viewport.zoom
-        };
-    }, [viewport]);
-
     // Render canvas
     const render = useCallback(() => {
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
         if (!canvas || !ctx) return;
 
-        // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Apply viewport transform
         ctx.save();
         ctx.translate(viewport.x, viewport.y);
         ctx.scale(viewport.zoom, viewport.zoom);
@@ -188,10 +241,9 @@ const WhiteboardViewComponent = ({
         // Draw grid
         renderGrid(ctx, canvas, viewport);
 
-        // Render canvas objects (strokes, shapes)
+        // Render canvas objects
         canvasObjects.forEach((obj, objId) => {
             const isSelected = selectedObjectId === objId;
-
             if (obj.type === 'stroke') {
                 renderStroke(ctx, obj.data as WhiteboardStrokeData, isSelected, viewport);
             } else if (obj.type === 'shape') {
@@ -199,75 +251,36 @@ const WhiteboardViewComponent = ({
             }
         });
 
-        // Render view objects (text, note, view)
+        // Render view objects
         viewObjects.forEach((obj, objId) => {
             const isSelected = selectedObjectId === objId;
-
             if (obj.type === 'whiteboard_text') {
                 renderText(ctx, obj.data as WhiteboardTextData, isSelected, viewport);
             } else if (obj.type === 'whiteboard_note' || obj.type === 'whiteboard_view') {
                 renderNoteOrView(ctx, obj.data, obj, isSelected, viewport);
+            } else if (obj.type === 'whiteboard_edge') {
+                renderEdge(ctx, obj.data as WhiteboardEdgeData, isSelected, viewport);
             }
         });
 
-        // Render current drawing
-        if (isDrawing && currentTool === 'pen' && currentPoints.length > 0) {
-            ctx.strokeStyle = currentColor;
-            ctx.lineWidth = currentStrokeWidth;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            ctx.moveTo(currentPoints[0].x, currentPoints[0].y);
-            for (let i = 1; i < currentPoints.length; i++) {
-                ctx.lineTo(currentPoints[i].x, currentPoints[i].y);
-            }
-            ctx.stroke();
-        }
-
-        // Render current shape
-        if (isDrawing && startPoint && (currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line')) {
-            const currentPos = currentPoints[currentPoints.length - 1];
-            if (currentPos) {
-                ctx.strokeStyle = currentColor;
-                ctx.lineWidth = currentStrokeWidth;
-
-                if (currentTool === 'rectangle') {
-                    const width = currentPos.x - startPoint.x;
-                    const height = currentPos.y - startPoint.y;
-                    ctx.strokeRect(startPoint.x, startPoint.y, width, height);
-                } else if (currentTool === 'circle') {
-                    const radius = Math.sqrt(Math.pow(currentPos.x - startPoint.x, 2) + Math.pow(currentPos.y - startPoint.y, 2));
-                    ctx.beginPath();
-                    ctx.arc(startPoint.x, startPoint.y, radius, 0, 2 * Math.PI);
-                    ctx.stroke();
-                } else if (currentTool === 'line') {
-                    ctx.beginPath();
-                    ctx.moveTo(startPoint.x, startPoint.y);
-                    ctx.lineTo(currentPos.x, currentPos.y);
-                    ctx.stroke();
-                }
-            }
-        }
+        // Render tool previews
+        penTool.renderPreview(ctx);
+        shapeTool.renderPreview(ctx, currentTool);
+        edgeTool.renderPreview(ctx);
 
         ctx.restore();
-    }, [viewport, canvasObjects, viewObjects, isDrawing, currentTool, currentPoints, startPoint, currentColor, currentStrokeWidth, selectedObjectId]);
+    }, [viewport, canvasObjects, viewObjects, selectedObjectId, currentTool, penTool, shapeTool, edgeTool]);
 
     // Re-render when dependencies change
     useEffect(() => {
         render();
     }, [render]);
 
-    // Generate unique ID
-    const generateId = () => {
-        return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    };
-
-    // Get pointer position (works for both mouse and touch)
-    const getPointerPosition = (e: React.MouseEvent | React.TouchEvent) => {
+    // Get pointer position
+    const getPointerPosition = (e: React.MouseEvent | React.TouchEvent): Point | null => {
         let clientX: number, clientY: number;
 
         if ('touches' in e) {
-            // For touch events, use changedTouches when touches is empty (on touchend)
             const touch = e.touches.length > 0 ? e.touches[0] : e.changedTouches[0];
             if (!touch) return null;
             clientX = touch.clientX;
@@ -280,7 +293,7 @@ const WhiteboardViewComponent = ({
         return screenToCanvas(clientX, clientY);
     };
 
-    // Event handlers (unified for mouse and touch)
+    // Event handlers
     const handlePointerDown = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
         const pos = getPointerPosition(e);
         if (!pos) return;
@@ -295,140 +308,104 @@ const WhiteboardViewComponent = ({
             clientY = e.clientY;
         }
 
-        // Middle mouse button = pan (allowed in public mode)
+        // Middle mouse button = pan
         if (e.type === 'mousedown' && (e as React.MouseEvent).button === 1) {
             setIsPanning(true);
             setLastPanPoint({ x: clientX, y: clientY });
             return;
         }
 
-        // Space key pressed = pan mode (allowed in public mode)
+        // Space key pressed = pan mode
         if (isSpacePressed) {
             setIsPanning(true);
             setLastPanPoint({ x: clientX, y: clientY });
             return;
         }
 
-        // In public mode, only allow panning by clicking on empty space
-        if (isPublic) {
+        // In public mode or locked mode, only allow panning
+        if (isPublic || isLocked) {
             setIsPanning(true);
             setLastPanPoint({ x: clientX, y: clientY });
             return;
         }
 
-        // In locked mode, only allow panning (no tool operations)
-        if (isLocked) {
-            setIsPanning(true);
-            setLastPanPoint({ x: clientX, y: clientY });
-            return;
-        }
+        const ctx = getCtx();
 
         if (currentTool === 'select') {
-            const clickedObject = findObjectAtPosition(pos.x, pos.y);
+            // First, check if clicking on the currently selected object's resize handles
+            // This is important for shapes like circles where handles are outside the shape
+            if (selectedObjectId) {
+                const handle = checkResizeHandle(pos.x, pos.y, selectedObjectId, canvasObjects, viewObjects, ctx);
+                if (handle) {
+                    const bounds = getObjectBounds(selectedObjectId, canvasObjects, viewObjects, ctx);
+                    if (bounds) {
+                        selectTool.startResizing(selectedObjectId, handle, pos, bounds);
+                        return;
+                    }
+                }
+
+                // Check for connection point on selected object
+                const connectionPoint = checkConnectionPoint(pos.x, pos.y, selectedObjectId, canvasObjects, viewObjects, ctx);
+                if (connectionPoint) {
+                    const startPos = getConnectionPointPosition(selectedObjectId, connectionPoint, canvasObjects, viewObjects, ctx);
+                    if (startPos) {
+                        edgeTool.startDrawing(startPos, selectedObjectId, connectionPoint);
+                        return;
+                    }
+                }
+            }
+
+            // Then check for clicking on any object
+            const clickedObject = findObjectAtPosition(pos.x, pos.y, canvasObjects, viewObjects, ctx);
             if (clickedObject) {
-                // First check if clicking on a resize handle
-                const handle = checkResizeHandle(pos.x, pos.y, clickedObject.id);
-                if (handle && clickedObject.type === 'view') {
-                    // Start resizing
-                    setSelectedObjectId(clickedObject.id);
-                    setIsResizing(true);
-                    setResizeHandle(handle);
-                    const viewObj = viewObjects.get(clickedObject.id);
-                    if (viewObj && viewObj.data) {
-                        setResizeStartSize({
-                            width: viewObj.data.width || 250,
-                            height: viewObj.data.height || 200
-                        });
+                // Check for connection point
+                const connectionPoint = checkConnectionPoint(pos.x, pos.y, clickedObject.id, canvasObjects, viewObjects, ctx);
+                if (connectionPoint) {
+                    const startPos = getConnectionPointPosition(clickedObject.id, connectionPoint, canvasObjects, viewObjects, ctx);
+                    if (startPos) {
+                        setSelectedObjectId(clickedObject.id);
+                        edgeTool.startDrawing(startPos, clickedObject.id, connectionPoint);
+                        return;
                     }
-                    setDragOffset({
-                        x: pos.x,
-                        y: pos.y
-                    });
+                }
+
+                // Check for resize handle
+                const handle = checkResizeHandle(pos.x, pos.y, clickedObject.id, canvasObjects, viewObjects, ctx);
+                if (handle) {
+                    const bounds = getObjectBounds(clickedObject.id, canvasObjects, viewObjects, ctx);
+                    if (bounds) {
+                        selectTool.startResizing(clickedObject.id, handle, pos, bounds);
+                    }
                 } else {
-                    // Start dragging
-                    setSelectedObjectId(clickedObject.id);
-                    setIsDraggingObject(true);
-
-                    // Calculate drag offset based on object type
-                    let objPos = { x: 0, y: 0 };
-
-                    if (clickedObject.type === 'canvas') {
-                        const canvasObj = canvasObjects.get(clickedObject.id);
-                        if (canvasObj) {
-                            if (canvasObj.type === 'stroke') {
-                                const data = canvasObj.data as WhiteboardStrokeData;
-                                const minX = Math.min(...data.points.map(p => p.x));
-                                const minY = Math.min(...data.points.map(p => p.y));
-                                objPos = { x: minX, y: minY };
-                            } else if (canvasObj.type === 'shape') {
-                                const data = canvasObj.data as WhiteboardShapeData;
-                                objPos = data.position;
-                            }
-                        }
-                    } else {
-                        const viewObj = viewObjects.get(clickedObject.id);
-                        if (viewObj && viewObj.data) {
-                            objPos = viewObj.data.position || { x: 0, y: 0 };
-                        }
-                    }
-
-                    setDragOffset({
-                        x: pos.x - objPos.x,
-                        y: pos.y - objPos.y
-                    });
+                    selectTool.startDragging(clickedObject.id, pos);
                 }
             } else {
-                // Clicked on empty space with select tool = pan canvas
+                // Clicked on empty space = pan
                 setIsPanning(true);
                 setLastPanPoint({ x: clientX, y: clientY });
                 setSelectedObjectId(null);
-                setIsDraggingObject(false);
-                setDragOffset(null);
             }
         } else if (currentTool === 'pen') {
-            setIsDrawing(true);
-            setCurrentPoints([pos]);
+            penTool.startDrawing(pos);
         } else if (currentTool === 'eraser') {
-            setIsDrawing(true);
-            // Check if clicking on an object to erase
-            const objectToErase = findObjectAtPosition(pos.x, pos.y);
+            eraserTool.startErasing();
+            const objectToErase = findObjectAtPosition(pos.x, pos.y, canvasObjects, viewObjects, ctx);
             if (objectToErase) {
-                handleEraseObject(objectToErase.id);
+                eraserTool.eraseObject(objectToErase.id);
             }
         } else if (currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line') {
-            setIsDrawing(true);
-            setStartPoint(pos);
-            setCurrentPoints([pos]);
+            shapeTool.startDrawing(pos);
         } else if (currentTool === 'text') {
-            // Create a new text object immediately with default text
-            const textData: WhiteboardTextData = {
-                position: pos,
-                text: t('whiteboard.defaultText') || 'Text',
-                color: currentColor,
-                fontSize: 24,
-                fontFamily: 'sans-serif',
-                fontWeight: 'normal',
-                fontStyle: 'normal',
-                textDecoration: 'none'
-            };
-            const id = generateId();
-            const newObject: WhiteboardObject = {
-                id,
-                type: 'whiteboard_text',
-                name: `Text`,
-                data: textData
-            };
-
-            setViewObjects(prev => new Map(prev).set(id, newObject));
-            sendUpdate({ type: 'add_view_object', object: newObject });
-            setSelectedObjectId(id);
+            textTool.createText(pos);
         } else if (currentTool === 'note') {
             setIsAddingNote(true);
+        } else if (currentTool === 'edge') {
+            edgeTool.startDrawing(pos);
         }
     };
 
     const handlePointerMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-        // Allow panning in public mode
+        // Handle panning
         if (isPanning && lastPanPoint) {
             let clientX: number, clientY: number;
             if ('touches' in e) {
@@ -439,276 +416,175 @@ const WhiteboardViewComponent = ({
                 clientX = e.clientX;
                 clientY = e.clientY;
             }
-
-            const dx = clientX - lastPanPoint.x;
-            const dy = clientY - lastPanPoint.y;
-            setViewport(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
-            setLastPanPoint({ x: clientX, y: clientY });
+            handlePanMove(clientX, clientY);
             return;
         }
 
-        if (isPublic) return;
-
-        // In locked mode, only allow panning (already handled above)
-        if (isLocked) return;
+        if (isPublic || isLocked) return;
 
         const pos = getPointerPosition(e);
         if (!pos) return;
 
-        if (isDraggingObject && selectedObjectId && dragOffset) {
-            // Handle object dragging
-            const newPos = {
-                x: pos.x - dragOffset.x,
-                y: pos.y - dragOffset.y
-            };
+        const ctx = getCtx();
 
-            // Update object position
-            const canvasObj = canvasObjects.get(selectedObjectId);
-            const viewObj = viewObjects.get(selectedObjectId);
-
-            if (canvasObj) {
-                const updatedObj = { ...canvasObj };
-
-                if (updatedObj.type === 'stroke') {
-                    const data = updatedObj.data as WhiteboardStrokeData;
-                    const minX = Math.min(...data.points.map(p => p.x));
-                    const minY = Math.min(...data.points.map(p => p.y));
-                    const dx = newPos.x - minX;
-                    const dy = newPos.y - minY;
-
-                    updatedObj.data = {
-                        ...data,
-                        points: data.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
-                    };
-                } else if (updatedObj.type === 'shape') {
-                    const data = updatedObj.data as WhiteboardShapeData;
-                    updatedObj.data = {
-                        ...data,
-                        position: newPos
-                    };
+        if (selectTool.isDragging) {
+            selectTool.updateDrag(pos);
+            // Update connected edges in real-time while dragging
+            if (selectedObjectId) {
+                const updatedEdges = updateConnectedEdges(selectedObjectId, canvasObjects, viewObjects, ctx);
+                if (updatedEdges.length > 0) {
+                    setViewObjects(prev => {
+                        const newMap = new Map(prev);
+                        updatedEdges.forEach(edge => {
+                            newMap.set(edge.id, edge);
+                        });
+                        return newMap;
+                    });
                 }
-
-                setCanvasObjects(prev => new Map(prev).set(selectedObjectId, updatedObj));
-            } else if (viewObj) {
-                const updatedObj = { ...viewObj };
-                updatedObj.data = {
-                    ...updatedObj.data,
-                    position: newPos
-                };
-                setViewObjects(prev => new Map(prev).set(selectedObjectId, updatedObj));
-            }
-
-            render();
-        } else if (isResizing && selectedObjectId && dragOffset && resizeHandle && resizeStartSize) {
-            // Handle object resizing
-            const viewObj = viewObjects.get(selectedObjectId);
-            if (viewObj) {
-                const dx = pos.x - dragOffset.x;
-                const dy = pos.y - dragOffset.y;
-
-                let newWidth = resizeStartSize.width;
-                let newHeight = resizeStartSize.height;
-                let newPosition = { ...viewObj.data.position };
-
-                // Calculate new size based on which handle is being dragged
-                switch (resizeHandle) {
-                    case 'se': // Southeast - increase width and height
-                        newWidth = Math.max(100, resizeStartSize.width + dx);
-                        newHeight = Math.max(100, resizeStartSize.height + dy);
-                        break;
-                    case 'sw': // Southwest - decrease width, increase height, adjust x
-                        newWidth = Math.max(100, resizeStartSize.width - dx);
-                        newHeight = Math.max(100, resizeStartSize.height + dy);
-                        if (newWidth > 100) {
-                            newPosition.x = viewObj.data.position.x + dx;
-                        }
-                        break;
-                    case 'ne': // Northeast - increase width, decrease height, adjust y
-                        newWidth = Math.max(100, resizeStartSize.width + dx);
-                        newHeight = Math.max(100, resizeStartSize.height - dy);
-                        if (newHeight > 100) {
-                            newPosition.y = viewObj.data.position.y + dy;
-                        }
-                        break;
-                    case 'nw': // Northwest - decrease both, adjust x and y
-                        newWidth = Math.max(100, resizeStartSize.width - dx);
-                        newHeight = Math.max(100, resizeStartSize.height - dy);
-                        if (newWidth > 100) {
-                            newPosition.x = viewObj.data.position.x + dx;
-                        }
-                        if (newHeight > 100) {
-                            newPosition.y = viewObj.data.position.y + dy;
-                        }
-                        break;
-                }
-
-                const updatedObj = { ...viewObj };
-                updatedObj.data = {
-                    ...updatedObj.data,
-                    width: newWidth,
-                    height: newHeight,
-                    position: newPosition
-                };
-                setViewObjects(prev => new Map(prev).set(selectedObjectId, updatedObj));
-            }
-
-            render();
-        } else if (isDrawing) {
-            if (currentTool === 'eraser') {
-                // Continuous erasing while moving
-                const objectToErase = findObjectAtPosition(pos.x, pos.y);
-                if (objectToErase) {
-                    handleEraseObject(objectToErase.id);
-                }
-            } else {
-                setCurrentPoints(prev => [...prev, pos]);
             }
             render();
+        } else if (selectTool.isResizing) {
+            selectTool.updateResize(pos);
+            // Update connected edges in real-time while resizing
+            if (selectedObjectId) {
+                const updatedEdges = updateConnectedEdges(selectedObjectId, canvasObjects, viewObjects, ctx);
+                if (updatedEdges.length > 0) {
+                    setViewObjects(prev => {
+                        const newMap = new Map(prev);
+                        updatedEdges.forEach(edge => {
+                            newMap.set(edge.id, edge);
+                        });
+                        return newMap;
+                    });
+                }
+            }
+            render();
+        } else if (edgeTool.isDrawing) {
+            // Find nearby connection point to snap to
+            const nearestCP = findNearestConnectionPoint(
+                pos.x,
+                pos.y,
+                canvasObjects,
+                viewObjects,
+                edgeTool.edgeStartObjectId, // Exclude the start object
+                ctx
+            );
+            edgeTool.continueDrawing(pos, nearestCP);
+            render();
+        } else if (penTool.isDrawing) {
+            penTool.continueDrawing(pos);
+            render();
+        } else if (shapeTool.isDrawing) {
+            shapeTool.continueDrawing(pos);
+            render();
+        } else if (eraserTool.isErasing) {
+            const objectToErase = findObjectAtPosition(pos.x, pos.y, canvasObjects, viewObjects, ctx);
+            if (objectToErase) {
+                eraserTool.eraseObject(objectToErase.id);
+            }
         }
     };
 
     const handlePointerUp = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-        // Allow ending panning in public mode
         if (isPanning) {
             setIsPanning(false);
             setLastPanPoint(null);
             return;
         }
 
-        if (isPublic) return;
+        if (isPublic || isLocked) return;
 
-        // In locked mode, only allow panning (already handled above)
-        if (isLocked) return;
+        const pos = getPointerPosition(e);
+        const ctx = getCtx();
 
-        if (isDraggingObject && selectedObjectId) {
-            // Finish dragging - send update to server
-            const canvasObj = canvasObjects.get(selectedObjectId);
-            const viewObj = viewObjects.get(selectedObjectId);
-
-            if (canvasObj) {
-                sendUpdate({
-                    type: 'update_canvas_object',
-                    object: canvasObj
-                });
-            } else if (viewObj) {
-                sendUpdate({
-                    type: 'update_view_object',
-                    object: viewObj
-                });
+        if (selectTool.isDragging || selectTool.isResizing) {
+            // Update connected edges before finishing
+            if (selectedObjectId) {
+                const updatedEdges = updateConnectedEdges(selectedObjectId, canvasObjects, viewObjects, ctx);
+                if (updatedEdges.length > 0) {
+                    setViewObjects(prev => {
+                        const newMap = new Map(prev);
+                        updatedEdges.forEach(edge => {
+                            newMap.set(edge.id, edge);
+                        });
+                        return newMap;
+                    });
+                    // Send updates for all modified edges
+                    updatedEdges.forEach(edge => {
+                        sendUpdate({ type: 'update_view_object', object: edge });
+                    });
+                }
             }
+            selectTool.finishDragOrResize();
+        } else if (edgeTool.isDrawing) {
+            if (pos) {
+                // Use hover target if available, otherwise check for nearby connection point
+                let endObjectId: string | null = null;
+                let endConnectionPoint: ConnectionPointType | null = null;
+                let endPos = pos;
 
-            setIsDraggingObject(false);
-            setDragOffset(null);
-        } else if (isResizing && selectedObjectId) {
-            // Finish resizing - send update to server
-            const viewObj = viewObjects.get(selectedObjectId);
+                if (edgeTool.hoverTarget) {
+                    // Use the snapped hover target
+                    endObjectId = edgeTool.hoverTarget.objectId;
+                    endConnectionPoint = edgeTool.hoverTarget.connectionPoint;
+                    endPos = edgeTool.hoverTarget.position;
+                } else {
+                    // Fallback: check if ending on another object's connection point
+                    const nearestCP = findNearestConnectionPoint(
+                        pos.x,
+                        pos.y,
+                        canvasObjects,
+                        viewObjects,
+                        edgeTool.edgeStartObjectId,
+                        ctx
+                    );
+                    if (nearestCP) {
+                        endObjectId = nearestCP.objectId;
+                        endConnectionPoint = nearestCP.connectionPoint;
+                        endPos = nearestCP.position;
+                    }
+                }
 
-            if (viewObj) {
-                sendUpdate({
-                    type: 'update_view_object',
-                    object: viewObj
-                });
+                edgeTool.finishDrawing(endPos, endObjectId, endConnectionPoint);
+            } else {
+                edgeTool.cancelDrawing();
             }
-
-            setIsResizing(false);
-            setResizeHandle(null);
-            setResizeStartSize(null);
-            setDragOffset(null);
-        } else if (isDrawing) {
-            const pos = getPointerPosition(e);
-            if (!pos) {
-                setIsDrawing(false);
-                setCurrentPoints([]);
-                setStartPoint(null);
-                return;
-            }
-
-            if (currentTool === 'pen' && currentPoints.length > 1) {
-                const strokeData: WhiteboardStrokeData = {
-                    points: currentPoints,
-                    color: currentColor,
-                    width: currentStrokeWidth
-                };
-                const id = generateId();
-                const newObject: CanvasObject = {
-                    id,
-                    type: 'stroke',
-                    data: strokeData
-                };
-
-                setCanvasObjects(prev => new Map(prev).set(id, newObject));
-                sendUpdate({ type: 'add_canvas_object', object: newObject });
-            } else if (startPoint && (currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line')) {
-                const shapeData: WhiteboardShapeData = {
-                    type: currentTool as 'rectangle' | 'circle' | 'line',
-                    position: startPoint,
-                    dimensions: {
-                        width: pos.x - startPoint.x,
-                        height: pos.y - startPoint.y
-                    },
-                    color: currentColor,
-                    strokeWidth: currentStrokeWidth,
-                    filled: false
-                };
-                const id = generateId();
-                const newObject: CanvasObject = {
-                    id,
-                    type: 'shape',
-                    data: shapeData
-                };
-
-                setCanvasObjects(prev => new Map(prev).set(id, newObject));
-                sendUpdate({ type: 'add_canvas_object', object: newObject });
-            }
-
-            setIsDrawing(false);
-            setCurrentPoints([]);
-            setStartPoint(null);
+        } else if (penTool.isDrawing) {
+            penTool.finishDrawing();
+        } else if (shapeTool.isDrawing) {
+            shapeTool.finishDrawing(currentTool);
+        } else if (eraserTool.isErasing) {
+            eraserTool.finishErasing();
         }
     };
 
-    // Handle wheel for zoom - zoom centered on mouse position
+    // Handle wheel for zoom
     const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
         e.preventDefault();
         if (!canvasRef.current) return;
 
         const rect = canvasRef.current.getBoundingClientRect();
-        // Mouse position relative to canvas
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
-        const delta = e.deltaY * -0.001;
-        const newZoom = Math.max(0.1, Math.min(5, viewport.zoom + delta));
-        const scale = newZoom / viewport.zoom;
-
-        // Adjust viewport so the point under the mouse stays fixed
-        setViewport(prev => ({
-            ...prev,
-            zoom: newZoom,
-            x: mouseX - (mouseX - prev.x) * scale,
-            y: mouseY - (mouseY - prev.y) * scale
-        }));
+        handleWheelZoom(e.deltaY, mouseX, mouseY);
     };
 
-    // Handle pinch to zoom and two-finger pan on touch devices
+    // Touch handlers for pinch zoom
     const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
         if (e.touches.length === 2) {
-            // Two finger gesture - start tracking
             e.preventDefault();
             const touch1 = e.touches[0];
             const touch2 = e.touches[1];
 
-            // Calculate initial distance for pinch zoom
             const distance = Math.sqrt(
                 Math.pow(touch2.clientX - touch1.clientX, 2) +
                 Math.pow(touch2.clientY - touch1.clientY, 2)
             );
 
-            // Calculate midpoint for pan tracking
             const midX = (touch1.clientX + touch2.clientX) / 2;
             const midY = (touch1.clientY + touch2.clientY) / 2;
 
-            // Store first touch point as zoom center (relative to canvas)
             const rect = canvasRef.current?.getBoundingClientRect();
             if (rect) {
                 (e.currentTarget as any).pinchZoomCenter = {
@@ -720,7 +596,6 @@ const WhiteboardViewComponent = ({
             setLastPanPoint({ x: distance, y: midY });
             (e.currentTarget as any).twoFingerMidpoint = { x: midX, y: midY };
         } else {
-            // Single finger touch - prevent default to avoid scrolling when drawing
             if (currentTool === 'pen' || currentTool === 'eraser' ||
                 currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line') {
                 e.preventDefault();
@@ -731,36 +606,28 @@ const WhiteboardViewComponent = ({
 
     const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
         if (e.touches.length === 2) {
-            // Two finger gesture - pinch zoom and pan
             e.preventDefault();
             const touch1 = e.touches[0];
             const touch2 = e.touches[1];
 
-            // Calculate current distance for pinch zoom
             const distance = Math.sqrt(
                 Math.pow(touch2.clientX - touch1.clientX, 2) +
                 Math.pow(touch2.clientY - touch1.clientY, 2)
             );
 
-            // Calculate current midpoint for pan
             const midX = (touch1.clientX + touch2.clientX) / 2;
             const midY = (touch1.clientY + touch2.clientY) / 2;
 
             if (lastPanPoint) {
-                // Handle pinch zoom centered on first touch point
                 const scale = distance / lastPanPoint.x;
                 const newZoom = Math.max(0.1, Math.min(5, viewport.zoom * scale));
 
-                // Get the zoom center (first touch point stored at pinch start)
                 const zoomCenter = (e.currentTarget as any).pinchZoomCenter;
-
-                // Handle two-finger pan
                 const prevMidpoint = (e.currentTarget as any).twoFingerMidpoint || { x: midX, y: midY };
                 const dx = midX - prevMidpoint.x;
                 const dy = midY - prevMidpoint.y;
 
                 setViewport(prev => {
-                    // Apply zoom centered on first touch point
                     let newX = prev.x;
                     let newY = prev.y;
                     if (zoomCenter) {
@@ -768,7 +635,6 @@ const WhiteboardViewComponent = ({
                         newX = zoomCenter.x - (zoomCenter.x - prev.x) * zoomScale;
                         newY = zoomCenter.y - (zoomCenter.y - prev.y) * zoomScale;
                     }
-                    // Then apply pan
                     return {
                         ...prev,
                         zoom: newZoom,
@@ -781,8 +647,7 @@ const WhiteboardViewComponent = ({
                 (e.currentTarget as any).twoFingerMidpoint = { x: midX, y: midY };
             }
         } else {
-            // Single finger touch - prevent default when drawing or dragging
-            if (isDrawing || isDraggingObject || isPanning) {
+            if (penTool.isDrawing || selectTool.isDragging || isPanning) {
                 e.preventDefault();
             }
             handlePointerMove(e);
@@ -796,137 +661,14 @@ const WhiteboardViewComponent = ({
             delete (e.currentTarget as any).pinchZoomCenter;
         }
         if (e.touches.length === 0) {
-            // Prevent default when finishing drawing or dragging
-            if (isDrawing || isDraggingObject || isPanning) {
+            if (penTool.isDrawing || selectTool.isDragging || isPanning) {
                 e.preventDefault();
             }
             handlePointerUp(e);
         }
     };
 
-    // Check if clicking on a resize handle
-    const checkResizeHandle = (x: number, y: number, objId: string): 'se' | 'sw' | 'ne' | 'nw' | null => {
-        const viewObj = viewObjects.get(objId);
-        if (!viewObj || (viewObj.type !== 'whiteboard_note' && viewObj.type !== 'whiteboard_view')) {
-            return null;
-        }
-
-        const data = viewObj.data;
-        const width = data.width || 250;
-        const height = data.height || 200;
-        const handleSize = 10; // Size of resize handle in canvas units
-
-        // Check each corner
-        const corners = [
-            { handle: 'se' as const, x: data.position.x + width, y: data.position.y + height }, // Southeast
-            { handle: 'sw' as const, x: data.position.x, y: data.position.y + height }, // Southwest
-            { handle: 'ne' as const, x: data.position.x + width, y: data.position.y }, // Northeast
-            { handle: 'nw' as const, x: data.position.x, y: data.position.y }, // Northwest
-        ];
-
-        for (const corner of corners) {
-            if (
-                x >= corner.x - handleSize &&
-                x <= corner.x + handleSize &&
-                y >= corner.y - handleSize &&
-                y <= corner.y + handleSize
-            ) {
-                return corner.handle;
-            }
-        }
-
-        return null;
-    };
-
-    const findObjectAtPosition = (x: number, y: number): { id: string; type: 'canvas' | 'view' } | null => {
-        // Check view objects first (on top)
-        for (const [id, obj] of Array.from(viewObjects.entries()).reverse()) {
-            try {
-                const data = obj.data;
-
-                if (obj.type === 'whiteboard_text') {
-                    const textData = data as WhiteboardTextData;
-                    const canvas = canvasRef.current;
-                    const ctx = canvas?.getContext('2d');
-                    if (ctx) {
-                        const fontStyle = textData.fontStyle || 'normal';
-                        const fontWeight = textData.fontWeight || 'normal';
-                        const fontFamily = textData.fontFamily || 'sans-serif';
-                        const fontSize = textData.fontSize || 16;
-                        // Use placeholder text for hit detection when text is empty
-                        const displayText = textData.text?.trim() || 'Text';
-                        ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
-                        const metrics = ctx.measureText(displayText);
-                        if (x >= textData.position.x - 5 && x <= textData.position.x + metrics.width + 5 &&
-                            y >= textData.position.y - fontSize - 5 && y <= textData.position.y + 5) {
-                            return { id, type: 'view' };
-                        }
-                    }
-                } else if (obj.type === 'whiteboard_note' || obj.type === 'whiteboard_view') {
-                    const posData = data as any;
-                    const width = posData.width || 200;
-                    const height = posData.height || 150;
-                    if (x >= posData.position.x && x <= posData.position.x + width &&
-                        y >= posData.position.y && y <= posData.position.y + height) {
-                        return { id, type: 'view' };
-                    }
-                }
-            } catch (e) {
-                console.error('Error checking view object:', e);
-            }
-        }
-
-        // Check canvas objects
-        for (const [id, obj] of Array.from(canvasObjects.entries()).reverse()) {
-            try {
-                const data = obj.data;
-
-                if (obj.type === 'stroke') {
-                    const strokeData = data as WhiteboardStrokeData;
-                    const minX = Math.min(...strokeData.points.map(p => p.x));
-                    const maxX = Math.max(...strokeData.points.map(p => p.x));
-                    const minY = Math.min(...strokeData.points.map(p => p.y));
-                    const maxY = Math.max(...strokeData.points.map(p => p.y));
-                    if (x >= minX - 5 && x <= maxX + 5 && y >= minY - 5 && y <= maxY + 5) {
-                        return { id, type: 'canvas' };
-                    }
-                } else if (obj.type === 'shape') {
-                    const shapeData = data as WhiteboardShapeData;
-                    if (shapeData.type === 'rectangle') {
-                        if (x >= shapeData.position.x && x <= shapeData.position.x + shapeData.dimensions.width &&
-                            y >= shapeData.position.y && y <= shapeData.position.y + shapeData.dimensions.height) {
-                            return { id, type: 'canvas' };
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error('Error checking canvas object:', e);
-            }
-        }
-        return null;
-    };
-
-    const handleEraseObject = (objId: string) => {
-        const canvasObj = canvasObjects.get(objId);
-        const viewObj = viewObjects.get(objId);
-
-        if (canvasObj) {
-            setCanvasObjects(prev => {
-                const newMap = new Map(prev);
-                newMap.delete(objId);
-                return newMap;
-            });
-            sendUpdate({ type: 'delete_canvas_object', id: objId });
-        } else if (viewObj) {
-            setViewObjects(prev => {
-                const newMap = new Map(prev);
-                newMap.delete(objId);
-                return newMap;
-            });
-            sendUpdate({ type: 'delete_view_object', id: objId });
-        }
-    };
-
+    // Clear all
     const handleClear = () => {
         if (window.confirm(t('whiteboard.clearConfirm') || 'Clear all? This cannot be undone.')) {
             setCanvasObjects(new Map());
@@ -935,18 +677,33 @@ const WhiteboardViewComponent = ({
         }
     };
 
+    // Delete selected
     const handleDelete = () => {
         if (!selectedObjectId) return;
-        handleEraseObject(selectedObjectId);
+        eraserTool.eraseObject(selectedObjectId);
         setSelectedObjectId(null);
     };
 
     // Handle text property updates
     const handleTextPropertyUpdate = useCallback((updates: Partial<WhiteboardTextData>) => {
         if (!selectedObjectId) return;
+        textTool.updateText(selectedObjectId, updates, viewObjects);
+    }, [selectedObjectId, viewObjects, textTool]);
+
+    // Get selected text data
+    const getSelectedTextData = useCallback((): WhiteboardTextData | null => {
+        if (!selectedObjectId) return null;
+        const viewObj = viewObjects.get(selectedObjectId);
+        if (!viewObj || viewObj.type !== 'whiteboard_text') return null;
+        return viewObj.data as WhiteboardTextData;
+    }, [selectedObjectId, viewObjects]);
+
+    // Handle edge property updates
+    const handleEdgePropertyUpdate = useCallback((updates: Partial<WhiteboardEdgeData>) => {
+        if (!selectedObjectId) return;
 
         const viewObj = viewObjects.get(selectedObjectId);
-        if (!viewObj || viewObj.type !== 'whiteboard_text') return;
+        if (!viewObj || viewObj.type !== 'whiteboard_edge') return;
 
         const updatedObj = {
             ...viewObj,
@@ -960,31 +717,18 @@ const WhiteboardViewComponent = ({
         sendUpdate({ type: 'update_view_object', object: updatedObj });
     }, [selectedObjectId, viewObjects, sendUpdate]);
 
-    // Get selected text data for properties panel
-    const getSelectedTextData = useCallback((): WhiteboardTextData | null => {
+    // Get selected edge data
+    const getSelectedEdgeData = useCallback((): WhiteboardEdgeData | null => {
         if (!selectedObjectId) return null;
         const viewObj = viewObjects.get(selectedObjectId);
-        if (!viewObj || viewObj.type !== 'whiteboard_text') return null;
-        return viewObj.data as WhiteboardTextData;
+        if (!viewObj || viewObj.type !== 'whiteboard_edge') return null;
+        return viewObj.data as WhiteboardEdgeData;
     }, [selectedObjectId, viewObjects]);
 
-    // Zoom controls
-    const handleZoomIn = () => {
-        setViewport(prev => ({ ...prev, zoom: Math.min(5, prev.zoom * 1.2) }));
-    };
-
-    const handleZoomOut = () => {
-        setViewport(prev => ({ ...prev, zoom: Math.max(0.1, prev.zoom / 1.2) }));
-    };
-
-    const handleResetZoom = () => {
-        setViewport({ x: 0, y: 0, zoom: 1 });
-    };
-
-    // Get cursor style based on position
+    // Get cursor style
     const getCursor = useCallback(() => {
-        if (isResizing) {
-            switch (resizeHandle) {
+        if (selectTool.isResizing) {
+            switch (selectTool.resizeHandle) {
                 case 'se': return 'nwse-resize';
                 case 'sw': return 'nesw-resize';
                 case 'ne': return 'nesw-resize';
@@ -992,16 +736,13 @@ const WhiteboardViewComponent = ({
                 default: return 'default';
             }
         }
-        if (isDraggingObject) return 'move';
+        if (selectTool.isDragging) return 'move';
         if (isPanning || isSpacePressed) return 'grab';
         return 'crosshair';
-    }, [isResizing, resizeHandle, isDraggingObject, isPanning, isSpacePressed]);
+    }, [selectTool.isResizing, selectTool.resizeHandle, selectTool.isDragging, isPanning, isSpacePressed]);
 
     // Handle element added from dialog
     const handleElementAdded = useCallback((element: any) => {
-        console.log('[Whiteboard] Element added via dialog:', element);
-
-        // Parse data if it's a JSON string
         let parsedData = element.data;
         if (typeof parsedData === 'string') {
             try {
@@ -1011,7 +752,6 @@ const WhiteboardViewComponent = ({
             }
         }
 
-        // Add to local state
         const newViewObject: WhiteboardObject = {
             id: element.id,
             type: element.type as ViewObjectType,
@@ -1019,8 +759,6 @@ const WhiteboardViewComponent = ({
             data: parsedData
         };
         setViewObjects(prev => new Map(prev).set(element.id, newViewObject));
-
-        // Broadcast to other clients via WebSocket
         sendUpdate({ type: 'add_view_object', object: newViewObject });
     }, [sendUpdate]);
 
@@ -1031,11 +769,8 @@ const WhiteboardViewComponent = ({
                 handleDelete();
             } else if (e.key === 'Escape') {
                 setSelectedObjectId(null);
-                setIsResizing(false);
-                setResizeHandle(null);
-                setResizeStartSize(null);
-            } else if (e.key === ' ' && !isDrawing && !isDraggingObject && !isResizing) {
-                e.preventDefault(); // Prevent page scroll
+            } else if (e.key === ' ' && !penTool.isDrawing && !selectTool.isDragging && !selectTool.isResizing) {
+                e.preventDefault();
                 setIsSpacePressed(true);
             }
         };
@@ -1043,7 +778,7 @@ const WhiteboardViewComponent = ({
         const handleKeyUp = (e: KeyboardEvent) => {
             if (e.key === ' ') {
                 setIsSpacePressed(false);
-                if (isPanning && !isDraggingObject) {
+                if (isPanning && !selectTool.isDragging) {
                     setIsPanning(false);
                     setLastPanPoint(null);
                 }
@@ -1056,11 +791,9 @@ const WhiteboardViewComponent = ({
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [selectedObjectId, isDrawing, isDraggingObject, isPanning]);
+    }, [selectedObjectId, penTool.isDrawing, selectTool.isDragging, selectTool.isResizing, isPanning]);
 
-    // Determine if we should show loading state
-    // For public mode with initial data, skip loading
-    // For non-public mode, wait for WebSocket initialization
+    // Determine loading state
     const shouldShowLoading = !disableWebSocket && !isInitialized && !(isPublic && initialCanvasObjects && initialViewObjects);
 
     if (shouldShowLoading) {
@@ -1112,46 +845,45 @@ const WhiteboardViewComponent = ({
                     return null;
                 })}
 
-                {/* Zoom controls and lock button - always visible */}
+                {/* Zoom controls and lock button */}
                 <div className="absolute bottom-24 sm:bottom-4 right-4 z-10 bg-white dark:bg-neutral-800 rounded-lg shadow-md p-2 flex flex-col gap-2">
-                        {/* Lock/Unlock button - only show in non-public mode */}
-                        {!isPublic && (
-                            <>
-                                <button
-                                    onClick={() => setIsLocked(!isLocked)}
-                                    className={`p-2 rounded transition-colors flex justify-center ${
-                                        isLocked
-                                            ? 'bg-primary text-white'
-                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                                    }`}
-                                    title={isLocked ? (t('whiteboard.unlock') || 'Unlock') : (t('whiteboard.lock') || 'Lock')}
-                                >
-                                    {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
-                                </button>
-                                <div className="border-t border-neutral-200 dark:border-neutral-600 my-1" />
-                            </>
-                        )}
-                        <button
-                            onClick={handleZoomIn}
-                            className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm font-medium"
-                            title={t('whiteboard.zoomIn') || 'Zoom In'}
-                        >
-                            +
-                        </button>
-                        <button
-                            onClick={handleResetZoom}
-                            className="p-1 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-xs font-medium"
-                            title={t('whiteboard.resetZoom') || 'Reset Zoom'}
-                        >
-                            {Math.round(viewport.zoom * 100)}%
-                        </button>
-                        <button
-                            onClick={handleZoomOut}
-                            className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm font-medium"
-                            title={t('whiteboard.zoomOut') || 'Zoom Out'}
-                        >
-                            −
-                        </button>
+                    {!isPublic && (
+                        <>
+                            <button
+                                onClick={() => setIsLocked(!isLocked)}
+                                className={`p-2 rounded transition-colors flex justify-center ${
+                                    isLocked
+                                        ? 'bg-primary text-white'
+                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                }`}
+                                title={isLocked ? (t('whiteboard.unlock') || 'Unlock') : (t('whiteboard.lock') || 'Lock')}
+                            >
+                                {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
+                            </button>
+                            <div className="border-t border-neutral-200 dark:border-neutral-600 my-1" />
+                        </>
+                    )}
+                    <button
+                        onClick={handleZoomIn}
+                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm font-medium"
+                        title={t('whiteboard.zoomIn') || 'Zoom In'}
+                    >
+                        +
+                    </button>
+                    <button
+                        onClick={handleResetZoom}
+                        className="p-1 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-xs font-medium"
+                        title={t('whiteboard.resetZoom') || 'Reset Zoom'}
+                    >
+                        {Math.round(viewport.zoom * 100)}%
+                    </button>
+                    <button
+                        onClick={handleZoomOut}
+                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm font-medium"
+                        title={t('whiteboard.zoomOut') || 'Zoom Out'}
+                    >
+                        −
+                    </button>
                 </div>
 
                 <canvas
@@ -1187,6 +919,8 @@ const WhiteboardViewComponent = ({
                             isPublic={isPublic}
                             selectedTextData={getSelectedTextData()}
                             onTextUpdate={handleTextPropertyUpdate}
+                            selectedEdgeData={getSelectedEdgeData()}
+                            onEdgeUpdate={handleEdgePropertyUpdate}
                         />
                     </>
                 )}

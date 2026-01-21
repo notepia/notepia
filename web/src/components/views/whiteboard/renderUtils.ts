@@ -1,4 +1,59 @@
-import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData } from '../../../types/view';
+import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, WhiteboardEdgeData } from '../../../types/view';
+
+// Helper function to render selection handles (4 corner resize + 4 edge connection points)
+export const renderSelectionHandles = (
+    ctx: CanvasRenderingContext2D,
+    bounds: { x: number; y: number; width: number; height: number },
+    viewport: { x: number; y: number; zoom: number },
+    showConnectionPoints: boolean = true
+) => {
+    const zoom = viewport.zoom || 1;
+    const handleSize = 8 / zoom;
+
+    // Draw selection border
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2 / zoom;
+    ctx.setLineDash([5 / zoom, 5 / zoom]);
+    ctx.strokeRect(bounds.x - 5, bounds.y - 5, bounds.width + 10, bounds.height + 10);
+    ctx.setLineDash([]);
+
+    // Four corner resize handles (square)
+    const corners = [
+        { x: bounds.x, y: bounds.y }, // Northwest
+        { x: bounds.x + bounds.width, y: bounds.y }, // Northeast
+        { x: bounds.x, y: bounds.y + bounds.height }, // Southwest
+        { x: bounds.x + bounds.width, y: bounds.y + bounds.height }, // Southeast
+    ];
+
+    ctx.fillStyle = '#3b82f6';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2 / zoom;
+
+    corners.forEach(corner => {
+        ctx.fillRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
+        ctx.strokeRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
+    });
+
+    // Four edge midpoint connection handles (circle)
+    if (showConnectionPoints) {
+        const connectionPoints = [
+            { x: bounds.x + bounds.width / 2, y: bounds.y }, // Top
+            { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height }, // Bottom
+            { x: bounds.x, y: bounds.y + bounds.height / 2 }, // Left
+            { x: bounds.x + bounds.width, y: bounds.y + bounds.height / 2 }, // Right
+        ];
+
+        ctx.fillStyle = '#10b981'; // Green for connection points
+        ctx.strokeStyle = '#ffffff';
+
+        connectionPoints.forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, handleSize / 2, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+        });
+    }
+};
 
 export const renderStroke = (
     ctx: CanvasRenderingContext2D,
@@ -39,11 +94,13 @@ export const renderStroke = (
         const maxX = Math.max(...validPoints.map(p => p.x));
         const minY = Math.min(...validPoints.map(p => p.y));
         const maxY = Math.max(...validPoints.map(p => p.y));
-        ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2 / (viewport.zoom || 1);
-        ctx.setLineDash([5 / (viewport.zoom || 1), 5 / (viewport.zoom || 1)]);
-        ctx.strokeRect(minX - 5, minY - 5, maxX - minX + 10, maxY - minY + 10);
-        ctx.setLineDash([]);
+
+        renderSelectionHandles(ctx, {
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY
+        }, viewport);
     }
 };
 
@@ -89,18 +146,34 @@ export const renderShape = (
     }
 
     if (isSelected) {
-        ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2 / zoom;
-        ctx.setLineDash([5 / zoom, 5 / zoom]);
         if (data.type === 'rectangle') {
-            ctx.strokeRect(data.position.x - 5, data.position.y - 5, data.dimensions.width + 10, data.dimensions.height + 10);
+            renderSelectionHandles(ctx, {
+                x: data.position.x,
+                y: data.position.y,
+                width: data.dimensions.width,
+                height: data.dimensions.height
+            }, viewport);
         } else if (data.type === 'circle') {
             const radius = Math.sqrt(Math.pow(data.dimensions.width, 2) + Math.pow(data.dimensions.height, 2));
-            ctx.beginPath();
-            ctx.arc(data.position.x, data.position.y, radius + 5, 0, 2 * Math.PI);
-            ctx.stroke();
+            renderSelectionHandles(ctx, {
+                x: data.position.x - radius,
+                y: data.position.y - radius,
+                width: radius * 2,
+                height: radius * 2
+            }, viewport);
+        } else if (data.type === 'line') {
+            // For lines, use bounding box
+            const minX = Math.min(data.position.x, data.position.x + data.dimensions.width);
+            const maxX = Math.max(data.position.x, data.position.x + data.dimensions.width);
+            const minY = Math.min(data.position.y, data.position.y + data.dimensions.height);
+            const maxY = Math.max(data.position.y, data.position.y + data.dimensions.height);
+            renderSelectionHandles(ctx, {
+                x: minX,
+                y: minY,
+                width: maxX - minX || 10,
+                height: maxY - minY || 10
+            }, viewport);
         }
-        ctx.setLineDash([]);
     }
 };
 
@@ -144,11 +217,12 @@ export const renderText = (
 
     if (isSelected) {
         const metrics = ctx.measureText(displayText);
-        ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2 / zoom;
-        ctx.setLineDash([5 / zoom, 5 / zoom]);
-        ctx.strokeRect(data.position.x - 5, data.position.y - fontSize - 5, metrics.width + 10, fontSize + 10);
-        ctx.setLineDash([]);
+        renderSelectionHandles(ctx, {
+            x: data.position.x,
+            y: data.position.y - fontSize,
+            width: metrics.width,
+            height: fontSize
+        }, viewport);
     }
 };
 
@@ -181,34 +255,14 @@ export const renderNoteOrView = (
         ctx.strokeRect(data.position.x, data.position.y, width, height);
     }
 
-    // Selection highlight (only for whiteboard_view since whiteboard_note has auto height)
-    if (isSelected && obj.type === 'whiteboard_view') {
-        ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 3 / zoom;
-        ctx.setLineDash([5 / zoom, 5 / zoom]);
-        ctx.strokeRect(data.position.x - 5, data.position.y - 5, width + 10, height + 10);
-        ctx.setLineDash([]);
-
-        // Draw resize handles for views only
-        const handleSize = 8 / zoom;
-        ctx.fillStyle = '#3b82f6';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2 / zoom;
-
-        // Four corner handles
-        const corners = [
-            { x: data.position.x, y: data.position.y }, // Northwest
-            { x: data.position.x + width, y: data.position.y }, // Northeast
-            { x: data.position.x, y: data.position.y + height }, // Southwest
-            { x: data.position.x + width, y: data.position.y + height }, // Southeast
-        ];
-
-        corners.forEach(corner => {
-            if (corner && typeof corner.x === 'number' && typeof corner.y === 'number') {
-                ctx.fillRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
-                ctx.strokeRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
-            }
-        });
+    // Selection highlight for both whiteboard_note and whiteboard_view
+    if (isSelected) {
+        renderSelectionHandles(ctx, {
+            x: data.position.x,
+            y: data.position.y,
+            width: width,
+            height: height
+        }, viewport);
     }
 };
 
@@ -242,5 +296,148 @@ export const renderGrid = (
         ctx.moveTo(startX, y);
         ctx.lineTo(endX, y);
         ctx.stroke();
+    }
+};
+
+// Helper function to draw arrow head
+const drawArrowHead = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    angle: number,
+    size: number,
+    color: string
+) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-size, size / 2);
+    ctx.lineTo(-size, -size / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+};
+
+// Helper function to calculate angle between two points
+const getAngle = (x1: number, y1: number, x2: number, y2: number): number => {
+    return Math.atan2(y2 - y1, x2 - x1);
+};
+
+export const renderEdge = (
+    ctx: CanvasRenderingContext2D,
+    data: WhiteboardEdgeData,
+    isSelected: boolean,
+    viewport: { x: number; y: number; zoom: number }
+) => {
+    // Null checks
+    if (!data || !data.startPoint || !data.endPoint) return;
+    if (!viewport) return;
+    if (typeof data.startPoint.x !== 'number' || typeof data.startPoint.y !== 'number') return;
+    if (typeof data.endPoint.x !== 'number' || typeof data.endPoint.y !== 'number') return;
+
+    const color = data.color || '#000000';
+    const strokeWidth = data.strokeWidth || 2;
+    const zoom = viewport.zoom || 1;
+    const arrowSize = 10;
+
+    const start = data.startPoint;
+    const end = data.endPoint;
+
+    // Set line style
+    ctx.strokeStyle = color;
+    ctx.lineWidth = strokeWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Set dash pattern based on lineStyle
+    const dashPatterns: Record<string, number[]> = {
+        solid: [],
+        dashed: [10, 5],
+        dotted: [2, 4]
+    };
+    ctx.setLineDash(dashPatterns[data.lineStyle] || []);
+
+    ctx.beginPath();
+
+    // Draw curve based on curveType
+    if (data.curveType === 'straight') {
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+    } else if (data.curveType === 'bezier') {
+        // S-curve using quadratic curves
+        const midX = (start.x + end.x) / 2;
+        const midY = (start.y + end.y) / 2;
+        ctx.moveTo(start.x, start.y);
+        ctx.quadraticCurveTo(midX, start.y, midX, midY);
+        ctx.quadraticCurveTo(midX, end.y, end.x, end.y);
+    } else if (data.curveType === 'elbow') {
+        // Elbow/step connection
+        const midX = (start.x + end.x) / 2;
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(midX, start.y);
+        ctx.lineTo(midX, end.y);
+        ctx.lineTo(end.x, end.y);
+    }
+
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Calculate angles for arrows based on curve type
+    let startAngle: number;
+    let endAngle: number;
+
+    if (data.curveType === 'straight') {
+        const angle = getAngle(start.x, start.y, end.x, end.y);
+        startAngle = angle + Math.PI;
+        endAngle = angle;
+    } else if (data.curveType === 'bezier') {
+        // For bezier, approximate angles at endpoints
+        const midX = (start.x + end.x) / 2;
+        startAngle = getAngle(start.x, start.y, midX, start.y) + Math.PI;
+        endAngle = getAngle(midX, end.y, end.x, end.y);
+    } else {
+        // For elbow
+        const midX = (start.x + end.x) / 2;
+        startAngle = start.x < midX ? Math.PI : 0;
+        endAngle = end.x > midX ? 0 : Math.PI;
+    }
+
+    // Draw arrows
+    if (data.arrowType === 'start' || data.arrowType === 'both') {
+        drawArrowHead(ctx, start.x, start.y, startAngle, arrowSize, color);
+    }
+    if (data.arrowType === 'end' || data.arrowType === 'both') {
+        drawArrowHead(ctx, end.x, end.y, endAngle, arrowSize, color);
+    }
+
+    // Draw selection indicators
+    if (isSelected) {
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 2 / zoom;
+        ctx.setLineDash([5 / zoom, 5 / zoom]);
+
+        // Draw endpoint handles
+        const handleSize = 8 / zoom;
+        ctx.fillStyle = '#3b82f6';
+
+        // Start point handle
+        ctx.beginPath();
+        ctx.arc(start.x, start.y, handleSize / 2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2 / zoom;
+        ctx.stroke();
+
+        // End point handle
+        ctx.beginPath();
+        ctx.arc(end.x, end.y, handleSize / 2, 0, 2 * Math.PI);
+        ctx.fillStyle = '#3b82f6';
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.setLineDash([]);
     }
 };
