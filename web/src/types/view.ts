@@ -1,5 +1,5 @@
 export type ViewType = 'map' | 'calendar' | 'kanban' | 'flow' | 'whiteboard';
-export type ViewObjectType = 'calendar_slot' | 'map_marker' | 'kanban_column' | 'flow_node' | 'flow_edge' | 'whiteboard_stroke' | 'whiteboard_shape' | 'whiteboard_text' | 'whiteboard_note' | 'whiteboard_view';
+export type ViewObjectType = 'calendar_slot' | 'map_marker' | 'kanban_column' | 'flow_node' | 'flow_edge' | 'whiteboard_stroke' | 'whiteboard_shape' | 'whiteboard_text' | 'whiteboard_note' | 'whiteboard_view' | 'whiteboard_edge';
 
 // View data structures
 export interface MapViewData {
@@ -183,4 +183,20 @@ export interface WhiteboardViewRefData {
   viewId: string;                       // 連結的 view ID
   width?: number;
   height?: number;
+}
+
+export type ConnectionPointType = 'top' | 'bottom' | 'left' | 'right';
+
+export interface WhiteboardEdgeData {
+  startObjectId: string | null;  // 連接的起始物件 ID (null 表示自由端點)
+  endObjectId: string | null;    // 連接的結束物件 ID (null 表示自由端點)
+  startConnectionPoint: ConnectionPointType | null;  // 起始物件的連接點 (top/bottom/left/right)
+  endConnectionPoint: ConnectionPointType | null;    // 結束物件的連接點 (top/bottom/left/right)
+  startPoint: { x: number; y: number };  // 起始點座標
+  endPoint: { x: number; y: number };    // 結束點座標
+  curveType: 'straight' | 'bezier' | 'elbow';  // 曲線類型
+  arrowType: 'none' | 'end' | 'start' | 'both';  // 箭頭類型
+  lineStyle: 'solid' | 'dashed' | 'dotted';  // 線條樣式
+  color: string;
+  strokeWidth: number;
 }

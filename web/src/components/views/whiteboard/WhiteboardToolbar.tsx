@@ -1,7 +1,8 @@
-import { Pen, Square, Circle, Minus, Type, FileText, Hand, Eraser, Trash2 } from 'lucide-react';
+import { Pen, Square, Circle, Minus, Type, FileText, Hand, Eraser, Trash2, Spline } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Tool } from './tools/types';
 
-export type Tool = 'select' | 'pen' | 'eraser' | 'rectangle' | 'circle' | 'line' | 'text' | 'note';
+export type { Tool } from './tools/types';
 
 interface WhiteboardToolbarProps {
     currentTool: Tool;
