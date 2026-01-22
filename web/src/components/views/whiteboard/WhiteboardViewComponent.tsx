@@ -906,7 +906,11 @@ const WhiteboardViewComponent = ({
                 {/* Note overlays */}
                 {Array.from(viewObjects.entries()).map(([objId, obj]) => {
                     if (obj.type === 'whiteboard_note') {
-                        const noteData = obj.data as WhiteboardNoteData;
+                        // Parse data if it's a string (from API/DB), otherwise use as-is
+                        const noteData: WhiteboardNoteData = typeof obj.data === 'string'
+                            ? JSON.parse(obj.data)
+                            : obj.data;
+                        if (!noteData?.position) return null;
                         return (
                             <NoteOverlay
                                 key={objId}

@@ -21,6 +21,27 @@ interface ViewObject {
     data: any;
 }
 
+// Helper function to parse view object data if it's a string
+const parseViewObjectData = (obj: ViewObject): ViewObject => {
+    if (typeof obj.data === 'string') {
+        try {
+            return { ...obj, data: JSON.parse(obj.data) };
+        } catch {
+            return obj;
+        }
+    }
+    return obj;
+};
+
+// Helper function to parse all view objects in a map
+const parseViewObjectsMap = (viewObjects: Record<string, ViewObject>): Map<string, ViewObject> => {
+    const parsed = new Map<string, ViewObject>();
+    for (const [id, obj] of Object.entries(viewObjects)) {
+        parsed.set(id, parseViewObjectData(obj));
+    }
+    return parsed;
+};
+
 interface WhiteboardMessage {
     type: 'sync' | 'init' | 'acquire_lock' | 'lock_acquired' | 'initialize_data' | 'add_canvas_object' | 'update_canvas_object' | 'delete_canvas_object' | 'add_view_object' | 'update_view_object' | 'delete_view_object' | 'clear_all';
     canvas_objects?: Record<string, CanvasObject>;
@@ -88,7 +109,7 @@ export function useWhiteboardWebSocket(options: UseWhiteboardWebSocketOptions) {
                                 setCanvasObjects(new Map(Object.entries(message.canvas_objects)));
                             }
                             if (message.view_objects) {
-                                setViewObjects(new Map(Object.entries(message.view_objects)));
+                                setViewObjects(parseViewObjectsMap(message.view_objects));
                             }
 
                             // Check if room is initialized
@@ -176,9 +197,9 @@ export function useWhiteboardWebSocket(options: UseWhiteboardWebSocketOptions) {
                                         // yjs_state: base64State // TODO: Add Y.js state here (base64 encoded)
                                     }));
 
-                                    // Update local state
+                                    // Update local state (parse view object data)
                                     setCanvasObjects(new Map(Object.entries(canvasObjectsData)));
-                                    setViewObjects(new Map(Object.entries(viewObjectsMap)));
+                                    setViewObjects(parseViewObjectsMap(viewObjectsMap));
                                     setIsInitialized(true);
                                     initializingRef.current = false;
                                 } catch (error) {
@@ -197,7 +218,7 @@ export function useWhiteboardWebSocket(options: UseWhiteboardWebSocketOptions) {
                                 setCanvasObjects(new Map(Object.entries(message.canvas_objects)));
                             }
                             if (message.view_objects) {
-                                setViewObjects(new Map(Object.entries(message.view_objects)));
+                                setViewObjects(parseViewObjectsMap(message.view_objects));
                             }
 
                             // Apply Y.js state if present
@@ -243,9 +264,10 @@ export function useWhiteboardWebSocket(options: UseWhiteboardWebSocketOptions) {
                         case 'add_view_object':
                         case 'update_view_object':
                             if (message.object) {
+                                const parsedObj = parseViewObjectData(message.object as ViewObject);
                                 setViewObjects(prev => {
                                     const newMap = new Map(prev || []);
-                                    newMap.set(message.object!.id, message.object as ViewObject);
+                                    newMap.set(parsedObj.id, parsedObj);
                                     return newMap;
                                 });
                             }
