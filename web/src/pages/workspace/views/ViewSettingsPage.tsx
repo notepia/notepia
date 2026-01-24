@@ -102,8 +102,8 @@ const ViewSettingsPage = () => {
                 return t('views.map')
             case 'kanban':
                 return t('views.kanban') || 'Kanban'
-            case 'flow':
-                return t('views.flow')
+            case 'whiteboard':
+                return t('views.whiteboard') || 'Whiteboard'
             default:
                 return viewType
         }
