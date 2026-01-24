@@ -1,5 +1,5 @@
-export type ViewType = 'map' | 'calendar' | 'kanban' | 'flow' | 'whiteboard';
-export type ViewObjectType = 'calendar_slot' | 'map_marker' | 'kanban_column' | 'flow_node' | 'flow_edge' | 'whiteboard_stroke' | 'whiteboard_shape' | 'whiteboard_text' | 'whiteboard_note' | 'whiteboard_view' | 'whiteboard_edge';
+export type ViewType = 'map' | 'calendar' | 'kanban' | 'whiteboard';
+export type ViewObjectType = 'calendar_slot' | 'map_marker' | 'kanban_column' | 'whiteboard_stroke' | 'whiteboard_shape' | 'whiteboard_text' | 'whiteboard_note' | 'whiteboard_view' | 'whiteboard_edge';
 
 // View data structures
 export interface MapViewData {
@@ -93,47 +93,6 @@ export interface MapMarkerData {
 
 export interface KanbanColumnData {
   color?: string; // Column header color
-}
-
-export interface FlowViewData {
-  // Array of node and edge IDs in order
-  nodes?: string[];
-  edges?: string[];
-  viewport?: {
-    x: number;
-    y: number;
-    zoom: number;
-  };
-}
-
-export interface FlowNodeData {
-  position: {
-    x: number;
-    y: number;
-  };
-  color?: string;
-  width?: number;
-  height?: number;
-}
-
-export type EdgeType = 'smoothstep' | 'step' | 'straight' | 'bezier';
-export type MarkerType = 'arrow' | 'arrowclosed';
-
-export interface FlowEdgeData {
-  source: string; // source node id
-  target: string; // target node id
-  sourceHandle?: string;
-  targetHandle?: string;
-  label?: string;
-  animated?: boolean;
-  style?: Record<string, any>;
-  markerStart?: string; // arrow at start: 'arrow' | 'arrowclosed' | 'none'
-  markerEnd?: string; // arrow at end: 'arrow' | 'arrowclosed' | 'none'
-  markerStartType?: MarkerType; // arrow type at start
-  markerEndType?: MarkerType; // arrow type at end
-  strokeDasharray?: string; // dashed line: '5,5' for dashed, undefined for solid
-  stroke?: string; // edge color
-  edgeType?: EdgeType; // edge curve type
 }
 
 // Whiteboard view data
