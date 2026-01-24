@@ -839,6 +839,11 @@ const WhiteboardViewComponent = ({
         };
         setViewObjects(prev => new Map(prev).set(element.id, newViewObject));
         sendUpdate({ type: 'add_view_object', object: newViewObject });
+
+        // Switch back to select tool after adding whiteboard_note
+        if (element.type === 'whiteboard_note') {
+            setCurrentTool('select');
+        }
     }, [sendUpdate]);
 
     // Handle keyboard shortcuts
