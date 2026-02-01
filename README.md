@@ -26,9 +26,6 @@ Build your own workspace with widgets, keep everything in one place, and stay in
 * 📋 **Kanban Board**
   Organize tasks with a powerful kanban board supporting drag-and-drop, multiple columns, and task management.
 
-* 🔄 **Flow Diagram**
-  Create and edit visual flowcharts and diagrams with an intuitive node-based editor.
-
 * 🎨 **Collaborative Whiteboard**
   Real-time collaborative whiteboard for brainstorming, sketching, and visual planning with your team.
 
