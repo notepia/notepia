@@ -157,12 +157,20 @@ func (r *SpreadsheetRoom) sendInitialStateToClient(client *Client) {
 
 // handleMessage processes incoming spreadsheet messages
 func (r *SpreadsheetRoom) handleMessage(msg *Message) {
+	msgPreview := string(msg.Data)
+	if len(msgPreview) > 200 {
+		msgPreview = msgPreview[:200] + "..."
+	}
+	log.Printf("Spreadsheet room %s received message from %s: %s", r.viewID, msg.Sender.UserID, msgPreview)
+
 	// Parse the JSON message
 	var spreadsheetMsg SpreadsheetMessage
 	if err := json.Unmarshal(msg.Data, &spreadsheetMsg); err != nil {
 		log.Printf("Error parsing spreadsheet message: %v", err)
 		return
 	}
+
+	log.Printf("Parsed message type: %s", spreadsheetMsg.Type)
 
 	// Ignore write operations from read-only clients
 	if msg.Sender.IsReadOnly {
@@ -204,9 +212,13 @@ func (r *SpreadsheetRoom) handleMessage(msg *Message) {
 
 	case SpreadsheetMessageTypeInitializeData:
 		// Client is sending initial data after fetching from DB
+		log.Printf("Received initialize_data for spreadsheet %s, sheets=%v", r.viewID, spreadsheetMsg.Sheets != nil)
 		if spreadsheetMsg.Sheets != nil {
+			log.Printf("Storing initial sheets for spreadsheet %s (size: %d bytes)", r.viewID, len(spreadsheetMsg.Sheets))
 			if err := r.cache.SetSheets(r.ctx, r.viewID, spreadsheetMsg.Sheets); err != nil {
 				log.Printf("Error storing sheets during init: %v", err)
+			} else {
+				log.Printf("Successfully stored initial sheets for spreadsheet %s", r.viewID)
 			}
 		}
 
@@ -237,6 +249,9 @@ func (r *SpreadsheetRoom) handleMessage(msg *Message) {
 
 	case SpreadsheetMessageTypeOp:
 		// Client is sending operations along with updated sheets data
+		log.Printf("Received op message for spreadsheet %s: ops=%v, sheets=%v",
+			r.viewID, spreadsheetMsg.Ops != nil, spreadsheetMsg.Sheets != nil)
+
 		if spreadsheetMsg.Ops != nil {
 			if err := r.cache.AppendOps(r.ctx, r.viewID, spreadsheetMsg.Ops); err != nil {
 				log.Printf("Error appending ops: %v", err)
@@ -245,9 +260,14 @@ func (r *SpreadsheetRoom) handleMessage(msg *Message) {
 
 		// Store updated sheets data for persistence
 		if spreadsheetMsg.Sheets != nil {
+			log.Printf("Storing sheets for spreadsheet %s (size: %d bytes)", r.viewID, len(spreadsheetMsg.Sheets))
 			if err := r.cache.SetSheets(r.ctx, r.viewID, spreadsheetMsg.Sheets); err != nil {
 				log.Printf("Error storing sheets during op: %v", err)
+			} else {
+				log.Printf("Successfully stored sheets for spreadsheet %s", r.viewID)
 			}
+		} else {
+			log.Printf("No sheets data in op message for spreadsheet %s", r.viewID)
 		}
 
 		// Broadcast operations to all other clients (without sheets to save bandwidth)

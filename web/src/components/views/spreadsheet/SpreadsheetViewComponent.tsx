@@ -79,10 +79,11 @@ const SpreadsheetViewComponent = ({
     const localSheetsRef = useRef<Sheet[]>(localSheets);
     const [isReady, setIsReady] = useState(false);
 
-    // Keep ref in sync with state
-    useEffect(() => {
-        localSheetsRef.current = localSheets;
-    }, [localSheets]);
+    // Update both state and ref when sheets change
+    const updateLocalSheets = useCallback((data: Sheet[]) => {
+        localSheetsRef.current = data;  // Update ref immediately
+        setLocalSheets(data);
+    }, []);
 
     // Monitor container size
     useEffect(() => {
@@ -110,9 +111,9 @@ const SpreadsheetViewComponent = ({
     // Sync remote data to local
     useEffect(() => {
         if (remoteSheets && remoteSheets.length > 0) {
-            setLocalSheets(remoteSheets as unknown as Sheet[]);
+            updateLocalSheets(remoteSheets as unknown as Sheet[]);
         }
-    }, [remoteSheets]);
+    }, [remoteSheets, updateLocalSheets]);
 
     // Handle pending ops from other clients
     useEffect(() => {
@@ -141,9 +142,9 @@ const SpreadsheetViewComponent = ({
     // Update local sheets when parsedInitialSheets changes (for initial load)
     useEffect(() => {
         if (parsedInitialSheets && parsedInitialSheets.length > 0 && localSheets.length === 0) {
-            setLocalSheets(parsedInitialSheets as unknown as Sheet[]);
+            updateLocalSheets(parsedInitialSheets as unknown as Sheet[]);
         }
-    }, [parsedInitialSheets]);
+    }, [parsedInitialSheets, updateLocalSheets]);
 
     return (
         <div ref={containerRef} className="relative w-full h-full bg-white dark:bg-neutral-900">
@@ -179,7 +180,7 @@ const SpreadsheetViewComponent = ({
                     <Workbook
                         ref={workbookRef}
                         data={localSheets}
-                        onChange={(data) => setLocalSheets(data)}
+                        onChange={updateLocalSheets}
                         onOp={handleOp}
                         showToolbar={!isPublic}
                         showFormulaBar={!isPublic}
