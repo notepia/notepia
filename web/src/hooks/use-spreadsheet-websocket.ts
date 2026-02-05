@@ -1,0 +1,235 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { SpreadsheetSheetData, SpreadsheetOp } from '../types/view';
+
+interface UseSpreadsheetWebSocketOptions {
+    viewId: string;
+    workspaceId: string;
+    enabled: boolean;
+    isPublic?: boolean;
+    skipInitialFetch?: boolean;
+}
+
+interface SpreadsheetMessage {
+    type: 'init' | 'acquire_lock' | 'lock_acquired' | 'initialize_data' | 'op' | 'sync';
+    sheets?: SpreadsheetSheetData[];
+    ops?: SpreadsheetOp[];
+    initialized?: boolean;
+    lock_acquired?: boolean;
+}
+
+export function useSpreadsheetWebSocket(options: UseSpreadsheetWebSocketOptions) {
+    const { viewId, workspaceId, enabled, isPublic = false, skipInitialFetch = false } = options;
+
+    const wsRef = useRef<WebSocket | null>(null);
+    const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+    const [isConnected, setIsConnected] = useState(false);
+    const [sheets, setSheets] = useState<SpreadsheetSheetData[] | null>(null);
+    const [isInitialized, setIsInitialized] = useState(false);
+    const [pendingOps, setPendingOps] = useState<SpreadsheetOp[]>([]);
+    const initializingRef = useRef(false);
+
+    const connect = useCallback(() => {
+        if (!enabled || !viewId) return;
+        // For non-public mode, require workspaceId
+        if (!isPublic && !workspaceId) return;
+
+        // Build WebSocket URL - use public endpoint for public mode
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const path = isPublic ? `/ws/public/views/${viewId}` : `/ws/views/${viewId}`;
+        const wsUrl = `${protocol}//${window.location.host}${path}`;
+
+        try {
+            const ws = new WebSocket(wsUrl);
+            wsRef.current = ws;
+
+            ws.onopen = () => {
+                console.log('Spreadsheet WebSocket connected');
+                setIsConnected(true);
+            };
+
+            ws.onmessage = async (event) => {
+                try {
+                    // Handle both text and blob messages
+                    let data: string;
+                    if (event.data instanceof Blob) {
+                        data = await event.data.text();
+                    } else {
+                        data = event.data;
+                    }
+
+                    const message: SpreadsheetMessage = JSON.parse(data);
+
+                    switch (message.type) {
+                        case 'init':
+                            // Skip initial data fetch if requested (e.g., public mode using API)
+                            if (skipInitialFetch) {
+                                console.log('Skipping initial WebSocket data fetch (using API data)');
+                                setIsInitialized(true);
+                                break;
+                            }
+
+                            // Initial state from server
+                            if (message.sheets) {
+                                setSheets(message.sheets);
+                            }
+
+                            // Check if room is initialized
+                            if (message.initialized) {
+                                setIsInitialized(true);
+                            } else if (!initializingRef.current) {
+                                // Room not initialized, try to acquire lock
+                                initializingRef.current = true;
+                                ws.send(JSON.stringify({ type: 'acquire_lock' }));
+                            }
+                            break;
+
+                        case 'lock_acquired':
+                            if (message.lock_acquired && !isInitialized && !isPublic) {
+                                // We got the lock, fetch data from API and initialize
+                                try {
+                                    // Fetch view data
+                                    const viewResponse = await fetch(`/api/v1/workspaces/${workspaceId}/views/${viewId}`, {
+                                        credentials: 'include'
+                                    });
+                                    if (!viewResponse.ok) throw new Error('Failed to fetch view');
+                                    const viewData = await viewResponse.json();
+
+                                    // Parse sheets from view.data
+                                    let sheetsData: SpreadsheetSheetData[] = [];
+                                    if (viewData.data) {
+                                        try {
+                                            const parsed = JSON.parse(viewData.data);
+                                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                                sheetsData = parsed;
+                                            }
+                                        } catch (e) {
+                                            console.warn('Failed to parse sheets:', e);
+                                        }
+                                    }
+
+                                    // If no sheets, create default empty sheet
+                                    if (sheetsData.length === 0) {
+                                        sheetsData = [{
+                                            id: 'sheet1',
+                                            name: 'Sheet1',
+                                            order: 0,
+                                            row: 100,
+                                            column: 26,
+                                            celldata: []
+                                        }];
+                                    }
+
+                                    // Send initialize_data message
+                                    ws.send(JSON.stringify({
+                                        type: 'initialize_data',
+                                        sheets: sheetsData
+                                    }));
+
+                                    // Update local state
+                                    setSheets(sheetsData);
+                                    setIsInitialized(true);
+                                    initializingRef.current = false;
+                                } catch (error) {
+                                    console.error('Failed to initialize spreadsheet:', error);
+                                    initializingRef.current = false;
+                                }
+                            } else {
+                                // Another client got the lock, wait for initialization
+                                initializingRef.current = false;
+                            }
+                            break;
+
+                        case 'initialize_data':
+                            // Another client initialized the room, apply the data
+                            if (message.sheets) {
+                                setSheets(message.sheets);
+                            }
+                            setIsInitialized(true);
+                            initializingRef.current = false;
+                            break;
+
+                        case 'op':
+                            // Received operations from other clients
+                            if (message.ops && message.ops.length > 0) {
+                                setPendingOps(prev => [...prev, ...message.ops!]);
+                            }
+                            break;
+
+                        case 'sync':
+                            // Full sync (for reconnection scenarios)
+                            if (message.sheets) {
+                                setSheets(message.sheets);
+                            }
+                            break;
+                    }
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                setIsConnected(false);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket closed');
+                setIsConnected(false);
+                wsRef.current = null;
+
+                // Attempt to reconnect after 3 seconds
+                if (enabled) {
+                    reconnectTimeoutRef.current = setTimeout(() => {
+                        console.log('Attempting to reconnect...');
+                        connect();
+                    }, 3000);
+                }
+            };
+        } catch (error) {
+            console.error('Failed to create WebSocket:', error);
+        }
+    }, [enabled, viewId, workspaceId, isPublic, skipInitialFetch, isInitialized]);
+
+    // Send operations to server
+    const sendOps = useCallback((ops: SpreadsheetOp[]) => {
+        // Don't send updates in public/read-only mode
+        if (isPublic) {
+            console.log('Ignoring ops in public mode');
+            return;
+        }
+
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({ type: 'op', ops }));
+        }
+    }, [isPublic]);
+
+    // Clear pending ops after they've been applied
+    const clearPendingOps = useCallback(() => {
+        setPendingOps([]);
+    }, []);
+
+    useEffect(() => {
+        if (enabled) {
+            connect();
+        }
+
+        return () => {
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+            }
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
+        };
+    }, [enabled, connect]);
+
+    return {
+        sendOps,
+        isConnected,
+        sheets,
+        pendingOps,
+        clearPendingOps,
+        isInitialized
+    };
+}
