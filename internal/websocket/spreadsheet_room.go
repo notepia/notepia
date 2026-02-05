@@ -185,11 +185,24 @@ func (r *SpreadsheetRoom) handleMessage(msg *Message) {
 
 	switch spreadsheetMsg.Type {
 	case SpreadsheetMessageTypeAcquireLock:
-		// Client wants to acquire initialization lock
-		acquired, err := r.cache.AcquireSpreadsheetInitLock(r.ctx, r.viewID)
+		// First check if already initialized - if so, deny the lock to prevent overwriting
+		alreadyInitialized, err := r.cache.IsSpreadsheetInitialized(r.ctx, r.viewID)
 		if err != nil {
-			log.Printf("Error acquiring init lock: %v", err)
+			log.Printf("Error checking initialization status: %v", err)
+		}
+
+		var acquired bool
+		if alreadyInitialized {
+			// Already initialized, deny the lock
+			log.Printf("Spreadsheet %s already initialized, denying lock to client %s", r.viewID, msg.Sender.UserID)
 			acquired = false
+		} else {
+			// Not initialized, try to acquire lock
+			acquired, err = r.cache.AcquireSpreadsheetInitLock(r.ctx, r.viewID)
+			if err != nil {
+				log.Printf("Error acquiring init lock: %v", err)
+				acquired = false
+			}
 		}
 
 		// Send response back to the requesting client
