@@ -236,18 +236,35 @@ func (r *SpreadsheetRoom) handleMessage(msg *Message) {
 		}
 
 	case SpreadsheetMessageTypeOp:
-		// Client is sending operations
+		// Client is sending operations along with updated sheets data
 		if spreadsheetMsg.Ops != nil {
 			if err := r.cache.AppendOps(r.ctx, r.viewID, spreadsheetMsg.Ops); err != nil {
 				log.Printf("Error appending ops: %v", err)
 			}
 		}
 
-		// Broadcast operations to all other clients
+		// Store updated sheets data for persistence
+		if spreadsheetMsg.Sheets != nil {
+			if err := r.cache.SetSheets(r.ctx, r.viewID, spreadsheetMsg.Sheets); err != nil {
+				log.Printf("Error storing sheets during op: %v", err)
+			}
+		}
+
+		// Broadcast operations to all other clients (without sheets to save bandwidth)
+		broadcastMsg := SpreadsheetMessage{
+			Type: SpreadsheetMessageTypeOp,
+			Ops:  spreadsheetMsg.Ops,
+		}
+		broadcastData, err := json.Marshal(broadcastMsg)
+		if err != nil {
+			log.Printf("Error marshaling broadcast message: %v", err)
+			return
+		}
+
 		for client := range r.clients {
 			if client != msg.Sender {
 				select {
-				case client.send <- msg.Data:
+				case client.send <- broadcastData:
 				default:
 					close(client.send)
 					delete(r.clients, client)

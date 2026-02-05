@@ -76,7 +76,13 @@ const SpreadsheetViewComponent = ({
 
     // Local sheets state - use Sheet[] for fortune-sheet compatibility
     const [localSheets, setLocalSheets] = useState<Sheet[]>(parsedInitialSheets as unknown as Sheet[]);
+    const localSheetsRef = useRef<Sheet[]>(localSheets);
     const [isReady, setIsReady] = useState(false);
+
+    // Keep ref in sync with state
+    useEffect(() => {
+        localSheetsRef.current = localSheets;
+    }, [localSheets]);
 
     // Monitor container size
     useEffect(() => {
@@ -127,7 +133,8 @@ const SpreadsheetViewComponent = ({
     const handleOp = useCallback((ops: Op[]) => {
         if (!isPublic && ops.length > 0) {
             // Cast to SpreadsheetOp[] for our WebSocket protocol
-            sendOps(ops as unknown as SpreadsheetOp[]);
+            // Include current sheets data for server persistence
+            sendOps(ops as unknown as SpreadsheetOp[], localSheetsRef.current as unknown as SpreadsheetSheetData[]);
         }
     }, [isPublic, sendOps]);
 

@@ -190,8 +190,8 @@ export function useSpreadsheetWebSocket(options: UseSpreadsheetWebSocketOptions)
         }
     }, [enabled, viewId, workspaceId, isPublic, skipInitialFetch, isInitialized]);
 
-    // Send operations to server
-    const sendOps = useCallback((ops: SpreadsheetOp[]) => {
+    // Send operations to server (with full sheets data for persistence)
+    const sendOps = useCallback((ops: SpreadsheetOp[], currentSheets?: SpreadsheetSheetData[]) => {
         // Don't send updates in public/read-only mode
         if (isPublic) {
             console.log('Ignoring ops in public mode');
@@ -199,7 +199,8 @@ export function useSpreadsheetWebSocket(options: UseSpreadsheetWebSocketOptions)
         }
 
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({ type: 'op', ops }));
+            // Include sheets data so server can update Redis for persistence
+            wsRef.current.send(JSON.stringify({ type: 'op', ops, sheets: currentSheets }));
         }
     }, [isPublic]);
 
