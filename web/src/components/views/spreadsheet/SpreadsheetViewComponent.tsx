@@ -79,6 +79,9 @@ const SpreadsheetViewComponent = ({
     const localSheetsRef = useRef<Sheet[]>(localSheets);
     const [isReady, setIsReady] = useState(false);
 
+    // Flag to prevent sending ops back when applying remote ops
+    const isApplyingRemoteOpsRef = useRef(false);
+
     // Update both state and ref when sheets change
     const updateLocalSheets = useCallback((data: Sheet[]) => {
         localSheetsRef.current = data;  // Update ref immediately
@@ -118,6 +121,8 @@ const SpreadsheetViewComponent = ({
     // Handle pending ops from other clients
     useEffect(() => {
         if (pendingOps.length > 0 && workbookRef.current) {
+            // Set flag to prevent sending these ops back to server
+            isApplyingRemoteOpsRef.current = true;
             pendingOps.forEach(op => {
                 try {
                     // Cast to Op[] for fortune-sheet compatibility
@@ -126,12 +131,18 @@ const SpreadsheetViewComponent = ({
                     console.error('Failed to apply op:', e);
                 }
             });
+            // Clear flag after applying all ops
+            isApplyingRemoteOpsRef.current = false;
             clearPendingOps();
         }
     }, [pendingOps, clearPendingOps]);
 
     // Handle local operations (send to server)
     const handleOp = useCallback((ops: Op[]) => {
+        // Skip if we're applying remote ops (to prevent sending them back)
+        if (isApplyingRemoteOpsRef.current) {
+            return;
+        }
         if (!isPublic && ops.length > 0) {
             // Cast to SpreadsheetOp[] for our WebSocket protocol
             // Include current sheets data for server persistence
