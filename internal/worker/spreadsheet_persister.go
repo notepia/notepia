@@ -31,6 +31,7 @@ func NewSpreadsheetPersister(cache *redis.SpreadsheetCache, database db.DB) *Spr
 func (p *SpreadsheetPersister) Start() error {
 	// Run every 30 seconds
 	_, err := p.cron.AddFunc("*/30 * * * * *", func() {
+		log.Println("Spreadsheet persister tick")
 		if err := p.PersistAll(); err != nil {
 			log.Printf("Error persisting spreadsheet data: %v", err)
 		}
@@ -61,10 +62,12 @@ func (p *SpreadsheetPersister) PersistAll() error {
 	// Get all active spreadsheet IDs
 	viewIDs, err := p.cache.GetAllActiveSpreadsheetIDs(ctx)
 	if err != nil {
+		log.Printf("Error getting active spreadsheet IDs: %v", err)
 		return err
 	}
 
 	if len(viewIDs) == 0 {
+		log.Println("No active spreadsheets to persist")
 		return nil
 	}
 
