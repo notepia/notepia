@@ -79,6 +79,9 @@ const SpreadsheetViewComponent = ({
     const localSheetsRef = useRef<Sheet[]>(localSheets);
     const [isReady, setIsReady] = useState(false);
 
+    // Track data version to force Workbook re-mount when Redis data arrives
+    const [dataVersion, setDataVersion] = useState(0);
+
     // Flag to prevent sending ops back when applying remote ops
     const isApplyingRemoteOpsRef = useRef(false);
 
@@ -111,10 +114,13 @@ const SpreadsheetViewComponent = ({
         return () => resizeObserver.disconnect();
     }, []);
 
-    // Sync remote data to local
+    // Sync remote data to local (Redis data takes priority)
     useEffect(() => {
         if (remoteSheets && remoteSheets.length > 0) {
+            console.log('Received sheets from Redis, updating Workbook');
             updateLocalSheets(remoteSheets as unknown as Sheet[]);
+            // Increment version to force Workbook re-mount with new data
+            setDataVersion(v => v + 1);
         }
     }, [remoteSheets, updateLocalSheets]);
 
@@ -189,6 +195,7 @@ const SpreadsheetViewComponent = ({
             {isReady && (
                 <div style={{ width: '100%', height: '100%' }}>
                     <Workbook
+                        key={`workbook-${dataVersion}`}
                         ref={workbookRef}
                         data={localSheets}
                         onChange={updateLocalSheets}

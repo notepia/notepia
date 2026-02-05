@@ -68,16 +68,18 @@ export function useSpreadsheetWebSocket(options: UseSpreadsheetWebSocketOptions)
                                 break;
                             }
 
-                            // Initial state from server
-                            if (message.sheets) {
+                            // If server has sheets data from Redis, use it directly (no DB fetch needed)
+                            if (message.initialized && message.sheets) {
+                                console.log('Using spreadsheet data from Redis cache');
                                 setSheets(message.sheets);
+                                setIsInitialized(true);
+                                initializingRef.current = false;
+                                break;
                             }
 
-                            // Check if room is initialized
-                            if (message.initialized) {
-                                setIsInitialized(true);
-                            } else if (!initializingRef.current) {
-                                // Room not initialized, try to acquire lock
+                            // Room not initialized in Redis, try to acquire lock to fetch from DB
+                            if (!message.initialized && !initializingRef.current) {
+                                console.log('Redis cache empty, acquiring lock to fetch from DB');
                                 initializingRef.current = true;
                                 ws.send(JSON.stringify({ type: 'acquire_lock' }));
                             }
