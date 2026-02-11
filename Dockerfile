@@ -7,7 +7,7 @@ ARG VITE_APP_VERSION=dev
 ENV VITE_APP_VERSION=${VITE_APP_VERSION}
 
 COPY web/package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY web/ .
 RUN npm run build
@@ -19,7 +19,7 @@ WORKDIR /app/collab
 RUN apk add --no-cache python3 make g++
 
 COPY collab/package*.json ./
-RUN npm ci --production
+RUN npm install --production
 
 # ---------- Stage 3: build Go backend ----------
 FROM golang:1.25-alpine AS backend
